@@ -8,6 +8,19 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Accounts + cloud sync (Supabase)**: on open, the app now asks you to sign up
+  or log in. Signing in syncs your data (types, shifts, notes, leave, swaps,
+  roster, settings) to a Supabase project instead of just the local browser —
+  the same account will work across other apps under the same brand later on,
+  and your data now follows you between devices instead of staying stuck on
+  one phone/browser. See "Setting up your Supabase project" below for the
+  one-time setup this needs. Sign out from Reports → Account.
+- **Optional Node server for Render "Web Service"**: added `server.js` and
+  `package.json` so the app can also run as a Node web service (e.g. on
+  Render, Railway, Fly.io) instead of only a static site — see "Put it on
+  the web" below. It's still the same plain client-side app; the server
+  just serves the files with the right content types.
+
 - **No more duplicate chip after a swap**: a shift that was just swapped in
   no longer shows both a "Swapped on" banner and a separate plain chip for
   the same shift — the banner covers it.
@@ -89,6 +102,10 @@ server-side code, nothing to install beyond a static file server.
 - `manifest.json` — lets phones/desktops "install" it as an app icon
 - `sw.js` — service worker; caches the app so it still opens with no signal
 - `icon-192.png`, `icon-512.png` — app icons used by the manifest
+- `server.js`, `package.json` — an optional tiny Node static-file server,
+  only needed if you're hosting this as a "Web Service" (Render, Railway,
+  Fly.io, etc.) rather than a "Static Site". Not used for GitHub Pages,
+  Netlify, Vercel, or opening the file locally.
 
 Data is stored in the browser's `localStorage`, per device — no account,
 no server. Use "Full backup" (Reports tab) to move data between devices,
@@ -96,6 +113,51 @@ or host it and open the same URL everywhere so it's at least the same
 browser profile. PDF export uses jsPDF, loaded from a CDN — it needs an
 internet connection the moment you click Export, even if the rest of the
 app works offline.
+
+## Setting up your Supabase project
+
+The app is already pointed at your Supabase project (URL + publishable key
+are in `index.html` — safe to be public, they only allow what your database
+rules permit). One thing still needs to be created inside that project: the
+table that stores each account's data.
+
+1. In the Supabase dashboard, open **SQL Editor** → **New query**.
+2. Paste this and click **Run**:
+
+   ```sql
+   create table if not exists app_data (
+     user_id uuid primary key references auth.users(id) on delete cascade,
+     data jsonb not null default '{}'::jsonb,
+     updated_at timestamptz not null default now()
+   );
+
+   alter table app_data enable row level security;
+
+   create policy "Users can read their own data"
+     on app_data for select
+     using (auth.uid() = user_id);
+
+   create policy "Users can insert their own data"
+     on app_data for insert
+     with check (auth.uid() = user_id);
+
+   create policy "Users can update their own data"
+     on app_data for update
+     using (auth.uid() = user_id);
+   ```
+
+   This creates one row per account holding a JSON blob of everything the app
+   already stores locally, and locks it down so a user can only ever read or
+   write their own row — nobody else's data is reachable, even though the
+   publishable key is public.
+3. Optional, for faster testing: Authentication → Providers → Email → turn
+   off "Confirm email" so new accounts can log in immediately instead of
+   needing to click a confirmation link first. Leave it on for real users.
+
+That's the only manual step — sign-up, login, and sync are already wired up
+in the app itself. This is also the foundation for sharing one account/login
+across other apps under the same brand later: they'd point at this same
+Supabase project and reuse the same `auth.users` accounts.
 
 ## Run it locally
 
@@ -107,6 +169,13 @@ python3 -m http.server 8000
 Then open `http://localhost:8000`. (Opening `index.html` directly by
 double-clicking mostly works too, but the service worker and "Add to Home
 Screen" prompt need it served over `http://` or `https://`.)
+
+Or, with Node instead of Python:
+```
+cd webapp
+node server.js
+```
+Then open `http://localhost:3000`.
 
 ## Put it on the web
 
@@ -128,6 +197,18 @@ Any static hosting works, since it's just files.
 
 **Your own server / cPanel / S3 / etc.**
 Just upload the files to any folder a web server serves — nothing to build.
+
+**Render, Railway, Fly.io — as a "Web Service"** (rather than a static site)
+1. Push these files to a GitHub repo (same as the GitHub Pages step above).
+2. On Render: **New +** → **Web Service** → pick the repo.
+3. Build Command: `npm install` (or leave blank — there's nothing to install).
+4. Start Command: `npm start` (runs `server.js`, a tiny built-in Node file
+   server — no external packages needed).
+5. Deploy. You get a live URL the same as the static-site options above.
+
+This isn't required — a Static Site does the exact same job for this app
+with no server to keep running — but it's here in case you'd rather keep
+everything set up the same way as another Node-based app of yours.
 
 ## Installing it like an app
 
@@ -165,6 +246,12 @@ JavaScript, no framework). Data model, in `localStorage` under the key
 If you change what `index.html` caches or add files, bump the `CACHE`
 version string at the top of `sw.js` so returning visitors pick up the
 update instead of a stale cached copy.
+
+Cloud side: a signed-in account's data lives in Supabase, table `app_data`,
+one row per user (`user_id`, `data` — the same JSON shape as `localStorage`,
+`updated_at`). The app writes to both `localStorage` and this table on every
+save (debounced ~1.2s for the cloud write), and pulls the cloud copy down on
+login so the same account sees its data on any device.
 
 ## Where this is headed
 
