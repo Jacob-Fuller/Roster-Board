@@ -288,14 +288,14 @@
   /* Roster tab */
   .roster-controls{display:flex; align-items:flex-end; gap:10px;}
   .roster-controls .form-row{margin-top:0; flex:1;}
-  .roster-grid{margin-top:14px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;}
-  .roster-week{display:grid; grid-template-columns:52px repeat(7,1fr);}
-  .roster-week + .roster-week{border-top:1px solid var(--border);}
+  .roster-grid{margin-top:14px; border-radius:var(--radius-md); overflow:hidden; background:var(--border); border:1px solid var(--border);}
+  .roster-week{display:grid; grid-template-columns:52px repeat(7,1fr); gap:1px; background:var(--border);}
+  .roster-week + .roster-week{margin-top:1px;}
   .roster-week-label{display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:var(--text-faint); background:var(--surface-2);}
-  .roster-head{display:grid; grid-template-columns:52px repeat(7,1fr); background:var(--surface-2);}
-  .roster-head span{text-align:center; font-size:.6rem; font-weight:700; color:var(--text-faint); padding:6px 0; text-transform:uppercase;}
+  .roster-head{display:grid; grid-template-columns:52px repeat(7,1fr); gap:1px; background:var(--border);}
+  .roster-head span{text-align:center; font-size:.6rem; font-weight:700; color:var(--text-faint); padding:6px 0; text-transform:uppercase; background:var(--surface-2);}
   .roster-cell{
-    border-left:1px solid var(--border); min-height:52px; padding:4px; display:flex; flex-direction:column; gap:2px;
+    min-height:52px; padding:4px; display:flex; flex-direction:column; gap:2px;
     background:var(--surface); text-align:left;
   }
   .roster-cell .rchip{font-size:.56rem; font-weight:700; border-radius:4px; padding:1px 4px; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -362,7 +362,7 @@
       </p>
     </div>
   </div>
-  <header>
+  <header id="appHeader">
     <div class="header-top">
       <div class="month-nav">
         <button class="icon-btn" id="prevMonth" aria-label="Previous month">&#8249;</button>
@@ -441,20 +441,6 @@
         <div class="stat-tile"><div class="label">Leave taken</div><div class="value num" id="repLeaveDays">0</div></div>
       </div>
 
-      <div class="section-head"><h2>Account</h2></div>
-      <div class="card" id="accountCard">
-        <div id="accountSignedIn" style="display:none;">
-          <div class="rate-row"><span>Signed in as</span><span id="accountEmail" style="font-weight:600;"></span></div>
-          <button class="btn sm block" id="signOutBtn" style="margin-top:12px;">Sign out</button>
-        </div>
-        <div id="accountSignedOut" style="display:none;">
-          <div class="section-sub" style="margin:0;">Not signed in.</div>
-        </div>
-        <p style="margin:12px 0 0; text-align:center;">
-          <a href="privacy.html" target="_blank" style="color:var(--accent); font-weight:600; font-size:.82rem;">Privacy Policy</a>
-        </p>
-      </div>
-
       <div class="section-head"><h2>Estimated pay</h2></div>
       <div class="card">
         <div class="rate-row">
@@ -462,10 +448,30 @@
           <input type="number" id="hourlyRateInput" min="0" step="0.5" placeholder="0.00">
           <span>/hr</span>
         </div>
-        <div class="stat-tile" style="margin-top:12px; border:none; background:var(--surface-2); padding:12px;">
-          <div class="label">Estimated pay this period</div>
-          <div class="value num" id="repPayEstimate">$0</div>
+        <div class="rate-row" style="margin-top:10px;">
+          <span>Overtime multiplier</span>
+          <input type="number" id="otMultiplierInput" min="1" step="0.05" placeholder="1.5">
+          <span>×</span>
         </div>
+        <div class="rate-row" style="margin-top:10px;">
+          <span>Pay leave at full rate</span>
+          <input type="checkbox" id="payLeaveToggle" style="width:18px; height:18px; accent-color:var(--accent);">
+        </div>
+      </div>
+
+      <div class="section-head" style="margin-top:16px;"><h2>Payslip estimate</h2></div>
+      <div class="card" id="payBreakdown"></div>
+
+      <div class="section-head" style="margin-top:16px;">
+        <h2>Recurring pay items</h2>
+        <button class="btn sm primary" id="addPayItemBtn">+ Add</button>
+      </div>
+      <div class="section-sub">Things that apply every pay period on top of your hours — salary sacrifice, a fixed allowance, a standing deduction. Additions increase the estimate, deductions reduce it.</div>
+      <div class="card" id="payItemsList"><div class="section-sub" style="margin:0;">No recurring items yet.</div></div>
+
+      <div class="stat-tile" style="margin-top:14px; border:none; background:var(--surface-2); padding:12px;">
+        <div class="label">Estimated net pay this period</div>
+        <div class="value num" id="repPayEstimate">$0</div>
       </div>
 
       <div class="section-head"><h2>By shift type</h2></div>
@@ -488,7 +494,7 @@
     </div>
 
     <div class="view" id="view-types">
-      <div class="section-head"><h2>Shift types</h2><button class="btn sm primary" id="newTypeBtn">+ New</button></div>
+      <div class="section-head"><h2>Shifts</h2><button class="btn sm primary" id="newTypeBtn">+ New</button></div>
       <div class="section-sub">Set a start and end time and the duration is worked out for you. Overtime and leave are built in below.</div>
       <div class="card" id="builtinTypesList"></div>
       <div class="section-head" style="margin-top:20px;"><h2>Your types</h2></div>
@@ -497,7 +503,49 @@
 
     <div class="view" id="view-shared">
       <div id="sharedListPane">
-        <div class="section-head"><h2>Invite a friend</h2></div>
+        <div class="section-head"><h2>Account</h2></div>
+        <div class="card" id="accountCard">
+          <div id="accountSignedIn" style="display:none;">
+            <div class="rate-row"><span>Signed in as</span><span id="accountEmail" style="font-weight:600;"></span></div>
+            <button class="btn sm block" id="signOutBtn" style="margin-top:12px;">Sign out</button>
+          </div>
+          <div id="accountSignedOut" style="display:none;">
+            <div class="section-sub" style="margin:0;">Not signed in.</div>
+          </div>
+        </div>
+
+        <div class="section-head" style="margin-top:20px;"><h2>Change password</h2></div>
+        <div class="card">
+          <div class="form-row" style="margin-top:0;">
+            <label for="changePwNew">New password</label>
+            <input type="password" id="changePwNew" autocomplete="new-password">
+          </div>
+          <div class="form-row">
+            <label for="changePwConfirm">Confirm new password</label>
+            <input type="password" id="changePwConfirm" autocomplete="new-password">
+          </div>
+          <p id="changePwError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+          <button class="btn sm block" id="changePwBtn" style="margin-top:12px;">Update password</button>
+        </div>
+
+        <div class="section-head" style="margin-top:20px;"><h2>Appearance</h2></div>
+        <div class="card">
+          <div class="seg" id="themeSeg">
+            <button data-theme-choice="system">System</button>
+            <button data-theme-choice="light">Light</button>
+            <button data-theme-choice="dark">Dark</button>
+          </div>
+        </div>
+
+        <div class="section-head" style="margin-top:20px;"><h2>About</h2></div>
+        <div class="card">
+          <button class="btn sm block" id="aboutUsBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">About us</button>
+          <button class="btn sm block" id="helpBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Help</button>
+          <a class="btn sm block" href="mailto:jacob.fuller@outlook.com.au" style="text-align:left; justify-content:flex-start; margin-bottom:8px; text-decoration:none; display:flex; align-items:center;">Contact us</a>
+          <a class="btn sm block" href="privacy.html" target="_blank" style="text-align:left; justify-content:flex-start; text-decoration:none; display:flex; align-items:center;">Privacy Policy</a>
+        </div>
+
+        <div class="section-head" style="margin-top:24px;"><h2>Invite a friend</h2></div>
         <div class="section-sub">Not on Roster Board yet? Send them a quick invite to download it and set up their own account — then you can connect below.</div>
         <div class="card">
           <button class="btn primary block" id="inviteFriendBtn">Share invite</button>
@@ -555,17 +603,17 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 2l4 4-4 4M21 6H8a5 5 0 0 0 0 10h1M7 22l-4-4 4-4M3 18h13a5 5 0 0 0 0-10h-1"/></svg>
       Roster
     </button>
+    <button class="tab-btn" data-view="types">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
+      Shifts
+    </button>
     <button class="tab-btn" data-view="reports">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
       Reports
     </button>
-    <button class="tab-btn" data-view="types">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
-      Types
-    </button>
     <button class="tab-btn" data-view="shared">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M3 20c0-3.3 2.5-6 5.5-6 2.2 0 4.1 1.3 5 3.2M14.5 14c2.6.3 4.5 2.4 4.5 5"/></svg>
-      Shared
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
+      Account
     </button>
   </nav>
 
@@ -714,6 +762,36 @@
     </div>
   </div>
 
+  <div class="overlay center" id="payItemFormOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3 id="payItemFormTitle">Recurring pay item</h3>
+        <button class="close" id="payItemFormClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="form-row">
+          <label for="payItemName">Name</label>
+          <input type="text" id="payItemName" placeholder="e.g. Salary sacrifice">
+        </div>
+        <div class="form-row">
+          <label for="payItemType">Type</label>
+          <select id="payItemType">
+            <option value="deduction">Deduction (reduces pay)</option>
+            <option value="addition">Addition (adds to pay)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label for="payItemAmount">Amount per period</label>
+          <input type="number" id="payItemAmount" min="0" step="0.5" placeholder="0.00">
+        </div>
+        <div class="sheet-footer">
+          <button class="btn block" id="payItemFormCancel">Cancel</button>
+          <button class="btn primary block" id="payItemFormConfirm">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast"></div>
 </div>
 
@@ -730,7 +808,7 @@
   ];
   var OVERTIME_ID = "overtime";
   var OVERTIME_TYPE = {id:OVERTIME_ID, name:"Overtime", color:"#F0679E", ink:"#FFFFFF", isBuiltin:true};
-  var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick leave"} };
+  var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual Leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick Leave"} };
   var EVENT_CATS = {
     appointment: {color:"#3FC5C0", label:"Appointment"},
     family: {color:"#F0679E", label:"Social"},
@@ -818,6 +896,7 @@
     var msgEl = document.getElementById("miniModalMessage");
     msgEl.textContent = opts.message || "";
     msgEl.style.display = opts.message ? "block" : "none";
+    msgEl.style.whiteSpace = "pre-line";
     var inputWrap = document.getElementById("miniModalInputWrap");
     var input = document.getElementById("miniModalInput");
     if (opts.showInput === false){
@@ -1078,6 +1157,65 @@
   });
   document.getElementById("signOutBtn").addEventListener("click", function(){
     if (sb) sb.auth.signOut();
+  });
+
+  /* ---------------- change password ---------------- */
+  function setChangePwError(msg){
+    var el = document.getElementById("changePwError");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+  document.getElementById("changePwBtn").addEventListener("click", function(){
+    if (!sb || !currentUser){ setChangePwError("Sign in first."); return; }
+    var pw1 = document.getElementById("changePwNew").value;
+    var pw2 = document.getElementById("changePwConfirm").value;
+    if (!pw1 || pw1.length < 6){ setChangePwError("Password must be at least 6 characters."); return; }
+    if (pw1 !== pw2){ setChangePwError("Passwords don't match."); return; }
+    setChangePwError("");
+    var btn = document.getElementById("changePwBtn");
+    btn.disabled = true;
+    sb.auth.updateUser({ password: pw1 }).then(function(res){
+      btn.disabled = false;
+      if (res.error){ setChangePwError(res.error.message); return; }
+      document.getElementById("changePwNew").value = "";
+      document.getElementById("changePwConfirm").value = "";
+      toast("Password updated");
+    });
+  });
+
+  /* ---------------- appearance (theme) ---------------- */
+  function applyTheme(choice){
+    var root = document.documentElement;
+    if (choice === "light") root.setAttribute("data-theme", "light");
+    else if (choice === "dark") root.setAttribute("data-theme", "dark");
+    else root.removeAttribute("data-theme");
+    document.querySelectorAll("#themeSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-theme-choice") === choice);
+    });
+  }
+  document.querySelectorAll("#themeSeg button").forEach(function(b){
+    b.addEventListener("click", function(){
+      var choice = b.getAttribute("data-theme-choice");
+      state.settings.theme = choice;
+      applyTheme(choice);
+      saveStore();
+    });
+  });
+
+  /* ---------------- about / help ---------------- */
+  document.getElementById("aboutUsBtn").addEventListener("click", function(){
+    openMiniModal({
+      title: "About Roster Board",
+      message: "Roster Board is a shift calendar and roster app for managing your work schedule, overtime, leave and pay estimates in one place.\n\nIt's built to grow into a small family of everyday apps that all share one account and subscription.",
+      showInput: false, confirmLabel: "Close"
+    });
+  });
+  document.getElementById("helpBtn").addEventListener("click", function(){
+    openMiniModal({
+      title: "Help",
+      message: "Tap a day on the Calendar to add shifts, leave or personal events.\n\nUse Roster to build a repeating shift pattern and stamp it onto the calendar.\n\nUse Shifts to set up your own shift types and see built-in ones (Overtime, Annual Leave, Sick Leave).\n\nUse Reports for totals, pay estimates and exports.\n\nUse Account to sign in, manage your password, connect with others to share rosters, and invite friends.",
+      showInput: false, confirmLabel: "Close"
+    });
   });
 
   /* ---------------- shared rosters (connections) ---------------- */
@@ -1414,7 +1552,7 @@
         var lv = dataSrc.leave[key][0];
         var lline = document.createElement("div");
         lline.className = "leave-line";
-        lline.textContent = LEAVE_COLORS[lv.kind].label;
+        lline.textContent = LEAVE_COLORS[lv.kind].label + (lv.hours != null ? " " + fmtHours(lv.hours) + "h" : "");
         btn.appendChild(lline);
       }
       var dayEvents = (dataSrc.notes && dataSrc.notes[key]) || [];
@@ -1600,7 +1738,7 @@
         row.style.background = def.color;
         row.style.color = def.ink;
         var label = document.createElement("span");
-        label.textContent = def.label;
+        label.textContent = def.label + (l.hours != null ? " · " + fmtHours(l.hours) + "h" : "");
         row.appendChild(label);
         var rm = document.createElement("button");
         rm.textContent = "✕";
@@ -1850,8 +1988,19 @@
     saveStore(); renderAll(); toast("Hours updated");
   }
   function addLeave(dateKey, kind){
-    (state.leave[dateKey] = state.leave[dateKey] || []).push({id: mkId(), kind: kind});
-    saveStore(); renderAll(); toast(LEAVE_COLORS[kind].label + " added");
+    var def = LEAVE_COLORS[kind];
+    openMiniModal({
+      title: def.label,
+      message: "How many hours?",
+      inputType: "number", placeholder: "e.g. 8", min: 0.5, step: 0.5,
+      confirmLabel: "Add",
+      onConfirm: function(val){
+        var h = parseFloat(val);
+        if (!h || h <= 0){ toast("Enter a number of hours"); return; }
+        (state.leave[dateKey] = state.leave[dateKey] || []).push({id: mkId(), kind: kind, hours: h});
+        saveStore(); renderAll(); toast(def.label + " added");
+      }
+    });
   }
   function removeLeave(dateKey, id){
     if (state.leave[dateKey]) state.leave[dateKey] = state.leave[dateKey].filter(function(l){ return l.id!==id; });
@@ -1955,8 +2104,6 @@
       var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Built-in";
       name.appendChild(pill);
       meta.appendChild(name);
-      var hrs = document.createElement("div"); hrs.className="hrs num"; hrs.textContent="Enter hours each time";
-      meta.appendChild(hrs);
       row.appendChild(meta);
       builtin.appendChild(row);
     });
@@ -1969,8 +2116,6 @@
       var name = document.createElement("div"); name.className="name"; name.textContent=def.label+" ";
       var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Built-in"; name.appendChild(pill);
       meta.appendChild(name);
-      var hrs = document.createElement("div"); hrs.className="hrs num"; hrs.textContent="Logged as a day, not hours";
-      meta.appendChild(hrs);
       row.appendChild(meta);
       builtin.appendChild(row);
     });
@@ -2188,16 +2333,157 @@
         monthTotals[mk] = (monthTotals[mk]||0) + h;
       });
     });
-    var leaveDays = 0;
+    var leaveDays = 0, leaveHours = 0, leaveHoursByKind = { annual: 0, sick: 0 };
     Object.keys(state.leave).forEach(function(dateKey){
       var d = parseYmd(dateKey);
       if (d < range.start || d >= range.end) return;
-      leaveDays += state.leave[dateKey].length;
+      state.leave[dateKey].forEach(function(l){
+        leaveDays++;
+        var h = l.hours != null ? l.hours : 0;
+        leaveHours += h;
+        if (leaveHoursByKind[l.kind] != null) leaveHoursByKind[l.kind] += h;
+      });
     });
     return { byType:byType, daysWorked:Object.keys(daysWorked).length, totalHours:totalHours, otHours:otHours,
+      ordinaryHours: totalHours - otHours,
       weekdayHours:weekdayHours, weekendHours:weekendHours, weekdayCount:weekdayCount, weekendCount:weekendCount,
-      leaveDays:leaveDays, monthTotals:monthTotals };
+      leaveDays:leaveDays, leaveHours:leaveHours, leaveHoursByKind:leaveHoursByKind, monthTotals:monthTotals };
   }
+
+  /* ---------------- pay items + breakdown ---------------- */
+  function getPayItems(){ return state.settings.payItems || []; }
+  function fmtMoney(n){
+    var sign = n < 0 ? "-" : "";
+    return sign + "$" + Math.abs(Math.round(n*100)/100).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function computePay(stats){
+    var rate = state.settings.hourlyRate || 0;
+    var otMult = state.settings.otMultiplier || 1.5;
+    var payLeave = !!state.settings.payLeaveFullRate;
+    var lines = [];
+    var net = 0;
+
+    var ordinaryPay = stats.ordinaryHours * rate;
+    lines.push({ label: "Ordinary hours (" + fmtHours(stats.ordinaryHours) + "h)", amount: ordinaryPay });
+    net += ordinaryPay;
+
+    if (stats.otHours > 0){
+      var otPay = stats.otHours * rate * otMult;
+      lines.push({ label: "Overtime (" + fmtHours(stats.otHours) + "h @ " + otMult + "×)", amount: otPay });
+      net += otPay;
+    }
+
+    if (payLeave){
+      if (stats.leaveHoursByKind.annual > 0){
+        var aPay = stats.leaveHoursByKind.annual * rate;
+        lines.push({ label: "Annual Leave (" + fmtHours(stats.leaveHoursByKind.annual) + "h)", amount: aPay });
+        net += aPay;
+      }
+      if (stats.leaveHoursByKind.sick > 0){
+        var sPay = stats.leaveHoursByKind.sick * rate;
+        lines.push({ label: "Sick Leave (" + fmtHours(stats.leaveHoursByKind.sick) + "h)", amount: sPay });
+        net += sPay;
+      }
+    }
+
+    getPayItems().forEach(function(item){
+      var amt = item.type === "deduction" ? -Math.abs(item.amount) : Math.abs(item.amount);
+      lines.push({ label: item.name, amount: amt });
+      net += amt;
+    });
+
+    return { lines: lines, net: net };
+  }
+  function renderPayBreakdown(stats){
+    var wrap = document.getElementById("payBreakdown");
+    wrap.innerHTML = "";
+    var pay = computePay(stats);
+    if (!pay.lines.length){
+      wrap.appendChild(hintEl("Nothing logged this period yet."));
+      return;
+    }
+    pay.lines.forEach(function(line, i){
+      if (i > 0){ var d = document.createElement("div"); d.className = "row-divider"; wrap.appendChild(d); }
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex; justify-content:space-between; padding:9px 4px; font-size:.85rem;";
+      var neg = line.amount < 0;
+      row.innerHTML = "<span style='color:var(--text-dim)'>" + line.label + "</span><b class='num'" + (neg ? " style='color:var(--danger)'" : "") + ">" + fmtMoney(line.amount) + "</b>";
+      wrap.appendChild(row);
+    });
+    return pay.net;
+  }
+  function renderPayItemsList(){
+    var wrap = document.getElementById("payItemsList");
+    wrap.innerHTML = "";
+    var items = getPayItems();
+    if (!items.length){
+      wrap.appendChild(hintEl("No recurring items yet."));
+      return;
+    }
+    items.forEach(function(item, i){
+      if (i > 0){ var d = document.createElement("div"); d.className = "row-divider"; wrap.appendChild(d); }
+      var row = document.createElement("div");
+      row.className = "rate-row";
+      var label = document.createElement("span");
+      label.textContent = item.name + " · " + (item.type === "deduction" ? "-" : "+") + fmtMoney(Math.abs(item.amount));
+      row.appendChild(label);
+      var btns = document.createElement("div");
+      btns.style.display = "flex"; btns.style.gap = "6px";
+      var editBtn = document.createElement("button");
+      editBtn.className = "icon-btn"; editBtn.textContent = "✎"; editBtn.setAttribute("aria-label","Edit");
+      editBtn.addEventListener("click", function(){ openPayItemForm(item.id); });
+      var delBtn = document.createElement("button");
+      delBtn.className = "icon-btn"; delBtn.textContent = "✕"; delBtn.setAttribute("aria-label","Remove");
+      delBtn.addEventListener("click", function(){
+        state.settings.payItems = getPayItems().filter(function(p){ return p.id !== item.id; });
+        saveStore(); renderReports();
+      });
+      btns.appendChild(editBtn); btns.appendChild(delBtn);
+      row.appendChild(btns);
+      wrap.appendChild(row);
+    });
+  }
+  var editingPayItemId = null;
+  function openPayItemForm(id){
+    editingPayItemId = id || null;
+    var item = id ? getPayItems().find(function(p){ return p.id === id; }) : null;
+    document.getElementById("payItemFormTitle").textContent = item ? "Edit pay item" : "Recurring pay item";
+    document.getElementById("payItemName").value = item ? item.name : "";
+    document.getElementById("payItemType").value = item ? item.type : "deduction";
+    document.getElementById("payItemAmount").value = item ? item.amount : "";
+    document.getElementById("payItemFormOverlay").classList.add("show");
+  }
+  function closePayItemForm(){
+    document.getElementById("payItemFormOverlay").classList.remove("show");
+  }
+  document.getElementById("addPayItemBtn").addEventListener("click", function(){ openPayItemForm(null); });
+  document.getElementById("payItemFormClose").addEventListener("click", closePayItemForm);
+  document.getElementById("payItemFormCancel").addEventListener("click", closePayItemForm);
+  document.getElementById("payItemFormOverlay").addEventListener("click", function(e){ if (e.target === this) closePayItemForm(); });
+  document.getElementById("payItemFormConfirm").addEventListener("click", function(){
+    var name = document.getElementById("payItemName").value.trim();
+    var type = document.getElementById("payItemType").value;
+    var amount = parseFloat(document.getElementById("payItemAmount").value);
+    if (!name){ toast("Enter a name"); return; }
+    if (!amount || amount <= 0){ toast("Enter an amount"); return; }
+    var items = getPayItems();
+    if (editingPayItemId){
+      var existing = items.find(function(p){ return p.id === editingPayItemId; });
+      if (existing){ existing.name = name; existing.type = type; existing.amount = amount; }
+    } else {
+      items.push({ id: mkId(), name: name, type: type, amount: amount });
+    }
+    state.settings.payItems = items;
+    saveStore(); closePayItemForm(); renderReports();
+  });
+  document.getElementById("otMultiplierInput").addEventListener("change", function(){
+    state.settings.otMultiplier = parseFloat(this.value) || 1.5;
+    saveStore(); renderReports();
+  });
+  document.getElementById("payLeaveToggle").addEventListener("change", function(){
+    state.settings.payLeaveFullRate = this.checked;
+    saveStore(); renderReports();
+  });
 
   function renderReports(){
     var range = periodRange();
@@ -2214,7 +2500,11 @@
 
     var rate = state.settings.hourlyRate || 0;
     document.getElementById("hourlyRateInput").value = rate || "";
-    document.getElementById("repPayEstimate").textContent = "$" + (Math.round(stats.totalHours * rate * 100)/100).toLocaleString();
+    document.getElementById("otMultiplierInput").value = state.settings.otMultiplier || 1.5;
+    document.getElementById("payLeaveToggle").checked = !!state.settings.payLeaveFullRate;
+    renderPayItemsList();
+    var netPay = renderPayBreakdown(stats) || 0;
+    document.getElementById("repPayEstimate").textContent = fmtMoney(netPay);
 
     var bars = document.getElementById("repBars");
     bars.innerHTML = "";
@@ -2258,7 +2548,7 @@
         ["Total overtime", fmtHours(stats.otHours) + " h"],
         ["Busiest month", busiestLabel + (busiestKey ? " (" + fmtHours(busiestVal) + " h)" : "")],
         ["Leave days taken", stats.leaveDays],
-        ["Estimated pay", "$" + (Math.round(stats.totalHours*rate*100)/100).toLocaleString()]
+        ["Estimated pay", fmtMoney(computePay(stats).net)]
       ];
       rows2.forEach(function(r, i){
         if (i>0){ var d=document.createElement("div"); d.className="row-divider"; yir.appendChild(d); }
@@ -2348,6 +2638,7 @@
     document.querySelectorAll(".view").forEach(function(el){ el.classList.remove("active"); });
     document.getElementById("view-"+v).classList.add("active");
     document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-view")===v); });
+    document.getElementById("appHeader").style.display = (v === "calendar") ? "flex" : "none";
     if (v === "roster") renderRoster();
     if (v === "shared") refreshConnections();
   }
@@ -2411,7 +2702,7 @@
         var h = effectiveHours(s);
         totalHours += h;
         return t ? entryDisplayName(s) + " (" + fmtHours(h) + "h)" : "";
-      }).concat(lv.map(function(l){ return LEAVE_COLORS[l.kind].label; }));
+      }).concat(lv.map(function(l){ return LEAVE_COLORS[l.kind].label + (l.hours != null ? " (" + fmtHours(l.hours) + "h)" : ""); }));
       if (names.length){
         doc.text(pad2(cur.getDate())+"/"+pad2(cur.getMonth()+1), 40, y);
         doc.text(WEEKDAY_FULL[cur.getDay()].slice(0,3), 130, y);
@@ -2464,6 +2755,7 @@
 
   /* ---------------- boot ---------------- */
   loadIntoState();
+  applyTheme(state.settings.theme || "system");
   renderAll();
   initAuth();
 

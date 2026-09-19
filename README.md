@@ -8,6 +8,42 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Account tab**: the last tab is now called Account (previously Shared) and
+  is the home for everything account-related — signed-in email/sign out,
+  Change password, Appearance (theme), About us/Help/Contact us/Privacy
+  Policy, and the existing Invite a friend + Share your roster sections all
+  live here now, in that order. Reports no longer has an Account section.
+- **Light/dark theme**: Appearance card on the Account tab lets you pick
+  System (follows your device), Light, or Dark — takes effect immediately
+  and syncs with your account like everything else.
+- **Change password**: set a new password right from the Account tab
+  without needing a reset email, as long as you're signed in.
+- **About us / Help / Contact us / Privacy Policy**: quick info links added
+  to the Account tab — About us and Help open an in-app info screen, Contact
+  us opens an email, Privacy Policy opens the existing privacy page.
+- **Header only shows on Calendar**: the month title, weekday row, and the
+  hours/overtime/shifts stat row used to appear at the top of every tab —
+  they now only show on the Calendar tab, so the other tabs have more room.
+- **Shifts tab** (renamed from Types): same place you manage shift types,
+  just a clearer name. Tab order is now Calendar, Roster, Shifts, Reports,
+  Account.
+- **Annual Leave and Sick Leave now ask how many hours**: instead of logging
+  as a fixed full day, tapping either one prompts for the number of hours —
+  useful since a sick day might be 1, 2, or 12 hours depending on the job.
+  Both are now capitalized throughout ("Annual Leave", "Sick Leave"), and
+  the calendar chip, day sheet, and PDF export all show the hours logged.
+  The explanatory subtext under the built-in shift types (e.g. "Enter hours
+  each time") has been removed from the Shifts tab list to keep it tidy —
+  the built-in types themselves are unchanged.
+- **Payslip-style pay breakdown**: Reports → Estimated pay is now a full
+  itemized breakdown — Ordinary hours, Overtime (at your multiplier),
+  optionally Leave at full rate — plus a **Recurring pay items** section
+  where you can add your own standing additions or deductions (e.g. salary
+  sacrifice, a fixed allowance) that apply every period. Everything rolls
+  into a single "Estimated net pay this period" total, and the year-in-review
+  card uses the same calculation.
+- **Roster tab visual fix**: cleaned up a rendering artifact that could show
+  thin black gaps between cells at the edge of the weekly pattern grid.
 - **Invite a friend**: the Shared tab now has an "Invite a friend" section
   above the roster-connect section — a "Share invite" button that opens your
   phone's native share sheet (or copies a message + the app's link to your
@@ -406,7 +442,7 @@ JavaScript, no framework). Data model, in `localStorage` under the key
   `{id, typeId, hours?, tag?, baseTypeId?}` — `hours` is only set on
   overtime entries, and `baseTypeId` links an overtime entry to the shift
   type it's overtime for (used for its "Overtime – Dayshift" label and color)
-- `leave` — keyed by date, array of `{id, kind: "annual"|"sick"}`
+- `leave` — keyed by date, array of `{id, kind: "annual"|"sick", hours}`
 - `notes` — personal events, keyed by date, array of
   `{id, text, category: "appointment"|"family"|"reminder"|"other", time?}`
 - `swaps` — keyed by date, array of `{id, kind: "off"|"on", partner, note,
@@ -416,7 +452,9 @@ JavaScript, no framework). Data model, in `localStorage` under the key
   if you picked a different "Swapping for" type)
 - `roster` — `{weeks, pattern}`, where `pattern[weekIndex][dayIndex]` is an
   array of type ids for that day of the repeating cycle (`dayIndex` 0 = Monday)
-- `settings` — `{hourlyRate}`
+- `settings` — `{hourlyRate, otMultiplier, payLeaveFullRate, payItems, theme}` —
+  `payItems` is an array of `{id, name, type: "addition"|"deduction", amount}`
+  recurring pay line items; `theme` is `"system"|"light"|"dark"`
 
 If you change what `index.html` caches or add files, bump the `CACHE`
 version string at the top of `sw.js` so returning visitors pick up the
