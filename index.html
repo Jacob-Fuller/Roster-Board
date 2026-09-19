@@ -470,6 +470,50 @@
       <div class="section-head" style="margin-top:20px;"><h2>Your types</h2></div>
       <div class="card" id="typesList"></div>
     </div>
+
+    <div class="view" id="view-shared">
+      <div id="sharedListPane">
+        <div class="section-head"><h2>Share your roster</h2></div>
+        <div class="section-sub">Connect with someone to swap views of each other's work schedule — shifts, overtime, leave and swaps only. Your personal events, notes and pay rate are never shared.</div>
+        <div class="card">
+          <div class="form-row" style="margin-top:0;">
+            <label for="inviteEmailInput">Invite by email</label>
+            <input type="email" id="inviteEmailInput" placeholder="name@example.com">
+          </div>
+          <p id="inviteError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+          <button class="btn primary block" id="inviteSendBtn" style="margin-top:12px;">Send invite</button>
+        </div>
+
+        <div class="section-head" id="sharedRequestsHead" style="margin-top:20px; display:none;"><h2>Requests for you</h2></div>
+        <div class="card" id="sharedRequestsList" style="display:none;"></div>
+
+        <div class="section-head" id="sharedSentHead" style="margin-top:20px; display:none;"><h2>Sent, awaiting reply</h2></div>
+        <div class="card" id="sharedSentList" style="display:none;"></div>
+
+        <div class="section-head" style="margin-top:20px;"><h2>Connected</h2></div>
+        <div class="card" id="sharedConnectedList"><div class="section-sub" style="margin:0;">No connections yet.</div></div>
+      </div>
+
+      <div id="sharedRosterPane" style="display:none;">
+        <div class="section-head">
+          <button class="icon-btn" id="sharedBackBtn" aria-label="Back">&#8249;</button>
+          <h2 id="sharedRosterEmail" style="font-size:1rem;"></h2>
+          <span></span>
+        </div>
+        <div class="section-head">
+          <div class="month-nav">
+            <button class="icon-btn" id="sharedPrevMonth" aria-label="Previous month">&#8249;</button>
+            <button class="icon-btn" id="sharedNextMonth" aria-label="Next month">&#8250;</button>
+          </div>
+          <h2 id="sharedMonthTitle" style="font-size:1rem;">September</h2>
+          <span></span>
+        </div>
+        <div class="weekday-row" style="padding:0 0 6px;">
+          <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+        </div>
+        <div class="cal-grid" id="sharedCalGrid"></div>
+      </div>
+    </div>
   </main>
 
   <nav class="tabbar">
@@ -488,6 +532,10 @@
     <button class="tab-btn" data-view="types">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
       Types
+    </button>
+    <button class="tab-btn" data-view="shared">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.6"/><path d="M3 20c0-3.3 2.5-6 5.5-6 2.2 0 4.1 1.3 5 3.2M14.5 14c2.6.3 4.5 2.4 4.5 5"/></svg>
+      Shared
     </button>
   </nav>
 
@@ -940,26 +988,195 @@
     if (sb) sb.auth.signOut();
   });
 
+  /* ---------------- shared rosters (connections) ---------------- */
+  var connections = [];
+  var sharedRoster = null; // { connectionId, ownerId, email, month, data:{shifts,leave,swaps,typesById} }
+
+  function setInviteError(msg){
+    var el = document.getElementById("inviteError");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function refreshConnections(){
+    if (!sb || !currentUser) return;
+    var uid = currentUser.id;
+    sb.from("connections").select("*").or("requester_id.eq." + uid + ",target_id.eq." + uid)
+      .then(function(res){
+        if (res.error){ toast("Couldn't load connections"); return; }
+        connections = res.data || [];
+        renderSharedList();
+      });
+  }
+
+  function otherPartyEmail(conn){
+    return conn.requester_id === currentUser.id ? conn.target_email : conn.requester_email;
+  }
+
+  function renderSharedList(){
+    var uid = currentUser ? currentUser.id : null;
+    var incoming = connections.filter(function(c){ return c.target_id === uid && c.status === "pending"; });
+    var outgoing = connections.filter(function(c){ return c.requester_id === uid && c.status === "pending"; });
+    var accepted = connections.filter(function(c){ return c.status === "accepted"; });
+
+    var reqHead = document.getElementById("sharedRequestsHead");
+    var reqList = document.getElementById("sharedRequestsList");
+    reqHead.style.display = incoming.length ? "flex" : "none";
+    reqList.style.display = incoming.length ? "block" : "none";
+    reqList.innerHTML = "";
+    incoming.forEach(function(c){
+      var row = document.createElement("div");
+      row.className = "rate-row";
+      var label = document.createElement("span");
+      label.textContent = otherPartyEmail(c);
+      row.appendChild(label);
+      var btns = document.createElement("div");
+      btns.style.display = "flex"; btns.style.gap = "8px";
+      var acceptBtn = document.createElement("button");
+      acceptBtn.className = "btn sm primary"; acceptBtn.textContent = "Accept";
+      acceptBtn.addEventListener("click", function(){ respondConnection(c.id, true); });
+      var declineBtn = document.createElement("button");
+      declineBtn.className = "btn sm"; declineBtn.textContent = "Decline";
+      declineBtn.addEventListener("click", function(){ respondConnection(c.id, false); });
+      btns.appendChild(acceptBtn); btns.appendChild(declineBtn);
+      row.appendChild(btns);
+      reqList.appendChild(row);
+    });
+
+    var sentHead = document.getElementById("sharedSentHead");
+    var sentList = document.getElementById("sharedSentList");
+    sentHead.style.display = outgoing.length ? "flex" : "none";
+    sentList.style.display = outgoing.length ? "block" : "none";
+    sentList.innerHTML = "";
+    outgoing.forEach(function(c){
+      var row = document.createElement("div");
+      row.className = "rate-row";
+      var label = document.createElement("span");
+      label.textContent = otherPartyEmail(c) + " — pending";
+      row.appendChild(label);
+      var cancelBtn = document.createElement("button");
+      cancelBtn.className = "btn sm"; cancelBtn.textContent = "Cancel";
+      cancelBtn.addEventListener("click", function(){ removeConnection(c.id); });
+      row.appendChild(cancelBtn);
+      sentList.appendChild(row);
+    });
+
+    var connList = document.getElementById("sharedConnectedList");
+    connList.innerHTML = "";
+    if (!accepted.length){
+      var empty = document.createElement("div");
+      empty.className = "section-sub"; empty.style.margin = "0";
+      empty.textContent = "No connections yet.";
+      connList.appendChild(empty);
+    }
+    accepted.forEach(function(c){
+      var row = document.createElement("div");
+      row.className = "rate-row";
+      var viewBtn = document.createElement("button");
+      viewBtn.className = "btn sm block"; viewBtn.style.textAlign = "left"; viewBtn.style.justifyContent = "flex-start";
+      viewBtn.textContent = otherPartyEmail(c);
+      viewBtn.addEventListener("click", function(){ openSharedRoster(c); });
+      row.appendChild(viewBtn);
+      var removeBtn = document.createElement("button");
+      removeBtn.className = "icon-btn"; removeBtn.textContent = "✕"; removeBtn.setAttribute("aria-label", "Remove connection");
+      removeBtn.addEventListener("click", function(){ removeConnection(c.id); });
+      row.appendChild(removeBtn);
+      connList.appendChild(row);
+    });
+  }
+
+  function respondConnection(id, accept){
+    if (!sb) return;
+    sb.rpc("respond_connection", { p_connection_id: id, p_accept: accept }).then(function(res){
+      if (res.error){ toast(res.error.message || "Couldn't respond to request"); return; }
+      toast(accept ? "Connected" : "Request declined");
+      refreshConnections();
+    });
+  }
+  function removeConnection(id){
+    if (!sb) return;
+    sb.rpc("remove_connection", { p_connection_id: id }).then(function(res){
+      if (res.error){ toast("Couldn't remove connection"); return; }
+      refreshConnections();
+    });
+  }
+
+  document.getElementById("inviteSendBtn").addEventListener("click", function(){
+    if (!sb) return;
+    var email = document.getElementById("inviteEmailInput").value.trim();
+    if (!email){ setInviteError("Enter an email address."); return; }
+    setInviteError("");
+    var btn = document.getElementById("inviteSendBtn");
+    btn.disabled = true;
+    sb.rpc("invite_connection", { p_email: email }).then(function(res){
+      btn.disabled = false;
+      if (res.error){ setInviteError(res.error.message || "Couldn't send invite"); return; }
+      document.getElementById("inviteEmailInput").value = "";
+      toast("Invite sent");
+      refreshConnections();
+    });
+  });
+
+  function openSharedRoster(conn){
+    if (!sb) return;
+    var ownerId = conn.requester_id === currentUser.id ? conn.target_id : conn.requester_id;
+    sb.rpc("get_shared_roster", { p_owner_id: ownerId }).then(function(res){
+      if (res.error){ toast(res.error.message || "Couldn't load that roster"); return; }
+      var data = res.data || { types: [], shifts: {}, leave: {}, swaps: {} };
+      var typesById = {};
+      typesById[OVERTIME_ID] = OVERTIME_TYPE;
+      (data.types || []).forEach(function(t){ typesById[t.id] = t; });
+      sharedRoster = {
+        connectionId: conn.id, ownerId: ownerId, email: otherPartyEmail(conn),
+        month: startOfMonth(new Date()),
+        data: { shifts: data.shifts || {}, leave: data.leave || {}, swaps: data.swaps || {}, typesById: typesById }
+      };
+      document.getElementById("sharedListPane").style.display = "none";
+      document.getElementById("sharedRosterPane").style.display = "block";
+      document.getElementById("sharedRosterEmail").textContent = sharedRoster.email;
+      renderSharedRoster();
+    });
+  }
+  function renderSharedRoster(){
+    if (!sharedRoster) return;
+    document.getElementById("sharedMonthTitle").textContent =
+      MONTH_LABELS[sharedRoster.month.getMonth()] + " " + sharedRoster.month.getFullYear();
+    renderCalendarGrid("sharedCalGrid", sharedRoster.month, sharedRoster.data, {});
+  }
+  document.getElementById("sharedBackBtn").addEventListener("click", function(){
+    sharedRoster = null;
+    document.getElementById("sharedRosterPane").style.display = "none";
+    document.getElementById("sharedListPane").style.display = "block";
+  });
+  document.getElementById("sharedPrevMonth").addEventListener("click", function(){
+    sharedRoster.month = addMonths(sharedRoster.month, -1); renderSharedRoster();
+  });
+  document.getElementById("sharedNextMonth").addEventListener("click", function(){
+    sharedRoster.month = addMonths(sharedRoster.month, 1); renderSharedRoster();
+  });
+
   function effectiveHours(entry){
     if (entry.hours != null) return entry.hours;
     var t = state.typesById[entry.typeId];
     return t ? (t.hours || 0) : 0;
   }
-  function entryDisplayName(entry){
-    var t = state.typesById[entry.typeId];
+  function entryDisplayName(entry, typesById){
+    typesById = typesById || state.typesById;
+    var t = typesById[entry.typeId];
     if (!t) return "";
     if (entry.typeId === OVERTIME_ID && entry.baseTypeId){
-      var bt = state.typesById[entry.baseTypeId];
+      var bt = typesById[entry.baseTypeId];
       if (bt) return "Overtime – " + bt.name;
     }
     return t.name;
   }
-  function entryColor(entry){
+  function entryColor(entry, typesById){
+    typesById = typesById || state.typesById;
     if (entry.typeId === OVERTIME_ID && entry.baseTypeId){
-      var bt = state.typesById[entry.baseTypeId];
+      var bt = typesById[entry.baseTypeId];
       if (bt) return {bg: bt.color, ink: bt.ink};
     }
-    var t = state.typesById[entry.typeId];
+    var t = typesById[entry.typeId];
     return t ? {bg: t.color, ink: t.ink} : {bg:"#9C9585", ink:"#FFFFFF"};
   }
 
@@ -986,14 +1203,25 @@
 
   /* ---------------- render: calendar ---------------- */
   function renderCalendar(){
-    var grid = document.getElementById("calGrid");
+    renderCalendarGrid("calGrid", state.calMonth, {
+      shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById
+    }, { onDayClick: openDaySheet });
+    renderHeader();
+  }
+
+  // Generic month-grid renderer, reused for the user's own calendar and for a
+  // connected person's read-only shared roster (opts.onDayClick omitted there).
+  function renderCalendarGrid(gridId, monthDate, dataSrc, opts){
+    opts = opts || {};
+    var grid = document.getElementById(gridId);
     grid.innerHTML = "";
-    var cells = buildMonthCells(state.calMonth);
+    var cells = buildMonthCells(monthDate);
     var today = new Date();
+    var typesById = dataSrc.typesById || {};
     cells.forEach(function(cell){
       var key = ymd(cell.date);
-      var hasLeave = (state.leave[key]||[]).length > 0;
-      var btn = document.createElement("button");
+      var hasLeave = ((dataSrc.leave && dataSrc.leave[key])||[]).length > 0;
+      var btn = document.createElement(opts.onDayClick ? "button" : "div");
       btn.className = "day-cell" + (cell.inMonth ? "" : " out") + (isSameDay(cell.date, today) ? " today" : "") + (hasLeave ? " leave" : "");
       btn.setAttribute("data-date", key);
 
@@ -1004,12 +1232,12 @@
       numRow.appendChild(numSpan);
       btn.appendChild(numRow);
 
-      var daySwaps = state.swaps[key] || [];
+      var daySwaps = (dataSrc.swaps && dataSrc.swaps[key]) || [];
       var maxSwapChips = 2;
       var swappedInShiftIds = {};
       daySwaps.forEach(function(rec){ if (rec.kind === "on" && rec.shiftEntryId) swappedInShiftIds[rec.shiftEntryId] = true; });
       daySwaps.slice(0, maxSwapChips).forEach(function(rec){
-        var col = entryColor(rec);
+        var col = entryColor(rec, typesById);
         var chip = document.createElement("div");
         chip.className = "chip swap-chip-cal";
         var strip = document.createElement("span");
@@ -1020,7 +1248,7 @@
         base.className = "swap-chip-cal-base";
         base.style.background = col.bg;
         base.style.color = col.ink;
-        base.textContent = entryDisplayName(rec) || "Shift";
+        base.textContent = entryDisplayName(rec, typesById) || "Shift";
         chip.appendChild(base);
         btn.appendChild(chip);
       });
@@ -1031,13 +1259,13 @@
         btn.appendChild(moreS);
       }
 
-      var dayShifts = (state.shifts[key] || []).filter(function(s){ return !swappedInShiftIds[s.id]; });
+      var dayShifts = ((dataSrc.shifts && dataSrc.shifts[key]) || []).filter(function(s){ return !swappedInShiftIds[s.id]; });
       var maxChips = 3;
       dayShifts.slice(0, maxChips).forEach(function(s){
-        var t = state.typesById[s.typeId];
+        var t = typesById[s.typeId];
         if (!t) return;
         var isOT = s.typeId === OVERTIME_ID;
-        var col = entryColor(s);
+        var col = entryColor(s, typesById);
         var chip = document.createElement("div");
         if (isOT){
           chip.className = "chip ot-chip";
@@ -1049,7 +1277,7 @@
           baseLine.className = "ot-chip-base";
           baseLine.style.background = col.bg;
           baseLine.style.color = col.ink;
-          var bt = state.typesById[s.baseTypeId];
+          var bt = typesById[s.baseTypeId];
           baseLine.textContent = (bt ? bt.name : "Overtime") + (s.hours!=null ? " " + fmtHours(s.hours) + "h" : "");
           chip.appendChild(baseLine);
         } else {
@@ -1057,7 +1285,7 @@
           chip.style.background = col.bg;
           chip.style.color = col.ink;
           var label = document.createElement("span");
-          label.textContent = entryDisplayName(s);
+          label.textContent = entryDisplayName(s, typesById);
           chip.appendChild(label);
           if (s.tag){
             var td = document.createElement("span");
@@ -1074,13 +1302,13 @@
         btn.appendChild(more);
       }
       if (hasLeave && dayShifts.length <= maxChips){
-        var lv = state.leave[key][0];
+        var lv = dataSrc.leave[key][0];
         var lline = document.createElement("div");
         lline.className = "leave-line";
         lline.textContent = LEAVE_COLORS[lv.kind].label;
         btn.appendChild(lline);
       }
-      var dayEvents = state.notes[key] || [];
+      var dayEvents = (dataSrc.notes && dataSrc.notes[key]) || [];
       var maxEvents = 2;
       dayEvents.slice(0, maxEvents).forEach(function(n){
         var cat = EVENT_CATS[n.category] || EVENT_CATS.other;
@@ -1102,15 +1330,19 @@
         btn.appendChild(moreE);
       }
 
-      btn.addEventListener("click", function(){ openDaySheet(key); });
+      if (opts.onDayClick){
+        var clickKey = key;
+        btn.addEventListener("click", function(){ opts.onDayClick(clickKey); });
+      }
       grid.appendChild(btn);
     });
-    renderHeader();
-    fitPairedChips(".swap-chip-cal");
-    fitPairedChips(".ot-chip");
+    if (opts.fit !== false){
+      fitPairedChips("#" + gridId + " .swap-chip-cal");
+      fitPairedChips("#" + gridId + " .ot-chip");
+    }
   }
-  function fitPairedChips(chipSelector){
-    document.querySelectorAll("#calGrid " + chipSelector).forEach(function(chip){
+  function fitPairedChips(fullSelector){
+    document.querySelectorAll(fullSelector).forEach(function(chip){
       var base = chip.querySelector(".ot-chip-base, .swap-chip-cal-base");
       var strip = chip.querySelector(".ot-chip-strip, .swap-chip-cal-strip");
       if (!base || !strip) return;
@@ -2008,6 +2240,7 @@
     document.getElementById("view-"+v).classList.add("active");
     document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-view")===v); });
     if (v === "roster") renderRoster();
+    if (v === "shared") refreshConnections();
   }
 
   /* ---------------- export ---------------- */

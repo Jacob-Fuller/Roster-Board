@@ -8,6 +8,16 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Shared rosters**: a new Shared tab lets you connect with another account
+  (invite by email, they accept or decline) so you can each see the other's
+  work schedule — shift types, overtime, leave and swaps, read-only, month by
+  month. Nothing else is shared: personal events/notes, pay rate, and reports
+  never leave your own account. Sharing is mutual once accepted — remove a
+  connection any time from either side with the ✕. Needs one more one-time
+  SQL step in Supabase — see "Setting up your Supabase project" below.
+- **Login screen redesign**: full-screen branded background (app icon, name,
+  tagline) instead of the dimmed calendar showing through behind the sign-in
+  card.
 - **Accounts + cloud sync (Supabase)**: on open, the app now asks you to sign up
   or log in. Signing in syncs your data (types, shifts, notes, leave, swaps,
   roster, settings) to a Supabase project instead of just the local browser —
@@ -153,11 +163,163 @@ table that stores each account's data.
 3. Optional, for faster testing: Authentication → Providers → Email → turn
    off "Confirm email" so new accounts can log in immediately instead of
    needing to click a confirmation link first. Leave it on for real users.
+4. Authentication → URL Configuration → set **Site URL** to your real
+   deployed URL (e.g. `https://roster-board.onrender.com`) and add
+   `https://roster-board.onrender.com/*` under **Redirect URLs**, so email
+   confirmation links work instead of pointing at localhost.
 
-That's the only manual step — sign-up, login, and sync are already wired up
+That's the account/sync setup — sign-up, login, and sync are already wired up
 in the app itself. This is also the foundation for sharing one account/login
 across other apps under the same brand later: they'd point at this same
 Supabase project and reuse the same `auth.users` accounts.
+
+### Shared rosters — one more SQL step
+
+Run this in the same SQL Editor to add the "Shared" tab's connect/accept
+system and a locked-down function that hands over only the work-roster part
+of a connected account's data:
+
+```sql
+create table if not exists connections (
+  id uuid primary key default gen_random_uuid(),
+  requester_id uuid not null references auth.users(id) on delete cascade,
+  target_id uuid not null references auth.users(id) on delete cascade,
+  requester_email text not null,
+  target_email text not null,
+  status text not null default 'pending' check (status in ('pending','accepted','declined')),
+  created_at timestamptz not null default now(),
+  responded_at timestamptz,
+  unique (requester_id, target_id)
+);
+
+alter table connections enable row level security;
+
+create policy "Users can view their own connections"
+  on connections for select
+  using (auth.uid() = requester_id or auth.uid() = target_id);
+
+-- No insert/update policies on purpose — all writes go through the
+-- functions below, which check the rules themselves.
+
+create or replace function invite_connection(p_email text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_target_id uuid;
+  v_requester_email text;
+  v_existing record;
+begin
+  select id into v_target_id from auth.users where lower(email) = lower(p_email) limit 1;
+  if v_target_id is null then
+    raise exception 'No account found with that email';
+  end if;
+  if v_target_id = auth.uid() then
+    raise exception 'You can''t connect with yourself';
+  end if;
+
+  select email into v_requester_email from auth.users where id = auth.uid();
+
+  select * into v_existing from connections
+    where (requester_id = auth.uid() and target_id = v_target_id)
+       or (requester_id = v_target_id and target_id = auth.uid())
+    limit 1;
+
+  if found then
+    if v_existing.status = 'accepted' then
+      raise exception 'You''re already connected with this person';
+    elsif v_existing.status = 'pending' then
+      raise exception 'A request is already pending with this person';
+    else
+      delete from connections where id = v_existing.id;
+    end if;
+  end if;
+
+  insert into connections (requester_id, target_id, requester_email, target_email, status)
+  values (auth.uid(), v_target_id, v_requester_email, p_email, 'pending');
+end;
+$$;
+
+create or replace function respond_connection(p_connection_id uuid, p_accept boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update connections
+    set status = case when p_accept then 'accepted' else 'declined' end,
+        responded_at = now()
+    where id = p_connection_id and target_id = auth.uid() and status = 'pending';
+
+  if not found then
+    raise exception 'Request not found';
+  end if;
+end;
+$$;
+
+create or replace function remove_connection(p_connection_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from connections
+    where id = p_connection_id
+      and (requester_id = auth.uid() or target_id = auth.uid());
+end;
+$$;
+
+create or replace function get_shared_roster(p_owner_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_connected boolean;
+  v_data jsonb;
+begin
+  select exists (
+    select 1 from connections
+      where status = 'accepted'
+        and ((requester_id = auth.uid() and target_id = p_owner_id)
+          or (requester_id = p_owner_id and target_id = auth.uid()))
+  ) into v_connected;
+
+  if not v_connected then
+    raise exception 'Not connected with this account';
+  end if;
+
+  select data into v_data from app_data where user_id = p_owner_id;
+
+  return jsonb_build_object(
+    'types', coalesce(v_data->'types', '[]'::jsonb),
+    'shifts', coalesce(v_data->'shifts', '{}'::jsonb),
+    'leave', coalesce(v_data->'leave', '{}'::jsonb),
+    'swaps', coalesce(v_data->'swaps', '{}'::jsonb)
+  );
+end;
+$$;
+
+grant execute on function invite_connection(text) to authenticated;
+grant execute on function respond_connection(uuid, boolean) to authenticated;
+grant execute on function remove_connection(uuid) to authenticated;
+grant execute on function get_shared_roster(uuid) to authenticated;
+```
+
+Notes on how this stays private:
+- `get_shared_roster` only ever returns `types`, `shifts`, `leave` and
+  `swaps` — it never touches `notes` (personal events) or `settings` (hourly
+  rate), so those two never leave the owner's own account no matter what.
+- It also refuses to return anything unless an `accepted` connection exists
+  between the caller and the account being viewed, checked server-side.
+- A person can only be invited by an email that already has an account —
+  there's no way to probe for arbitrary emails otherwise, since the function
+  only ever says "sent" or "no account found."
 
 ## Run it locally
 
