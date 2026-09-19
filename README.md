@@ -8,6 +8,18 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Invite a friend**: the Shared tab now has an "Invite a friend" section
+  above the roster-connect section — a "Share invite" button that opens your
+  phone's native share sheet (or copies a message + the app's link to your
+  clipboard on desktop) so you can send it to someone who doesn't have the
+  app yet. Separate from connecting rosters — this is just for getting
+  someone onto the app so you can connect with them afterwards.
+- **Password recovery + Privacy Policy**: added a "Forgot password?" link on
+  the login screen (emails a reset link via Supabase; opening it lets you set
+  a new password right in the app) and a Privacy Policy page (`privacy.html`,
+  linked from the login screen and Reports → Account) explaining what data is
+  collected, how it's stored, and how the Shared rosters feature keeps
+  personal data out of what's shared.
 - **Shared rosters**: a new Shared tab lets you connect with another account
   (invite by email, they accept or decline) so you can each see the other's
   work schedule — shift types, overtime, leave and swaps, read-only, month by
@@ -109,6 +121,7 @@ server-side code, nothing to install beyond a static file server.
 ## Files
 
 - `index.html` — the whole app (markup, styles, logic)
+- `privacy.html` — the Privacy Policy page, linked from the login screen and Account
 - `manifest.json` — lets phones/desktops "install" it as an app icon
 - `sw.js` — service worker; caches the app so it still opens with no signal
 - `icon-192.png`, `icon-512.png` — app icons used by the manifest

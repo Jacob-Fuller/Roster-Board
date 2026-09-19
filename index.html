@@ -321,24 +321,45 @@
         <div class="sheet-head" style="padding:0 0 10px;">
           <h3 id="authTitle">Log in</h3>
         </div>
-        <p class="section-sub" style="margin:0 0 4px;">One account works across every app in the family — sign in to sync your data.</p>
-        <div class="form-row">
-          <label for="authEmail">Email</label>
-          <input type="email" id="authEmail" autocomplete="email">
+        <p class="section-sub" id="authIntro" style="margin:0 0 4px;">One account works across every app in the family — sign in to sync your data.</p>
+
+        <div id="authFieldsNormal">
+          <div class="form-row">
+            <label for="authEmail">Email</label>
+            <input type="email" id="authEmail" autocomplete="email">
+          </div>
+          <div class="form-row">
+            <label for="authPassword">Password</label>
+            <input type="password" id="authPassword" autocomplete="current-password">
+          </div>
+          <p style="margin:8px 0 0; text-align:right;">
+            <a href="#" id="authForgotLink" style="color:var(--text-dim); font-size:.78rem;">Forgot password?</a>
+          </p>
         </div>
-        <div class="form-row">
-          <label for="authPassword">Password</label>
-          <input type="password" id="authPassword" autocomplete="current-password">
+
+        <div id="authFieldsRecovery" style="display:none;">
+          <div class="form-row">
+            <label for="authNewPassword">New password</label>
+            <input type="password" id="authNewPassword" autocomplete="new-password">
+          </div>
+          <div class="form-row">
+            <label for="authNewPassword2">Confirm new password</label>
+            <input type="password" id="authNewPassword2" autocomplete="new-password">
+          </div>
         </div>
+
         <p id="authError" style="color:var(--danger); font-size:.8rem; margin:10px 0 0; display:none;"></p>
         <div class="sheet-footer" style="padding:16px 0 0;">
           <button class="btn primary block" id="authSubmitBtn">Log in</button>
         </div>
-        <p class="section-sub" style="margin:14px 0 0; text-align:center;">
+        <p class="section-sub" id="authToggleRow" style="margin:14px 0 0; text-align:center;">
           <span id="authTogglePrompt">Don't have an account?</span>
           <a href="#" id="authToggleMode" style="color:var(--accent); font-weight:600;">Sign up</a>
         </p>
       </div>
+      <p style="text-align:center; margin:16px 0 0; font-size:.74rem; color:rgba(251,246,236,.55);">
+        By continuing you agree to our <a href="privacy.html" target="_blank" style="color:rgba(251,246,236,.85);">Privacy Policy</a>.
+      </p>
     </div>
   </div>
   <header>
@@ -429,6 +450,9 @@
         <div id="accountSignedOut" style="display:none;">
           <div class="section-sub" style="margin:0;">Not signed in.</div>
         </div>
+        <p style="margin:12px 0 0; text-align:center;">
+          <a href="privacy.html" target="_blank" style="color:var(--accent); font-weight:600; font-size:.82rem;">Privacy Policy</a>
+        </p>
       </div>
 
       <div class="section-head"><h2>Estimated pay</h2></div>
@@ -473,7 +497,13 @@
 
     <div class="view" id="view-shared">
       <div id="sharedListPane">
-        <div class="section-head"><h2>Share your roster</h2></div>
+        <div class="section-head"><h2>Invite a friend</h2></div>
+        <div class="section-sub">Not on Roster Board yet? Send them a quick invite to download it and set up their own account — then you can connect below.</div>
+        <div class="card">
+          <button class="btn primary block" id="inviteFriendBtn">Share invite</button>
+        </div>
+
+        <div class="section-head" style="margin-top:24px;"><h2>Share your roster</h2></div>
         <div class="section-sub">Connect with someone to swap views of each other's work schedule — shifts, overtime, leave and swaps only. Your personal events, notes and pay rate are never shared.</div>
         <div class="card">
           <div class="form-row" style="margin-top:0;">
@@ -618,7 +648,7 @@
   </div>
 
   <!-- generic centered modal: hours prompt / tag prompt / confirm -->
-  <div class="overlay center" id="miniModalOverlay">
+  <div class="overlay center" id="miniModalOverlay" style="z-index:250;">
     <div class="sheet">
       <div class="sheet-head">
         <h3 id="miniModalTitle">Title</h3>
@@ -876,10 +906,21 @@
     el.style.display = msg ? "block" : "none";
   }
   function updateAuthModeUI(){
-    document.getElementById("authTitle").textContent = authMode === "signup" ? "Sign up" : "Log in";
-    document.getElementById("authSubmitBtn").textContent = authMode === "signup" ? "Sign up" : "Log in";
-    document.getElementById("authTogglePrompt").textContent = authMode === "signup" ? "Already have an account?" : "Don't have an account?";
-    document.getElementById("authToggleMode").textContent = authMode === "signup" ? "Log in" : "Sign up";
+    var isRecovery = authMode === "recovery";
+    document.getElementById("authFieldsNormal").style.display = isRecovery ? "none" : "block";
+    document.getElementById("authFieldsRecovery").style.display = isRecovery ? "block" : "none";
+    document.getElementById("authToggleRow").style.display = isRecovery ? "none" : "block";
+    if (isRecovery){
+      document.getElementById("authTitle").textContent = "Set a new password";
+      document.getElementById("authIntro").textContent = "Choose a new password for your account.";
+      document.getElementById("authSubmitBtn").textContent = "Save new password";
+    } else {
+      document.getElementById("authTitle").textContent = authMode === "signup" ? "Sign up" : "Log in";
+      document.getElementById("authIntro").textContent = "One account works across every app in the family — sign in to sync your data.";
+      document.getElementById("authSubmitBtn").textContent = authMode === "signup" ? "Sign up" : "Log in";
+      document.getElementById("authTogglePrompt").textContent = authMode === "signup" ? "Already have an account?" : "Don't have an account?";
+      document.getElementById("authToggleMode").textContent = authMode === "signup" ? "Log in" : "Sign up";
+    }
     setAuthError("");
   }
   function showAuthOverlay(){
@@ -954,6 +995,14 @@
       if (session && session.user) onSignedIn(session.user); else showAuthOverlay();
     });
     sb.auth.onAuthStateChange(function(event, session){
+      if (event === "PASSWORD_RECOVERY"){
+        // A reset-password link was just opened — require a new password before
+        // treating this as a normal sign-in, even though Supabase has issued a session.
+        authMode = "recovery";
+        updateAuthModeUI();
+        showAuthOverlay();
+        return;
+      }
       if (session && session.user) onSignedIn(session.user); else onSignedOut();
     });
   }
@@ -963,14 +1012,57 @@
     authMode = authMode === "signup" ? "login" : "signup";
     updateAuthModeUI();
   });
+  document.getElementById("authForgotLink").addEventListener("click", function(e){
+    e.preventDefault();
+    if (!sb){ setAuthError("Account sync isn't available right now."); return; }
+    var prefill = document.getElementById("authEmail").value.trim();
+    openMiniModal({
+      title: "Reset password",
+      message: "Enter your account email — we'll send a link to set a new password.",
+      placeholder: "you@example.com",
+      inputType: "email",
+      value: prefill,
+      confirmLabel: "Send link",
+      onConfirm: function(email){
+        email = (email || "").trim();
+        if (!email) return;
+        sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }).then(function(res){
+          if (res.error){ toast("Couldn't send reset link"); return; }
+          toast("Check your email for a reset link");
+        });
+      }
+    });
+  });
   document.getElementById("authSubmitBtn").addEventListener("click", function(){
     if (!sb){ setAuthError("Account sync isn't available right now."); return; }
+    var btn = document.getElementById("authSubmitBtn");
+
+    if (authMode === "recovery"){
+      var newPw = document.getElementById("authNewPassword").value;
+      var newPw2 = document.getElementById("authNewPassword2").value;
+      if (!newPw || newPw.length < 6){ setAuthError("Password must be at least 6 characters."); return; }
+      if (newPw !== newPw2){ setAuthError("Passwords don't match."); return; }
+      setAuthError("");
+      btn.disabled = true;
+      sb.auth.updateUser({ password: newPw }).then(function(res){
+        btn.disabled = false;
+        if (res.error){ setAuthError(res.error.message); return; }
+        document.getElementById("authNewPassword").value = "";
+        document.getElementById("authNewPassword2").value = "";
+        authMode = "login";
+        updateAuthModeUI();
+        toast("Password updated");
+        var recoveredUser = res.data && res.data.user;
+        if (recoveredUser) onSignedIn(recoveredUser); else hideAuthOverlay();
+      });
+      return;
+    }
+
     var email = document.getElementById("authEmail").value.trim();
     var pw = document.getElementById("authPassword").value;
     if (!email || !pw){ setAuthError("Enter an email and password."); return; }
     if (pw.length < 6){ setAuthError("Password must be at least 6 characters."); return; }
     setAuthError("");
-    var btn = document.getElementById("authSubmitBtn");
     btn.disabled = true;
     var wasSignup = authMode === "signup";
     var action = wasSignup ? sb.auth.signUp({ email: email, password: pw }) : sb.auth.signInWithPassword({ email: email, password: pw });
@@ -1101,6 +1193,23 @@
     });
   }
 
+  document.getElementById("inviteFriendBtn").addEventListener("click", function(){
+    var url = window.location.origin + "/";
+    var text = "I'm using Roster Board to manage my shifts and roster — thought you might like it too. Check it out: " + url;
+    if (navigator.share){
+      navigator.share({ title: "Roster Board", text: text, url: url }).catch(function(){});
+      return;
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        toast("Invite copied — paste it anywhere");
+      }).catch(function(){
+        toast("Couldn't copy — the link is " + url);
+      });
+      return;
+    }
+    toast("Share the link: " + url);
+  });
   document.getElementById("inviteSendBtn").addEventListener("click", function(){
     if (!sb) return;
     var email = document.getElementById("inviteEmailInput").value.trim();

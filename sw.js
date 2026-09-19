@@ -1,6 +1,6 @@
 // Minimal offline cache for Roster Board.
-var CACHE = "roster-board-v20";
-var ASSETS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+var CACHE = "roster-board-v22";
+var ASSETS = ["./", "./index.html", "./privacy.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", function(event){
   event.waitUntil(caches.open(CACHE).then(function(cache){ return cache.addAll(ASSETS); }));
