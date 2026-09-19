@@ -1,0 +1,15 @@
+{
+  "name": "Roster Board",
+  "short_name": "Roster Board",
+  "description": "A shift calendar app with color-coded shift types, day notes, and monthly hour reports.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F5F2EA",
+  "theme_color": "#B97A1E",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

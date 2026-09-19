@@ -1,0 +1,1946 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roster Board</title>
+<meta name="description" content="A shift calendar app with rosters, overtime, leave tracking, pay estimates and analytics.">
+<meta name="theme-color" content="#B97A1E" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Roster Board">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F2EA; --surface:#FFFFFF; --surface-2:#EEEAE0; --border:#DED7C6;
+    --text:#1C1B18; --text-dim:#6B6558; --text-faint:#9C9585;
+    --accent:#B97A1E; --accent-ink:#FFFFFF; --accent-soft:#F0DEBE;
+    --danger:#C24444; --shadow: 0 1px 2px rgba(30,25,15,.06), 0 6px 20px rgba(30,25,15,.06);
+    --radius-lg:20px; --radius-md:14px; --radius-sm:9px; --today-ring:#B97A1E;
+    --prev-bar:#C9C2AE;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0C1016; --surface:#141A22; --surface-2:#1C232D; --border:#2B3542;
+      --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#5E6875;
+      --accent:#F0A947; --accent-ink:#211400; --accent-soft:#3A2C14;
+      --danger:#E5696A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+      --today-ring:#F0A947; --prev-bar:#3A4552;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0C1016; --surface:#141A22; --surface-2:#1C232D; --border:#2B3542;
+    --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#5E6875;
+    --accent:#F0A947; --accent-ink:#211400; --accent-soft:#3A2C14;
+    --danger:#E5696A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    --today-ring:#F0A947; --prev-bar:#3A4552;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%; margin:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    overflow:hidden;
+  }
+  #app{
+    height:100%; max-width:480px; margin:0 auto; display:flex; flex-direction:column; position:relative;
+    background:var(--bg); padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  h1,h2,h3{font-family:'Fraunces', Georgia, serif; margin:0; text-wrap:balance;}
+  .num{font-variant-numeric:tabular-nums;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  ::selection{background:var(--accent-soft);}
+
+  header{
+    flex:none; padding:14px 18px 12px; display:flex; flex-direction:column; gap:10px;
+    border-bottom:1px solid var(--border); background:var(--bg);
+  }
+  .header-top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .month-title{font-size:1.7rem; font-weight:600; letter-spacing:-.01em;}
+  .month-nav{display:flex; align-items:center; gap:4px;}
+  .icon-btn{
+    width:36px; height:36px; border-radius:50%; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); display:flex; align-items:center; justify-content:center;
+    font-size:1rem; transition:background .15s; flex:none;
+  }
+  .icon-btn:active{background:var(--surface-2);}
+  .today-pill{
+    border:1px solid var(--border); background:var(--surface); color:var(--text-dim);
+    font-size:.72rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+    padding:6px 12px; border-radius:999px;
+  }
+  .header-stat{display:flex; gap:14px; font-size:.78rem; color:var(--text-dim); flex-wrap:wrap;}
+  .header-stat b{color:var(--text); font-weight:600;}
+  .weekday-row{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:2px;}
+  .weekday-row span{text-align:center; font-size:.68rem; font-weight:600; letter-spacing:.06em; color:var(--text-faint); text-transform:uppercase;}
+
+  main{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:14px;}
+  .view{display:none; padding:10px 10px 20px;}
+  .view.active{display:block;}
+
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .day-cell{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+    min-height:86px; padding:5px 4px 4px; display:flex; flex-direction:column; gap:3px;
+    text-align:left; color:var(--text); position:relative; overflow:hidden;
+  }
+  .day-cell.out{opacity:.38;}
+  .day-cell.today{border-color:var(--today-ring); box-shadow:inset 0 0 0 1.5px var(--today-ring);}
+  .day-cell.leave{box-shadow:inset 0 0 0 1.5px var(--text-faint);}
+  .day-cell .dnum{font-size:.78rem; font-weight:600; display:flex; align-items:center; gap:4px;}
+  .chip{
+    font-size:.62rem; font-weight:600; line-height:1.5; border-radius:5px; padding:0 5px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:3px;
+    border-top:3px solid transparent;
+  }
+  .chip.ot-chip{ flex-direction:column; align-items:stretch; padding:0; border-top:none; gap:0; }
+  .ot-chip-strip{ background:#F0679E; color:#fff; font-size:.44rem; font-weight:700; text-align:center; line-height:1.15; padding:1px 4px; }
+  .ot-chip-base{ font-size:.66rem; font-weight:600; text-align:center; line-height:1.6; padding:0 4px; white-space:nowrap; }
+  .chip .tagdot{width:4px; height:4px; border-radius:50%; background:currentColor; opacity:.7; flex:none;}
+  .day-cell .more{font-size:.6rem; color:var(--text-faint); font-weight:600; padding-left:1px;}
+  .day-cell .leave-line{font-size:.6rem; font-weight:600; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  .section-head{display:flex; align-items:center; justify-content:space-between; margin:18px 6px 10px; gap:8px;}
+  .section-head h2{font-size:1.05rem; font-weight:600;}
+  .section-sub{font-size:.78rem; color:var(--text-dim); margin:2px 6px 14px;}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; box-shadow:var(--shadow);}
+  .card + .card{margin-top:10px;}
+
+  .seg{display:flex; background:var(--surface-2); border:1px solid var(--border); border-radius:11px; padding:3px; gap:2px;}
+  .seg button{flex:1; border:none; background:none; padding:7px 10px; border-radius:8px; font-size:.78rem; font-weight:600; color:var(--text-dim);}
+  .seg button.active{background:var(--surface); color:var(--text); box-shadow:0 1px 2px rgba(0,0,0,.08);}
+
+  .stat-row{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 6px 4px;}
+  .stat-tile{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px;}
+  .stat-tile .label{font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); font-weight:600;}
+  .stat-tile .value{font-family:'Fraunces',serif; font-size:1.5rem; font-weight:600; margin-top:4px;}
+  .stat-tile .sub{font-size:.7rem; color:var(--text-dim); margin-top:2px;}
+
+  .bar-row{display:flex; align-items:center; gap:10px; padding:9px 4px;}
+  .bar-row .swatch{width:11px; height:11px; border-radius:3px; flex:none;}
+  .bar-row .name{font-size:.83rem; font-weight:500; width:92px; flex:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bar-track{flex:1; height:8px; border-radius:5px; background:var(--surface-2); overflow:hidden; position:relative;}
+  .bar-fill{height:100%; border-radius:5px;}
+  .bar-row .amt{font-size:.76rem; color:var(--text-dim); width:64px; text-align:right; flex:none;}
+
+  .cmp-row{margin:10px 4px 4px;}
+  .cmp-row .cmp-label{display:flex; justify-content:space-between; font-size:.76rem; color:var(--text-dim); margin-bottom:5px;}
+  .cmp-row .cmp-label b{color:var(--text);}
+  .cmp-bar{height:9px; border-radius:5px; background:var(--surface-2); overflow:hidden; margin-bottom:4px;}
+  .cmp-bar > div{height:100%; border-radius:5px;}
+  .cmp-delta{font-size:.72rem; font-weight:600; margin-top:2px;}
+  .cmp-delta.up{color:#3ECF8E;}
+  .cmp-delta.down{color:var(--danger);}
+
+  .export-row{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .export-row .btn{flex:1; min-width:120px;}
+
+  .rate-row{display:flex; align-items:center; gap:10px;}
+  .rate-row input{width:90px; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 10px; font-size:.9rem; color:var(--text);}
+  .rate-row span{font-size:.78rem; color:var(--text-dim);}
+
+  .type-row{display:flex; align-items:center; gap:10px; padding:11px 4px;}
+  .type-row .swatch{width:26px; height:26px; border-radius:8px; flex:none;}
+  .type-row .meta{flex:1; min-width:0;}
+  .type-row .meta .name{font-weight:600; font-size:.9rem; display:flex; align-items:center; gap:6px;}
+  .type-row .meta .tagpill{font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-faint); border:1px solid var(--border); border-radius:5px; padding:1px 5px;}
+  .type-row .meta .hrs{font-size:.74rem; color:var(--text-dim);}
+  .type-row .actions{display:flex; gap:4px;}
+  .row-divider{border-top:1px solid var(--border);}
+  .ghost-btn{background:none; border:none; color:var(--text-faint); padding:6px; border-radius:8px; font-size:.85rem;}
+  .ghost-btn:active{background:var(--surface-2);}
+
+  .btn{
+    border-radius:11px; padding:10px 16px; font-size:.85rem; font-weight:600; border:1px solid var(--border);
+    background:var(--surface); color:var(--text);
+  }
+  .btn:active{background:var(--surface-2);}
+  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:transparent;}
+  .btn.danger{color:var(--danger); border-color:var(--border);}
+  .btn.block{width:100%;}
+  .btn.sm{padding:7px 12px; font-size:.76rem; border-radius:9px;}
+
+  nav.tabbar{
+    flex:none; display:flex; border-top:1px solid var(--border); background:var(--bg); padding:6px 4px 6px;
+  }
+  nav.tabbar button{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:none;
+    color:var(--text-faint); padding:6px 2px; border-radius:12px; font-size:.62rem; font-weight:600; letter-spacing:.01em;
+  }
+  nav.tabbar button.active{color:var(--accent);}
+  nav.tabbar svg{width:19px; height:19px;}
+
+  .overlay{position:absolute; inset:0; background:rgba(10,8,4,.45); display:none; align-items:flex-end; z-index:40;}
+  .overlay.show{display:flex;}
+  .overlay.center{align-items:center; justify-content:center; padding:20px;}
+  .sheet{
+    width:100%; max-height:88%; background:var(--surface); border-radius:22px 22px 0 0; border:1px solid var(--border); border-bottom:none;
+    display:flex; flex-direction:column; box-shadow:0 -10px 40px rgba(0,0,0,.25); animation:sheet-up .22s ease-out;
+  }
+  .overlay.center .sheet{border-radius:18px; border-bottom:1px solid var(--border); max-width:340px; animation:pop-in .16s ease-out;}
+  @keyframes sheet-up{from{transform:translateY(24px); opacity:.4;} to{transform:translateY(0); opacity:1;}}
+  @keyframes pop-in{from{transform:scale(.96); opacity:0;} to{transform:scale(1); opacity:1;}}
+  .sheet-handle{width:36px; height:4px; border-radius:4px; background:var(--border); margin:10px auto 2px;}
+  .overlay.center .sheet-handle{display:none;}
+  .sheet-head{display:flex; align-items:flex-start; justify-content:space-between; padding:14px 18px 10px;}
+  .sheet-head h3{font-size:1.15rem;}
+  .sheet-head .close{border:none; background:var(--surface-2); width:30px; height:30px; border-radius:50%; color:var(--text-dim); font-size:.95rem; flex:none;}
+  .sheet-body{overflow-y:auto; padding:0 18px 22px;}
+  .sheet-section{margin-top:8px;}
+  .sheet-section .label-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .sheet-section .label-row span{font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint);}
+  .shift-tag{
+    display:inline-flex; align-items:center; gap:6px; border-radius:10px; padding:7px 6px 7px 12px; font-size:.82rem; font-weight:600;
+    margin:0 6px 6px 0; border-top:3px solid transparent;
+  }
+  .shift-tag.ot{ border-top-color:#F0679E; }
+  .shift-tag .tagged-note{font-weight:500; font-size:.72rem; opacity:.85; max-width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .shift-tag button{background:rgba(0,0,0,.14); border:none; color:inherit; width:18px; height:18px; border-radius:50%; font-size:.66rem; line-height:1; display:flex; align-items:center; justify-content:center; flex:none;}
+  .empty-hint{font-size:.8rem; color:var(--text-faint); padding:4px 2px;}
+  .type-picker{display:flex; flex-wrap:wrap; gap:7px;}
+  .type-pick-btn{border:none; border-radius:10px; padding:8px 12px; font-size:.8rem; font-weight:600;}
+  .type-pick-btn.ot-combo{padding:0; overflow:hidden; display:flex; flex-direction:column; min-width:64px;}
+  .ot-combo .ot-strip{display:block; background:#F0679E; color:#fff; font-size:.5rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:2px 12px;}
+  .ot-combo .ot-base{display:block; font-size:.86rem; font-weight:600; padding:9px 12px;}
+  .add-note-row{display:flex; gap:8px; margin-top:6px;}
+  .add-note-row input[type=text]{flex:1; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 12px; font-size:.85rem; color:var(--text);}
+  .add-note-row input[type=time]{flex:none; width:98px; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 8px; font-size:.8rem; color:var(--text);}
+  .event-cat-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .cat-chip{border:1.5px solid var(--border); background:var(--surface-2); border-radius:9px; padding:6px 10px; font-size:.72rem; font-weight:600; color:var(--text-dim); display:flex; align-items:center; gap:5px;}
+  .cat-chip .dot{width:7px; height:7px; border-radius:50%; flex:none;}
+  .cat-chip.sel{border-color:var(--text); color:var(--text); background:var(--surface);}
+  .event-item{display:flex; align-items:center; gap:8px; padding:7px 2px; font-size:.85rem;}
+  .event-item .dot{width:7px; height:7px; border-radius:50%; flex:none;}
+  .event-item .etime{font-size:.72rem; color:var(--text-faint); font-variant-numeric:tabular-nums; flex:none;}
+  .event-item span.etext{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .event-item button{background:none; border:none; color:var(--text-faint); font-size:.85rem;}
+  .day-cell .event-line{font-size:.6rem; font-weight:600; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:4px;}
+  .day-cell .event-line .edot{width:4px; height:4px; border-radius:50%; flex:none;}
+  .leave-btns{display:flex; gap:8px;}
+  .leave-btn{flex:1; border-radius:10px; padding:9px; font-size:.8rem; font-weight:600; border:1px solid var(--border); background:var(--surface-2); color:var(--text);}
+  .leave-list{margin-top:8px;}
+  .chip.swap-chip-cal{ flex-direction:column; align-items:stretch; padding:0; border-top:none; gap:0; }
+  .swap-chip-cal-strip{ background:#E5484D; color:#fff; font-size:.44rem; font-weight:700; text-align:center; line-height:1.15; padding:1px 4px; }
+  .swap-chip-cal-base{ font-size:.66rem; font-weight:600; text-align:center; line-height:1.6; padding:0 4px; white-space:nowrap; }
+  .swap-chip{
+    display:flex; align-items:center; gap:8px; width:100%; text-align:left; border:1px solid var(--border); background:var(--surface-2);
+    border-radius:10px; padding:9px 10px; font-size:.8rem; margin-bottom:6px; color:var(--text);
+  }
+  .swap-chip .swap-badge{font-size:.62rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; border-radius:5px; padding:2px 6px; flex:none;}
+  .swap-chip .swap-badge.off{background:#E5484D; color:#fff;}
+  .swap-chip .swap-badge.on{background:#3ECF8E; color:#04241A;}
+  .swap-chip .swap-info{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .swap-chip .swap-info b{font-weight:600;}
+
+  .form-row{margin-top:14px;}
+  .form-row label{display:block; font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px;}
+  .form-row input[type=text], .form-row input[type=number], .form-row input[type=time], .form-row select, .form-row input[type=date]{
+    width:100%; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:10px 12px; font-size:.9rem; color:var(--text);
+  }
+  .time-row{display:flex; gap:10px; align-items:flex-end;}
+  .time-row .form-row{flex:1; margin-top:0;}
+  .duration-preview{font-size:.76rem; color:var(--text-dim); margin-top:8px;}
+  .checkbox-row{display:flex; align-items:center; gap:8px; margin-top:16px; font-size:.85rem; font-weight:600; cursor:pointer;}
+  .checkbox-row input[type=checkbox]{width:18px; height:18px; flex:none; accent-color:var(--accent);}
+  .color-grid{display:flex; flex-wrap:wrap; gap:9px;}
+  .color-swatch{width:34px; height:34px; border-radius:10px; border:2px solid transparent; position:relative;}
+  .color-swatch.sel{border-color:var(--text);}
+  .sheet-footer{display:flex; gap:8px; margin-top:18px;}
+
+  #toast{
+    position:absolute; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 78px); transform:translateX(-50%) translateY(8px);
+    background:var(--text); color:var(--bg); font-size:.8rem; font-weight:600; padding:9px 16px; border-radius:999px;
+    opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:60; white-space:nowrap; max-width:88%; text-align:center;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .banner{
+    display:flex; align-items:center; gap:8px; background:var(--accent-soft); color:var(--text); border-radius:12px;
+    padding:9px 12px; font-size:.75rem; margin:8px 6px 4px;
+  }
+
+  /* Roster tab */
+  .roster-controls{display:flex; align-items:flex-end; gap:10px;}
+  .roster-controls .form-row{margin-top:0; flex:1;}
+  .roster-grid{margin-top:14px; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;}
+  .roster-week{display:grid; grid-template-columns:52px repeat(7,1fr);}
+  .roster-week + .roster-week{border-top:1px solid var(--border);}
+  .roster-week-label{display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:var(--text-faint); background:var(--surface-2);}
+  .roster-head{display:grid; grid-template-columns:52px repeat(7,1fr); background:var(--surface-2);}
+  .roster-head span{text-align:center; font-size:.6rem; font-weight:700; color:var(--text-faint); padding:6px 0; text-transform:uppercase;}
+  .roster-cell{
+    border-left:1px solid var(--border); min-height:52px; padding:4px; display:flex; flex-direction:column; gap:2px;
+    background:var(--surface); text-align:left;
+  }
+  .roster-cell .rchip{font-size:.56rem; font-weight:700; border-radius:4px; padding:1px 4px; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .roster-cell .rmore{font-size:.55rem; color:var(--text-faint); font-weight:700;}
+  .apply-card{margin-top:16px;}
+  .toggle-chip{border:1.5px solid var(--border); background:var(--surface-2); border-radius:10px; padding:8px 12px; font-size:.8rem; font-weight:600; color:var(--text-dim);}
+  .toggle-chip.on{border-color:transparent;}
+
+  ::-webkit-scrollbar{width:0; height:0;}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="header-top">
+      <div class="month-nav">
+        <button class="icon-btn" id="prevMonth" aria-label="Previous month">&#8249;</button>
+        <button class="icon-btn" id="nextMonth" aria-label="Next month">&#8250;</button>
+      </div>
+      <h1 class="month-title" id="monthTitle">September</h1>
+      <button class="today-pill" id="todayBtn">Today</button>
+    </div>
+    <div class="header-stat">
+      <span><b class="num" id="statHours">0</b> h logged</span>
+      <span><b class="num" id="statOT">0</b> h OT</span>
+      <span><b class="num" id="statDays">0</b> shifts</span>
+    </div>
+    <div class="weekday-row">
+      <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="view active" id="view-calendar">
+      <div class="cal-grid" id="calGrid"></div>
+      <div id="modeBanner"></div>
+    </div>
+
+    <div class="view" id="view-roster">
+      <div class="section-head"><h2>Roster pattern</h2></div>
+      <div class="section-sub">Build a repeating shift pattern once, then stamp it onto the calendar as a starting template.</div>
+      <div class="card">
+        <div class="roster-controls">
+          <div class="form-row">
+            <label for="rosterWeeksInput">Pattern length (weeks)</label>
+            <input type="number" id="rosterWeeksInput" min="1" max="52" value="1">
+          </div>
+          <button class="btn sm" id="rosterWeeksApplyBtn">Update</button>
+        </div>
+        <div id="rosterGridWrap"></div>
+      </div>
+      <div class="card apply-card">
+        <div class="section-head" style="margin:0 0 10px;"><h2 style="font-size:.95rem;">Stamp onto calendar</h2></div>
+        <div class="form-row">
+          <label for="rosterStartDate">Start date</label>
+          <input type="date" id="rosterStartDate">
+        </div>
+        <div class="form-row">
+          <label for="rosterDuration">Repeat for</label>
+          <select id="rosterDuration">
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12" selected>1 year</option>
+            <option value="24">2 years</option>
+          </select>
+        </div>
+        <button class="btn primary block" id="rosterApplyBtn" style="margin-top:14px;">Fill calendar from pattern</button>
+      </div>
+    </div>
+
+    <div class="view" id="view-reports">
+      <div class="section-head">
+        <div class="seg" id="repModeSeg">
+          <button class="active" data-mode="month">Month</button>
+          <button data-mode="year">Year</button>
+        </div>
+      </div>
+      <div class="section-head">
+        <div class="month-nav">
+          <button class="icon-btn" id="repPrev" aria-label="Previous">&#8249;</button>
+          <button class="icon-btn" id="repNext" aria-label="Next">&#8250;</button>
+        </div>
+        <h2 id="repTitle">September</h2>
+        <span></span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-tile"><div class="label">Total hours</div><div class="value num" id="repTotalHours">0</div></div>
+        <div class="stat-tile"><div class="label">Overtime</div><div class="value num" id="repOTHours">0</div></div>
+        <div class="stat-tile"><div class="label">Days worked</div><div class="value num" id="repDaysWorked">0</div></div>
+        <div class="stat-tile"><div class="label">Leave taken</div><div class="value num" id="repLeaveDays">0</div></div>
+      </div>
+
+      <div class="section-head"><h2>Estimated pay</h2></div>
+      <div class="card">
+        <div class="rate-row">
+          <span>Hourly rate</span>
+          <input type="number" id="hourlyRateInput" min="0" step="0.5" placeholder="0.00">
+          <span>/hr</span>
+        </div>
+        <div class="stat-tile" style="margin-top:12px; border:none; background:var(--surface-2); padding:12px;">
+          <div class="label">Estimated pay this period</div>
+          <div class="value num" id="repPayEstimate">$0</div>
+        </div>
+      </div>
+
+      <div class="section-head"><h2>By shift type</h2></div>
+      <div class="card" id="repBars"></div>
+
+      <div class="section-head"><h2>Weekday vs weekend</h2></div>
+      <div class="card" id="repWeekdayWeekend"></div>
+
+      <div class="section-head"><h2>Vs previous period</h2></div>
+      <div class="card" id="repComparison"></div>
+
+      <div class="section-head" id="yirHead" style="display:none;"><h2>Year in review</h2></div>
+      <div class="card" id="repYearInReview" style="display:none;"></div>
+
+      <div class="export-row">
+        <button class="btn sm" id="exportCsv">CSV</button>
+        <button class="btn sm" id="exportPdf">PDF roster</button>
+        <button class="btn sm" id="exportJson">Full backup</button>
+      </div>
+    </div>
+
+    <div class="view" id="view-types">
+      <div class="section-head"><h2>Shift types</h2><button class="btn sm primary" id="newTypeBtn">+ New</button></div>
+      <div class="section-sub">Set a start and end time and the duration is worked out for you. Overtime and leave are built in below.</div>
+      <div class="card" id="builtinTypesList"></div>
+      <div class="section-head" style="margin-top:20px;"><h2>Your types</h2></div>
+      <div class="card" id="typesList"></div>
+    </div>
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+      Calendar
+    </button>
+    <button class="tab-btn" data-view="roster">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 2l4 4-4 4M21 6H8a5 5 0 0 0 0 10h1M7 22l-4-4 4-4M3 18h13a5 5 0 0 0 0-10h-1"/></svg>
+      Roster
+    </button>
+    <button class="tab-btn" data-view="reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+      Reports
+    </button>
+    <button class="tab-btn" data-view="types">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
+      Types
+    </button>
+  </nav>
+
+  <div class="overlay" id="daySheetOverlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 id="sheetDate">Saturday, 19 September</h3>
+        <button class="close" id="sheetClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="sheet-section">
+          <div class="label-row"><span>Shifts</span></div>
+          <div id="sheetShifts"></div>
+          <div class="type-picker" id="sheetTypePicker"></div>
+        </div>
+        <div class="sheet-section" id="swapsSection" style="display:none;">
+          <div class="label-row"><span>Swaps</span></div>
+          <div id="sheetSwaps"></div>
+        </div>
+        <div class="sheet-section">
+          <div class="label-row"><span>Leave</span></div>
+          <div id="sheetLeave" class="leave-list"></div>
+          <div class="leave-btns">
+            <button class="leave-btn" id="addAnnualLeave">+ Annual leave</button>
+            <button class="leave-btn" id="addSickLeave">+ Sick leave</button>
+          </div>
+        </div>
+        <div class="sheet-section">
+          <div class="label-row"><span>Personal events</span></div>
+          <div id="sheetNotes"></div>
+          <div class="event-cat-row" id="eventCatRow"></div>
+          <div class="add-note-row">
+            <input type="time" id="noteTime">
+            <input type="text" id="noteInput" placeholder="e.g. Dentist, Birthday dinner...">
+            <button class="btn sm primary" id="addNoteBtn">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="typeSheetOverlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 id="typeSheetTitle">New shift type</h3>
+        <button class="close" id="typeSheetClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="form-row">
+          <label for="typeName">Name</label>
+          <input type="text" id="typeName" maxlength="18" placeholder="e.g. Dayshift">
+        </div>
+        <div class="form-row">
+          <label>Color</label>
+          <div class="color-grid" id="colorGrid"></div>
+        </div>
+        <div class="time-row">
+          <div class="form-row">
+            <label for="typeStart">Start time</label>
+            <input type="time" id="typeStart" value="07:00">
+          </div>
+          <div class="form-row">
+            <label for="typeEnd">End time</label>
+            <input type="time" id="typeEnd" value="19:00">
+          </div>
+        </div>
+        <div class="duration-preview" id="durationPreview">= 12 hours</div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="typeOvertimeEligible" checked>
+          <span>Allow overtime for this shift type</span>
+        </label>
+        <div class="sheet-footer">
+          <button class="btn danger" id="deleteTypeBtn" style="display:none;">Delete</button>
+          <button class="btn primary block" id="saveTypeBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- generic centered modal: hours prompt / tag prompt / confirm -->
+  <div class="overlay center" id="miniModalOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3 id="miniModalTitle">Title</h3>
+        <button class="close" id="miniModalClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <p id="miniModalMessage" class="section-sub" style="margin:0 0 4px;"></p>
+        <div class="form-row" id="miniModalInputWrap">
+          <input type="text" id="miniModalInput">
+        </div>
+        <div class="sheet-footer">
+          <button class="btn block" id="miniModalCancel">Cancel</button>
+          <button class="btn primary block" id="miniModalConfirm">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- roster day pattern editor -->
+  <div class="overlay" id="patternSheetOverlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 id="patternSheetTitle">Week 1 · Monday</h3>
+        <button class="close" id="patternSheetClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="section-sub" style="margin:0 0 10px;">Tap to include a shift type on this day of the pattern.</div>
+        <div class="type-picker" id="patternTypePicker"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- swap a shift to another date -->
+  <div class="overlay center" id="swapFormOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3 id="swapFormTitle">Swap this shift</h3>
+        <button class="close" id="swapFormClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="form-row">
+          <label for="swapToDate">Swap to date</label>
+          <input type="date" id="swapToDate">
+        </div>
+        <div class="form-row">
+          <label for="swapReplaceType">Swapping for</label>
+          <select id="swapReplaceType"></select>
+        </div>
+        <div class="form-row">
+          <label for="swapPartner">Swapping with</label>
+          <input type="text" id="swapPartner" placeholder="e.g. Sam">
+        </div>
+        <div class="form-row">
+          <label for="swapNote">Note (optional)</label>
+          <input type="text" id="swapNote" placeholder="e.g. Covering their late">
+        </div>
+        <div class="sheet-footer">
+          <button class="btn block" id="swapFormCancel">Cancel</button>
+          <button class="btn primary block" id="swapFormConfirm">Swap shift</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "rosterBoard.v2";
+
+  var PALETTE = [
+    {hex:"#E5484D", ink:"#FFFFFF"}, {hex:"#E8B339", ink:"#241900"}, {hex:"#4C8DFF", ink:"#FFFFFF"},
+    {hex:"#A76BF0", ink:"#FFFFFF"}, {hex:"#3FC5C0", ink:"#062523"}, {hex:"#3ECF8E", ink:"#04241A"},
+    {hex:"#F0679E", ink:"#FFFFFF"}, {hex:"#7E8B99", ink:"#FFFFFF"}
+  ];
+  var OVERTIME_ID = "overtime";
+  var OVERTIME_TYPE = {id:OVERTIME_ID, name:"Overtime", color:"#F0679E", ink:"#FFFFFF", isBuiltin:true};
+  var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick leave"} };
+  var EVENT_CATS = {
+    appointment: {color:"#3FC5C0", label:"Appointment"},
+    family: {color:"#F0679E", label:"Social"},
+    reminder: {color:"#E8B339", label:"Reminder"},
+    other: {color:"#9C9585", label:"Other"}
+  };
+  var EVENT_CAT_ORDER = ["appointment","family","reminder","other"];
+  var MONTH_LABELS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var WEEKDAY_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+  var state = {
+    view: "calendar",
+    calMonth: startOfMonth(new Date()),
+    repMode: "month",
+    repMonth: startOfMonth(new Date()),
+    repYear: new Date().getFullYear(),
+    types: [],
+    typesById: {},
+    shifts: {},   // date -> [{id,typeId,hours?,tag?}]
+    leave: {},    // date -> [{id,kind}]
+    notes: {},    // date -> [{id,text}]
+    swaps: {},    // date -> [{id,kind:'off'|'on',partner,note,linkedDate,linkedSwapId,typeId,hours,shiftEntryId?}]
+    swapPending: null, // {date, shiftId, typeId, hours, baseTypeId}
+    noteCategory: "other",
+    roster: { weeks: 1, pattern: [[[],[],[],[],[],[],[]]] }, // pattern[weekIdx][dayIdx] = [typeId,...]
+    settings: { hourlyRate: 0 },
+    selectedDate: null,
+    editingTypeId: null,
+    editingShiftKey: null,   // {date,id} for tag editing
+    patternCell: null        // {week, day}
+  };
+  state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
+
+  /* ---------------- date helpers ---------------- */
+  function pad2(n){ return n < 10 ? "0"+n : ""+n; }
+  function ymd(d){ return d.getFullYear()+"-"+pad2(d.getMonth()+1)+"-"+pad2(d.getDate()); }
+  function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function addMonths(d, n){ return new Date(d.getFullYear(), d.getMonth()+n, 1); }
+  function addDays(d, n){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()+n); }
+  function isSameDay(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+  function mondayIndex(jsDay){ return (jsDay + 6) % 7; }
+  function parseYmd(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function fmtHours(h){ return (Math.round(h*10)/10).toString(); }
+  function isWeekendDate(d){ var wd = d.getDay(); return wd===0 || wd===6; }
+  function mkId(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+  function calcDuration(start, end){
+    var sp = start.split(":"), ep = end.split(":");
+    var startMin = (+sp[0])*60 + (+sp[1]), endMin = (+ep[0])*60 + (+ep[1]);
+    var diff = endMin - startMin;
+    if (diff <= 0) diff += 24*60;
+    return Math.round((diff/60)*100)/100;
+  }
+
+  function buildMonthCells(monthDate){
+    var first = startOfMonth(monthDate);
+    var leadCount = mondayIndex(first.getDay());
+    var gridStart = new Date(first.getFullYear(), first.getMonth(), 1 - leadCount);
+    var cells = [];
+    for (var i=0;i<42;i++){
+      var d = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate()+i);
+      cells.push({date:d, inMonth: d.getMonth()===monthDate.getMonth()});
+    }
+    var lastRowAllOut = true;
+    for (var j=35;j<42;j++){ if (cells[j].inMonth){ lastRowAllOut=false; break; } }
+    if (lastRowAllOut) cells = cells.slice(0,35);
+    return cells;
+  }
+
+  /* ---------------- toast ---------------- */
+  var toastTimer = null;
+  function toast(msg){
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove("show"); }, 2000);
+  }
+
+  /* ---------------- mini modal (prompt / confirm) ---------------- */
+  function openMiniModal(opts){
+    document.getElementById("miniModalTitle").textContent = opts.title || "";
+    var msgEl = document.getElementById("miniModalMessage");
+    msgEl.textContent = opts.message || "";
+    msgEl.style.display = opts.message ? "block" : "none";
+    var inputWrap = document.getElementById("miniModalInputWrap");
+    var input = document.getElementById("miniModalInput");
+    if (opts.showInput === false){
+      inputWrap.style.display = "none";
+    } else {
+      inputWrap.style.display = "block";
+      input.type = opts.inputType || "text";
+      input.placeholder = opts.placeholder || "";
+      input.value = opts.value != null ? opts.value : "";
+      if (opts.min != null) input.min = opts.min; else input.removeAttribute("min");
+      if (opts.step != null) input.step = opts.step; else input.removeAttribute("step");
+    }
+    document.getElementById("miniModalConfirm").textContent = opts.confirmLabel || "Save";
+    var overlay = document.getElementById("miniModalOverlay");
+    overlay.classList.add("show");
+    function cleanup(){
+      overlay.classList.remove("show");
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+    }
+    function onConfirm(){
+      var val = opts.showInput === false ? true : input.value;
+      cleanup();
+      if (opts.onConfirm) opts.onConfirm(val);
+    }
+    function onCancel(){ cleanup(); if (opts.onCancel) opts.onCancel(); }
+    var confirmBtn = document.getElementById("miniModalConfirm");
+    var cancelBtn = document.getElementById("miniModalCancel");
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    if (opts.showInput !== false) setTimeout(function(){ input.focus(); }, 50);
+  }
+  document.getElementById("miniModalClose").addEventListener("click", function(){
+    document.getElementById("miniModalOverlay").classList.remove("show");
+  });
+
+  /* ---------------- persistence ---------------- */
+  var storageOk = true;
+  function loadStore(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw){
+        var parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.types)) return parsed;
+      }
+    } catch(e){ storageOk = false; }
+    return { types: [], shifts:{}, notes:{}, leave:{}, swaps:{}, roster:{ weeks:1, pattern:[[[],[],[],[],[],[],[]]] }, settings:{ hourlyRate:0 } };
+  }
+  function saveStore(){
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps,
+        roster: state.roster, settings: state.settings
+      }));
+      storageOk = true;
+    } catch(e){ storageOk = false; toast("Couldn't save — storage unavailable"); }
+  }
+  function loadIntoState(){
+    var data = loadStore();
+    state.types = data.types || [];
+    state.typesById = {};
+    state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
+    state.types.forEach(function(t){ state.typesById[t.id] = t; });
+    state.shifts = data.shifts || {};
+    state.notes = data.notes || {};
+    state.leave = data.leave || {};
+    state.swaps = data.swaps || {};
+    state.roster = data.roster && data.roster.pattern ? data.roster : { weeks:1, pattern:[[[],[],[],[],[],[],[]]] };
+    state.settings = data.settings || { hourlyRate:0 };
+  }
+
+  function effectiveHours(entry){
+    if (entry.hours != null) return entry.hours;
+    var t = state.typesById[entry.typeId];
+    return t ? (t.hours || 0) : 0;
+  }
+  function entryDisplayName(entry){
+    var t = state.typesById[entry.typeId];
+    if (!t) return "";
+    if (entry.typeId === OVERTIME_ID && entry.baseTypeId){
+      var bt = state.typesById[entry.baseTypeId];
+      if (bt) return "Overtime – " + bt.name;
+    }
+    return t.name;
+  }
+  function entryColor(entry){
+    if (entry.typeId === OVERTIME_ID && entry.baseTypeId){
+      var bt = state.typesById[entry.baseTypeId];
+      if (bt) return {bg: bt.color, ink: bt.ink};
+    }
+    var t = state.typesById[entry.typeId];
+    return t ? {bg: t.color, ink: t.ink} : {bg:"#9C9585", ink:"#FFFFFF"};
+  }
+
+  /* ---------------- render: header ---------------- */
+  function renderHeader(){
+    document.getElementById("monthTitle").textContent = MONTH_LABELS[state.calMonth.getMonth()] + " " + state.calMonth.getFullYear();
+    var totalH = 0, otH = 0, totalShifts = 0;
+    var y = state.calMonth.getFullYear(), m = state.calMonth.getMonth();
+    Object.keys(state.shifts).forEach(function(dateKey){
+      var d = parseYmd(dateKey);
+      if (d.getFullYear()===y && d.getMonth()===m){
+        state.shifts[dateKey].forEach(function(s){
+          totalShifts++;
+          var h = effectiveHours(s);
+          totalH += h;
+          if (s.typeId === OVERTIME_ID) otH += h;
+        });
+      }
+    });
+    document.getElementById("statHours").textContent = fmtHours(totalH);
+    document.getElementById("statOT").textContent = fmtHours(otH);
+    document.getElementById("statDays").textContent = totalShifts;
+  }
+
+  /* ---------------- render: calendar ---------------- */
+  function renderCalendar(){
+    var grid = document.getElementById("calGrid");
+    grid.innerHTML = "";
+    var cells = buildMonthCells(state.calMonth);
+    var today = new Date();
+    cells.forEach(function(cell){
+      var key = ymd(cell.date);
+      var hasLeave = (state.leave[key]||[]).length > 0;
+      var btn = document.createElement("button");
+      btn.className = "day-cell" + (cell.inMonth ? "" : " out") + (isSameDay(cell.date, today) ? " today" : "") + (hasLeave ? " leave" : "");
+      btn.setAttribute("data-date", key);
+
+      var numRow = document.createElement("div");
+      numRow.className = "dnum";
+      var numSpan = document.createElement("span");
+      numSpan.textContent = cell.date.getDate();
+      numRow.appendChild(numSpan);
+      btn.appendChild(numRow);
+
+      var daySwaps = state.swaps[key] || [];
+      var maxSwapChips = 2;
+      var swappedInShiftIds = {};
+      daySwaps.forEach(function(rec){ if (rec.kind === "on" && rec.shiftEntryId) swappedInShiftIds[rec.shiftEntryId] = true; });
+      daySwaps.slice(0, maxSwapChips).forEach(function(rec){
+        var col = entryColor(rec);
+        var chip = document.createElement("div");
+        chip.className = "chip swap-chip-cal";
+        var strip = document.createElement("span");
+        strip.className = "swap-chip-cal-strip";
+        strip.textContent = rec.kind === "off" ? "Swapped off" : "Swapped on";
+        chip.appendChild(strip);
+        var base = document.createElement("span");
+        base.className = "swap-chip-cal-base";
+        base.style.background = col.bg;
+        base.style.color = col.ink;
+        base.textContent = entryDisplayName(rec) || "Shift";
+        chip.appendChild(base);
+        btn.appendChild(chip);
+      });
+      if (daySwaps.length > maxSwapChips){
+        var moreS = document.createElement("div");
+        moreS.className = "more";
+        moreS.textContent = "+" + (daySwaps.length - maxSwapChips) + " more";
+        btn.appendChild(moreS);
+      }
+
+      var dayShifts = (state.shifts[key] || []).filter(function(s){ return !swappedInShiftIds[s.id]; });
+      var maxChips = 3;
+      dayShifts.slice(0, maxChips).forEach(function(s){
+        var t = state.typesById[s.typeId];
+        if (!t) return;
+        var isOT = s.typeId === OVERTIME_ID;
+        var col = entryColor(s);
+        var chip = document.createElement("div");
+        if (isOT){
+          chip.className = "chip ot-chip";
+          var strip = document.createElement("span");
+          strip.className = "ot-chip-strip";
+          strip.textContent = "Overtime";
+          chip.appendChild(strip);
+          var baseLine = document.createElement("span");
+          baseLine.className = "ot-chip-base";
+          baseLine.style.background = col.bg;
+          baseLine.style.color = col.ink;
+          var bt = state.typesById[s.baseTypeId];
+          baseLine.textContent = (bt ? bt.name : "Overtime") + (s.hours!=null ? " " + fmtHours(s.hours) + "h" : "");
+          chip.appendChild(baseLine);
+        } else {
+          chip.className = "chip";
+          chip.style.background = col.bg;
+          chip.style.color = col.ink;
+          var label = document.createElement("span");
+          label.textContent = entryDisplayName(s);
+          chip.appendChild(label);
+          if (s.tag){
+            var td = document.createElement("span");
+            td.className = "tagdot";
+            chip.appendChild(td);
+          }
+        }
+        btn.appendChild(chip);
+      });
+      if (dayShifts.length > maxChips){
+        var more = document.createElement("div");
+        more.className = "more";
+        more.textContent = "+" + (dayShifts.length - maxChips) + " more";
+        btn.appendChild(more);
+      }
+      if (hasLeave && dayShifts.length <= maxChips){
+        var lv = state.leave[key][0];
+        var lline = document.createElement("div");
+        lline.className = "leave-line";
+        lline.textContent = LEAVE_COLORS[lv.kind].label;
+        btn.appendChild(lline);
+      }
+      var dayEvents = state.notes[key] || [];
+      var maxEvents = 2;
+      dayEvents.slice(0, maxEvents).forEach(function(n){
+        var cat = EVENT_CATS[n.category] || EVENT_CATS.other;
+        var eline = document.createElement("div");
+        eline.className = "event-line";
+        var edot = document.createElement("span");
+        edot.className = "edot";
+        edot.style.background = cat.color;
+        eline.appendChild(edot);
+        var etext = document.createElement("span");
+        etext.textContent = n.text;
+        eline.appendChild(etext);
+        btn.appendChild(eline);
+      });
+      if (dayEvents.length > maxEvents){
+        var moreE = document.createElement("div");
+        moreE.className = "more";
+        moreE.textContent = "+" + (dayEvents.length - maxEvents) + " more";
+        btn.appendChild(moreE);
+      }
+
+      btn.addEventListener("click", function(){ openDaySheet(key); });
+      grid.appendChild(btn);
+    });
+    renderHeader();
+    fitPairedChips(".swap-chip-cal");
+    fitPairedChips(".ot-chip");
+  }
+  function fitPairedChips(chipSelector){
+    document.querySelectorAll("#calGrid " + chipSelector).forEach(function(chip){
+      var base = chip.querySelector(".ot-chip-base, .swap-chip-cal-base");
+      var strip = chip.querySelector(".ot-chip-strip, .swap-chip-cal-strip");
+      if (!base || !strip) return;
+      var baseSize = fitOneLine(base, 10, 6);
+      fitOneLine(strip, Math.min(6.5, baseSize - 1), 4.5);
+    });
+  }
+  function fitOneLine(el, maxPx, minPx){
+    var size = maxPx;
+    el.style.fontSize = size + "px";
+    var target = Math.max(el.clientWidth - 6, minPx * 2); // keep a small even margin on both sides
+    while (el.scrollWidth > target && size > minPx){
+      size -= 0.5;
+      el.style.fontSize = size + "px";
+    }
+    return size;
+  }
+
+  /* ---------------- day sheet ---------------- */
+  function openDaySheet(dateKey){
+    state.selectedDate = dateKey;
+    var d = parseYmd(dateKey);
+    document.getElementById("sheetDate").textContent = WEEKDAY_FULL[d.getDay()] + ", " + d.getDate() + " " + MONTH_LABELS[d.getMonth()];
+    renderDaySheetBody();
+    document.getElementById("daySheetOverlay").classList.add("show");
+  }
+  function closeDaySheet(){ document.getElementById("daySheetOverlay").classList.remove("show"); }
+
+  function renderDaySheetBody(){
+    var key = state.selectedDate;
+
+    var shiftsWrap = document.getElementById("sheetShifts");
+    shiftsWrap.innerHTML = "";
+    var list = state.shifts[key] || [];
+    if (!list.length){
+      shiftsWrap.appendChild(hintEl("No shifts logged."));
+    } else {
+      list.forEach(function(s){
+        var t = state.typesById[s.typeId];
+        if (!t) return;
+        var isOT = s.typeId === OVERTIME_ID;
+        var col = entryColor(s);
+        var tag = document.createElement("span");
+        tag.className = "shift-tag" + (isOT ? " ot" : "");
+        tag.style.background = col.bg;
+        tag.style.color = col.ink;
+        var label = document.createElement("span");
+        label.textContent = entryDisplayName(s) + (isOT && s.hours!=null ? " · " + fmtHours(s.hours) + "h" : "");
+        tag.appendChild(label);
+        if (s.tag){
+          var note = document.createElement("span");
+          note.className = "tagged-note";
+          note.textContent = "· " + s.tag;
+          tag.appendChild(note);
+        }
+        if (isOT){
+          var hoursBtn = document.createElement("button");
+          hoursBtn.textContent = "⏱";
+          hoursBtn.title = "Edit overtime hours";
+          hoursBtn.addEventListener("click", function(){
+            openMiniModal({
+              title: "Overtime hours",
+              message: entryDisplayName(s) + " on this day",
+              inputType: "number", placeholder: "e.g. 4", min: 0.5, step: 0.5,
+              value: s.hours != null ? s.hours : "",
+              confirmLabel: "Save",
+              onConfirm: function(val){
+                var h = parseFloat(val);
+                if (!h || h <= 0){ toast("Enter a number of hours"); return; }
+                setShiftHours(key, s.id, h);
+              }
+            });
+          });
+          tag.appendChild(hoursBtn);
+        }
+        var tagBtn = document.createElement("button");
+        tagBtn.textContent = "✎";
+        tagBtn.title = "Add a note to this shift";
+        tagBtn.addEventListener("click", function(){
+          openMiniModal({
+            title: "Shift note",
+            message: t.name + " on this day",
+            placeholder: "e.g. Swapped with Sam",
+            value: s.tag || "",
+            confirmLabel: "Save",
+            onConfirm: function(val){ setShiftTag(key, s.id, val.trim()); }
+          });
+        });
+        tag.appendChild(tagBtn);
+        var swapBtn = document.createElement("button");
+        swapBtn.textContent = "⇄";
+        swapBtn.title = "Swap this shift to another date";
+        swapBtn.addEventListener("click", function(){ openSwapForm(key, s.id, s.typeId, s.hours, s.baseTypeId); });
+        tag.appendChild(swapBtn);
+        var rm = document.createElement("button");
+        rm.textContent = "✕";
+        rm.addEventListener("click", function(){ removeShift(key, s.id); });
+        tag.appendChild(rm);
+        shiftsWrap.appendChild(tag);
+      });
+    }
+
+    renderSwapsSection(key);
+
+    var picker = document.getElementById("sheetTypePicker");
+    picker.innerHTML = "";
+    if (!state.types.length){
+      picker.appendChild(hintEl("No shift types yet — add one from the Types tab first."));
+    }
+    state.types.forEach(function(t){
+      var b = document.createElement("button");
+      b.className = "type-pick-btn";
+      b.style.background = t.color;
+      b.style.color = t.ink;
+      b.textContent = "+ " + t.name;
+      b.addEventListener("click", function(){ addShift(key, t.id); });
+      picker.appendChild(b);
+    });
+    state.types.filter(function(t){ return t.overtimeEligible !== false; }).forEach(function(t){
+      var otBtn = document.createElement("button");
+      otBtn.className = "type-pick-btn ot-combo";
+      var strip = document.createElement("span");
+      strip.className = "ot-strip";
+      strip.textContent = "Overtime";
+      otBtn.appendChild(strip);
+      var base = document.createElement("span");
+      base.className = "ot-base";
+      base.style.background = t.color;
+      base.style.color = t.ink;
+      base.textContent = t.name;
+      otBtn.appendChild(base);
+      otBtn.addEventListener("click", function(){ openOvertimeHoursPrompt(key, t.id); });
+      picker.appendChild(otBtn);
+    });
+
+    var leaveWrap = document.getElementById("sheetLeave");
+    leaveWrap.innerHTML = "";
+    var lv = state.leave[key] || [];
+    if (!lv.length){
+      leaveWrap.appendChild(hintEl("No leave logged for this day."));
+    } else {
+      lv.forEach(function(l){
+        var def = LEAVE_COLORS[l.kind];
+        var row = document.createElement("span");
+        row.className = "shift-tag";
+        row.style.background = def.color;
+        row.style.color = def.ink;
+        var label = document.createElement("span");
+        label.textContent = def.label;
+        row.appendChild(label);
+        var rm = document.createElement("button");
+        rm.textContent = "✕";
+        rm.addEventListener("click", function(){ removeLeave(key, l.id); });
+        row.appendChild(rm);
+        leaveWrap.appendChild(row);
+      });
+    }
+
+    var notesWrap = document.getElementById("sheetNotes");
+    notesWrap.innerHTML = "";
+    var notes = (state.notes[key] || []).slice().sort(function(a,b){
+      return (a.time||"99:99").localeCompare(b.time||"99:99");
+    });
+    if (!notes.length){
+      notesWrap.appendChild(hintEl("No personal events for this day."));
+    } else {
+      notes.forEach(function(n){
+        var cat = EVENT_CATS[n.category] || EVENT_CATS.other;
+        var row = document.createElement("div");
+        row.className = "event-item";
+        var dot = document.createElement("span");
+        dot.className = "dot";
+        dot.style.background = cat.color;
+        row.appendChild(dot);
+        if (n.time){
+          var t = document.createElement("span");
+          t.className = "etime";
+          t.textContent = n.time;
+          row.appendChild(t);
+        }
+        var span = document.createElement("span");
+        span.className = "etext";
+        span.textContent = n.text;
+        row.appendChild(span);
+        var rm = document.createElement("button");
+        rm.textContent = "✕";
+        rm.addEventListener("click", function(){ removeNote(key, n.id); });
+        row.appendChild(rm);
+        notesWrap.appendChild(row);
+      });
+    }
+
+    renderEventCatPicker();
+  }
+  function renderEventCatPicker(){
+    var row = document.getElementById("eventCatRow");
+    row.innerHTML = "";
+    EVENT_CAT_ORDER.forEach(function(key){
+      var cat = EVENT_CATS[key];
+      var b = document.createElement("button");
+      b.className = "cat-chip" + (state.noteCategory === key ? " sel" : "");
+      b.type = "button";
+      var dot = document.createElement("span");
+      dot.className = "dot";
+      dot.style.background = cat.color;
+      b.appendChild(dot);
+      var label = document.createElement("span");
+      label.textContent = cat.label;
+      b.appendChild(label);
+      b.addEventListener("click", function(){ state.noteCategory = key; renderEventCatPicker(); });
+      row.appendChild(b);
+    });
+  }
+  function hintEl(text){
+    var d = document.createElement("div");
+    d.className = "empty-hint";
+    d.textContent = text;
+    return d;
+  }
+
+  /* ---------------- swaps ---------------- */
+  function renderSwapsSection(dateKey){
+    var section = document.getElementById("swapsSection");
+    var wrap = document.getElementById("sheetSwaps");
+    wrap.innerHTML = "";
+    var list = state.swaps[dateKey] || [];
+    if (!list.length){ section.style.display = "none"; return; }
+    section.style.display = "block";
+    list.forEach(function(rec){
+      var shiftLabel = entryDisplayName(rec) || "Shift";
+      var chip = document.createElement("button");
+      chip.className = "swap-chip";
+      var badge = document.createElement("span");
+      badge.className = "swap-badge " + rec.kind;
+      badge.textContent = rec.kind === "off" ? "Off" : "On";
+      chip.appendChild(badge);
+      var info = document.createElement("span");
+      info.className = "swap-info";
+      var otherDate = parseYmd(rec.linkedDate);
+      var otherLabel = otherDate.getDate() + " " + MONTH_LABELS[otherDate.getMonth()].slice(0,3);
+      info.innerHTML = "<b>" + shiftLabel + "</b>" +
+        (rec.kind === "off" ? " moved to " : " picked up from ") + otherLabel +
+        (rec.partner ? " · " + rec.partner : "");
+      chip.appendChild(info);
+      chip.addEventListener("click", function(){
+        var msg = shiftLabel + (rec.kind==="off" ? " swapped away to " : " picked up from ") + otherLabel + ".";
+        if (rec.partner) msg += " With " + rec.partner + ".";
+        if (rec.note) msg += " Note: " + rec.note;
+        openMiniModal({
+          title: "Swap details",
+          message: msg,
+          showInput: false,
+          confirmLabel: "Undo swap",
+          onConfirm: function(){ undoSwap(dateKey, rec.id); }
+        });
+      });
+      wrap.appendChild(chip);
+    });
+  }
+
+  function openSwapForm(dateKey, shiftId, typeId, hours, baseTypeId){
+    state.swapPending = {date: dateKey, shiftId: shiftId, typeId: typeId, hours: hours != null ? hours : null, baseTypeId: baseTypeId || null};
+    document.getElementById("swapFormTitle").textContent = "Swap " + (entryDisplayName({typeId:typeId, baseTypeId:baseTypeId}) || "shift");
+    document.getElementById("swapToDate").value = "";
+    document.getElementById("swapPartner").value = "";
+    document.getElementById("swapNote").value = "";
+    var effectiveTypeId = typeId === OVERTIME_ID ? baseTypeId : typeId;
+    var sel = document.getElementById("swapReplaceType");
+    sel.innerHTML = "";
+    if (!state.types.length){
+      var opt0 = document.createElement("option");
+      opt0.value = ""; opt0.textContent = "(no shift types yet)";
+      sel.appendChild(opt0);
+    } else {
+      state.types.forEach(function(t){
+        var opt = document.createElement("option");
+        opt.value = t.id; opt.textContent = t.name;
+        if (t.id === effectiveTypeId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+    document.getElementById("swapFormOverlay").classList.add("show");
+  }
+  function closeSwapForm(){
+    document.getElementById("swapFormOverlay").classList.remove("show");
+    state.swapPending = null;
+  }
+  document.getElementById("swapFormClose").addEventListener("click", closeSwapForm);
+  document.getElementById("swapFormCancel").addEventListener("click", closeSwapForm);
+  document.getElementById("swapFormOverlay").addEventListener("click", function(e){ if (e.target === this) closeSwapForm(); });
+  document.getElementById("swapFormConfirm").addEventListener("click", function(){
+    if (!state.swapPending) return;
+    var toVal = document.getElementById("swapToDate").value;
+    if (!toVal){ toast("Pick the date you're swapping to"); return; }
+    if (toVal === state.swapPending.date){ toast("Pick a different date"); return; }
+    var partner = document.getElementById("swapPartner").value.trim();
+    var note = document.getElementById("swapNote").value.trim();
+    var replacementTypeId = document.getElementById("swapReplaceType").value || null;
+    performSwap(state.swapPending.date, state.swapPending.shiftId, state.swapPending.typeId, state.swapPending.hours, toVal, partner, note, state.swapPending.baseTypeId, replacementTypeId);
+    closeSwapForm();
+  });
+
+  function performSwap(fromDate, shiftId, typeId, hours, toDate, partner, note, baseTypeId, replacementTypeId){
+    var list = state.shifts[fromDate] || [];
+    var idx = list.findIndex(function(s){ return s.id === shiftId; });
+    if (idx === -1){ toast("Couldn't find that shift"); return; }
+    list.splice(idx, 1);
+
+    var effectiveOriginalType = typeId === OVERTIME_ID ? baseTypeId : typeId;
+    var newEntry;
+    if (replacementTypeId && replacementTypeId !== effectiveOriginalType){
+      newEntry = {id: mkId(), typeId: replacementTypeId};
+    } else {
+      newEntry = {id: mkId(), typeId: typeId};
+      if (hours != null) newEntry.hours = hours;
+      if (baseTypeId) newEntry.baseTypeId = baseTypeId;
+    }
+    (state.shifts[toDate] = state.shifts[toDate] || []).push(newEntry);
+
+    var offId = mkId(), onId = mkId();
+    (state.swaps[fromDate] = state.swaps[fromDate] || []).push({
+      id: offId, kind: "off", partner: partner, note: note, linkedDate: toDate, linkedSwapId: onId, typeId: typeId, baseTypeId: baseTypeId || null, hours: hours != null ? hours : null
+    });
+    (state.swaps[toDate] = state.swaps[toDate] || []).push({
+      id: onId, kind: "on", partner: partner, note: note, linkedDate: fromDate, linkedSwapId: offId, typeId: newEntry.typeId, baseTypeId: newEntry.baseTypeId || null, hours: newEntry.hours != null ? newEntry.hours : null, shiftEntryId: newEntry.id
+    });
+
+    saveStore(); renderAll(); toast("Shift swapped" + (partner ? " with " + partner : ""));
+  }
+
+  /* ---------------- overtime ---------------- */
+  function openOvertimeHoursPrompt(dateKey, baseTypeId){
+    var bt = state.typesById[baseTypeId];
+    openMiniModal({
+      title: "Overtime – " + (bt ? bt.name : "shift"),
+      message: "How many hours of overtime?",
+      inputType: "number", placeholder: "e.g. 4", min: 0.5, step: 0.5,
+      confirmLabel: "Add",
+      onConfirm: function(val){
+        var h = parseFloat(val);
+        if (!h || h <= 0){ toast("Enter a number of hours"); return; }
+        addShift(dateKey, OVERTIME_ID, h, baseTypeId);
+      }
+    });
+  }
+
+  function undoSwap(fromClickedDate, clickedSwapId){
+    var clickedList = state.swaps[fromClickedDate] || [];
+    var rec = clickedList.find(function(r){ return r.id === clickedSwapId; });
+    if (!rec) return;
+    var offDate, offRec, onDate, onRec;
+    if (rec.kind === "off"){
+      offDate = fromClickedDate; offRec = rec; onDate = rec.linkedDate;
+      onRec = (state.swaps[onDate]||[]).find(function(r){ return r.id === rec.linkedSwapId; });
+    } else {
+      onDate = fromClickedDate; onRec = rec; offDate = rec.linkedDate;
+      offRec = (state.swaps[offDate]||[]).find(function(r){ return r.id === rec.linkedSwapId; });
+    }
+    if (onRec && state.shifts[onDate]){
+      state.shifts[onDate] = state.shifts[onDate].filter(function(s){ return s.id !== onRec.shiftEntryId; });
+    }
+    var srcRec = offRec || rec;
+    var restored = {id: mkId(), typeId: srcRec.typeId};
+    if (srcRec.hours != null) restored.hours = srcRec.hours;
+    if (srcRec.baseTypeId) restored.baseTypeId = srcRec.baseTypeId;
+    (state.shifts[offDate] = state.shifts[offDate] || []).push(restored);
+
+    if (offRec) state.swaps[offDate] = (state.swaps[offDate]||[]).filter(function(r){ return r.id !== offRec.id; });
+    if (onRec) state.swaps[onDate] = (state.swaps[onDate]||[]).filter(function(r){ return r.id !== onRec.id; });
+
+    saveStore(); renderAll(); toast("Swap undone");
+  }
+
+  /* ---------------- data mutations ---------------- */
+  function addShift(dateKey, typeId, hours, baseTypeId){
+    var entry = {id: mkId(), typeId: typeId};
+    if (hours != null) entry.hours = hours;
+    if (baseTypeId) entry.baseTypeId = baseTypeId;
+    (state.shifts[dateKey] = state.shifts[dateKey] || []).push(entry);
+    saveStore(); renderAll(); toast("Shift added");
+  }
+  function removeShift(dateKey, id){
+    if (state.shifts[dateKey]) state.shifts[dateKey] = state.shifts[dateKey].filter(function(s){ return s.id!==id; });
+    saveStore(); renderAll(); toast("Shift removed");
+  }
+  function setShiftTag(dateKey, id, text){
+    var list = state.shifts[dateKey] || [];
+    var s = list.find(function(x){ return x.id===id; });
+    if (s){ if (text) s.tag = text; else delete s.tag; }
+    saveStore(); renderAll(); toast(text ? "Note saved" : "Note removed");
+  }
+  function setShiftHours(dateKey, id, hours){
+    var list = state.shifts[dateKey] || [];
+    var s = list.find(function(x){ return x.id===id; });
+    if (s) s.hours = hours;
+    saveStore(); renderAll(); toast("Hours updated");
+  }
+  function addLeave(dateKey, kind){
+    (state.leave[dateKey] = state.leave[dateKey] || []).push({id: mkId(), kind: kind});
+    saveStore(); renderAll(); toast(LEAVE_COLORS[kind].label + " added");
+  }
+  function removeLeave(dateKey, id){
+    if (state.leave[dateKey]) state.leave[dateKey] = state.leave[dateKey].filter(function(l){ return l.id!==id; });
+    saveStore(); renderAll();
+  }
+  function addNote(dateKey, text, time, category){
+    text = text.trim();
+    if (!text) return;
+    var entry = {id: mkId(), text: text, category: category || "other"};
+    if (time) entry.time = time;
+    (state.notes[dateKey] = state.notes[dateKey] || []).push(entry);
+    saveStore(); renderAll(); toast("Event added");
+  }
+  function removeNote(dateKey, id){
+    if (state.notes[dateKey]) state.notes[dateKey] = state.notes[dateKey].filter(function(n){ return n.id!==id; });
+    saveStore(); renderAll();
+  }
+
+  function saveType(){
+    var name = document.getElementById("typeName").value.trim();
+    if (!name){ toast("Give it a name"); return; }
+    var start = document.getElementById("typeStart").value || "07:00";
+    var end = document.getElementById("typeEnd").value || "19:00";
+    var hours = calcDuration(start, end);
+    var sel = document.querySelector(".color-swatch.sel");
+    var color = sel ? sel.getAttribute("data-hex") : PALETTE[0].hex;
+    var ink = sel ? sel.getAttribute("data-ink") : PALETTE[0].ink;
+    var overtimeEligible = document.getElementById("typeOvertimeEligible").checked;
+
+    if (state.editingTypeId){
+      var t = state.typesById[state.editingTypeId];
+      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; }
+      toast("Type updated");
+    } else {
+      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, order: state.types.length};
+      state.types.push(nt);
+      state.typesById[nt.id] = nt;
+      toast("Type created");
+    }
+    saveStore(); renderAll(); closeTypeSheet();
+  }
+  function deleteType(){
+    if (!state.editingTypeId) return;
+    state.types = state.types.filter(function(t){ return t.id!==state.editingTypeId; });
+    delete state.typesById[state.editingTypeId];
+    saveStore(); renderAll(); toast("Type deleted"); closeTypeSheet();
+  }
+
+  function openTypeSheet(typeId){
+    state.editingTypeId = typeId || null;
+    var t = typeId ? state.typesById[typeId] : null;
+    document.getElementById("typeSheetTitle").textContent = t ? "Edit shift type" : "New shift type";
+    document.getElementById("typeName").value = t ? t.name : "";
+    document.getElementById("typeStart").value = t ? t.startTime : "07:00";
+    document.getElementById("typeEnd").value = t ? t.endTime : "19:00";
+    document.getElementById("typeOvertimeEligible").checked = t ? (t.overtimeEligible !== false) : true;
+    document.getElementById("deleteTypeBtn").style.display = t ? "block" : "none";
+    updateDurationPreview();
+
+    var grid = document.getElementById("colorGrid");
+    grid.innerHTML = "";
+    var chosen = t ? t.color : PALETTE[0].hex;
+    PALETTE.forEach(function(p){
+      var sw = document.createElement("button");
+      sw.className = "color-swatch" + (p.hex.toLowerCase()===chosen.toLowerCase() ? " sel" : "");
+      sw.style.background = p.hex;
+      sw.setAttribute("data-hex", p.hex);
+      sw.setAttribute("data-ink", p.ink);
+      sw.type = "button";
+      sw.addEventListener("click", function(){
+        grid.querySelectorAll(".color-swatch").forEach(function(s){ s.classList.remove("sel"); });
+        sw.classList.add("sel");
+      });
+      grid.appendChild(sw);
+    });
+    document.getElementById("typeSheetOverlay").classList.add("show");
+  }
+  function closeTypeSheet(){
+    document.getElementById("typeSheetOverlay").classList.remove("show");
+    state.editingTypeId = null;
+  }
+  function updateDurationPreview(){
+    var start = document.getElementById("typeStart").value || "07:00";
+    var end = document.getElementById("typeEnd").value || "19:00";
+    document.getElementById("durationPreview").textContent = "= " + fmtHours(calcDuration(start,end)) + " hours";
+  }
+  document.getElementById("typeStart").addEventListener("input", updateDurationPreview);
+  document.getElementById("typeEnd").addEventListener("input", updateDurationPreview);
+
+  /* ---------------- render: types view ---------------- */
+  function renderTypes(){
+    var builtin = document.getElementById("builtinTypesList");
+    builtin.innerHTML = "";
+    [OVERTIME_TYPE].forEach(function(t, i){
+      var row = document.createElement("div");
+      row.className = "type-row";
+      var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=t.color; row.appendChild(sw);
+      var meta = document.createElement("div"); meta.className="meta";
+      var name = document.createElement("div"); name.className="name";
+      name.innerHTML = ""; name.textContent = t.name + " ";
+      var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Built-in";
+      name.appendChild(pill);
+      meta.appendChild(name);
+      var hrs = document.createElement("div"); hrs.className="hrs num"; hrs.textContent="Enter hours each time";
+      meta.appendChild(hrs);
+      row.appendChild(meta);
+      builtin.appendChild(row);
+    });
+    ["annual","sick"].forEach(function(k, i){
+      if (i>0){ var div=document.createElement("div"); div.className="row-divider"; builtin.appendChild(div); }
+      var def = LEAVE_COLORS[k];
+      var row = document.createElement("div"); row.className="type-row";
+      var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=def.color; row.appendChild(sw);
+      var meta = document.createElement("div"); meta.className="meta";
+      var name = document.createElement("div"); name.className="name"; name.textContent=def.label+" ";
+      var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Built-in"; name.appendChild(pill);
+      meta.appendChild(name);
+      var hrs = document.createElement("div"); hrs.className="hrs num"; hrs.textContent="Logged as a day, not hours";
+      meta.appendChild(hrs);
+      row.appendChild(meta);
+      builtin.appendChild(row);
+    });
+    var divTop = document.createElement("div"); divTop.className="row-divider";
+    builtin.insertBefore(divTop, builtin.children[1]);
+
+    var list = document.getElementById("typesList");
+    list.innerHTML = "";
+    var sorted = state.types.slice().sort(function(a,b){ return a.order - b.order; });
+    sorted.forEach(function(t, i){
+      if (i>0){ var d=document.createElement("div"); d.className="row-divider"; list.appendChild(d); }
+      var row = document.createElement("div"); row.className="type-row";
+      var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=t.color; row.appendChild(sw);
+      var meta = document.createElement("div"); meta.className="meta";
+      var name = document.createElement("div"); name.className="name"; name.textContent=t.name;
+      meta.appendChild(name);
+      var hrs = document.createElement("div"); hrs.className="hrs num";
+      hrs.textContent = (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + (t.overtimeEligible === false ? "  ·  no overtime" : "");
+      meta.appendChild(hrs);
+      row.appendChild(meta);
+      var actions = document.createElement("div"); actions.className="actions";
+      var editBtn = document.createElement("button"); editBtn.className="ghost-btn"; editBtn.textContent="Edit";
+      editBtn.addEventListener("click", function(){ openTypeSheet(t.id); });
+      actions.appendChild(editBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+    if (!sorted.length) list.appendChild(hintEl("No shift types yet — add one to get started."));
+  }
+
+  /* ---------------- roster tab ---------------- */
+  function ensurePatternShape(){
+    var weeks = state.roster.weeks || 1;
+    var pattern = state.roster.pattern || [];
+    while (pattern.length < weeks) pattern.push([[],[],[],[],[],[],[]]);
+    pattern.length = weeks;
+    pattern.forEach(function(w){ while (w.length < 7) w.push([]); });
+    state.roster.pattern = pattern;
+  }
+  function renderRoster(){
+    ensurePatternShape();
+    document.getElementById("rosterWeeksInput").value = state.roster.weeks;
+    var wrap = document.getElementById("rosterGridWrap");
+    wrap.innerHTML = "";
+    var head = document.createElement("div");
+    head.className = "roster-head";
+    head.innerHTML = "<span></span>" + ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(function(w){ return "<span>"+w+"</span>"; }).join("");
+    wrap.appendChild(head);
+    var grid = document.createElement("div");
+    grid.className = "roster-grid";
+    state.roster.pattern.forEach(function(week, wi){
+      var row = document.createElement("div");
+      row.className = "roster-week";
+      var label = document.createElement("div");
+      label.className = "roster-week-label";
+      label.textContent = "W" + (wi+1);
+      row.appendChild(label);
+      week.forEach(function(dayTypeIds, di){
+        var cell = document.createElement("button");
+        cell.className = "roster-cell";
+        var shown = dayTypeIds.slice(0,2);
+        shown.forEach(function(tid){
+          var t = state.typesById[tid];
+          if (!t) return;
+          var c = document.createElement("div");
+          c.className = "rchip";
+          c.style.background = t.color; c.style.color = t.ink;
+          c.textContent = t.name;
+          cell.appendChild(c);
+        });
+        if (dayTypeIds.length > 2){
+          var more = document.createElement("div");
+          more.className = "rmore";
+          more.textContent = "+" + (dayTypeIds.length-2);
+          cell.appendChild(more);
+        }
+        cell.addEventListener("click", function(){ openPatternSheet(wi, di); });
+        row.appendChild(cell);
+      });
+      grid.appendChild(row);
+    });
+    wrap.appendChild(grid);
+
+    if (!document.getElementById("rosterStartDate").value){
+      document.getElementById("rosterStartDate").value = ymd(new Date());
+    }
+  }
+  function openPatternSheet(weekIdx, dayIdx){
+    state.patternCell = {week: weekIdx, day: dayIdx};
+    var dayNames = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    document.getElementById("patternSheetTitle").textContent = "Week " + (weekIdx+1) + " · " + dayNames[dayIdx];
+    renderPatternPicker();
+    document.getElementById("patternSheetOverlay").classList.add("show");
+  }
+  function renderPatternPicker(){
+    var picker = document.getElementById("patternTypePicker");
+    picker.innerHTML = "";
+    if (!state.types.length){
+      picker.appendChild(hintEl("No shift types yet — add one from the Types tab first."));
+      return;
+    }
+    var cur = state.roster.pattern[state.patternCell.week][state.patternCell.day];
+    state.types.forEach(function(t){
+      var b = document.createElement("button");
+      var on = cur.indexOf(t.id) !== -1;
+      b.className = "toggle-chip" + (on ? " on" : "");
+      if (on){ b.style.background = t.color; b.style.color = t.ink; }
+      b.textContent = t.name;
+      b.addEventListener("click", function(){
+        var idx = cur.indexOf(t.id);
+        if (idx === -1) cur.push(t.id); else cur.splice(idx,1);
+        saveStore();
+        renderPatternPicker();
+        renderRoster();
+      });
+      picker.appendChild(b);
+    });
+  }
+  document.getElementById("patternSheetClose").addEventListener("click", function(){
+    document.getElementById("patternSheetOverlay").classList.remove("show");
+  });
+  document.getElementById("patternSheetOverlay").addEventListener("click", function(e){
+    if (e.target === this) this.classList.remove("show");
+  });
+
+  document.getElementById("rosterWeeksApplyBtn").addEventListener("click", function(){
+    var n = parseInt(document.getElementById("rosterWeeksInput").value, 10);
+    if (!n || n < 1) n = 1;
+    if (n > 52) n = 52;
+    state.roster.weeks = n;
+    ensurePatternShape();
+    saveStore();
+    renderRoster();
+    toast("Pattern length updated");
+  });
+
+  document.getElementById("rosterApplyBtn").addEventListener("click", function(){
+    var startVal = document.getElementById("rosterStartDate").value;
+    if (!startVal){ toast("Pick a start date"); return; }
+    var months = parseInt(document.getElementById("rosterDuration").value, 10);
+    var hasAny = state.roster.pattern.some(function(w){ return w.some(function(d){ return d.length; }); });
+    if (!hasAny){ toast("Assign shifts to the pattern first"); return; }
+    openMiniModal({
+      title: "Fill the calendar?",
+      message: "This overwrites any existing shifts on the affected dates with the repeating pattern, starting " + startVal + " for " + months + " months. This can't be undone automatically.",
+      showInput: false,
+      confirmLabel: "Fill calendar",
+      onConfirm: function(){ applyRosterPattern(startVal, months); }
+    });
+  });
+
+  function applyRosterPattern(startVal, months){
+    var start = parseYmd(startVal);
+    var end = new Date(start.getFullYear(), start.getMonth()+months, start.getDate());
+    var weeks = state.roster.weeks;
+    var patternStart = addDays(start, -mondayIndex(start.getDay())); // Monday on/before start
+    var filled = 0;
+    var cur = new Date(start);
+    while (cur < end){
+      var diffDays = Math.round((cur - patternStart) / 86400000);
+      var totalDayIdx = ((diffDays % (weeks*7)) + (weeks*7)) % (weeks*7);
+      var wi = Math.floor(totalDayIdx / 7);
+      var di = mondayIndex(cur.getDay());
+      var typeIds = (state.roster.pattern[wi] && state.roster.pattern[wi][di]) || [];
+      var key = ymd(cur);
+      state.shifts[key] = typeIds.map(function(tid){ return {id: mkId(), typeId: tid}; });
+      filled++;
+      cur = addDays(cur, 1);
+    }
+    saveStore();
+    renderAll();
+    toast("Filled " + filled + " days from the pattern");
+  }
+
+  /* ---------------- reports ---------------- */
+  function periodRange(){
+    if (state.repMode === "month"){
+      var y = state.repMonth.getFullYear(), m = state.repMonth.getMonth();
+      return { start: new Date(y,m,1), end: new Date(y,m+1,1), label: MONTH_LABELS[m] + " " + y };
+    }
+    var y2 = state.repYear;
+    return { start: new Date(y2,0,1), end: new Date(y2+1,0,1), label: "" + y2 };
+  }
+  function prevPeriodRange(){
+    if (state.repMode === "month"){
+      var pm = addMonths(state.repMonth, -1);
+      var y = pm.getFullYear(), m = pm.getMonth();
+      return { start: new Date(y,m,1), end: new Date(y,m+1,1) };
+    }
+    var y2 = state.repYear - 1;
+    return { start: new Date(y2,0,1), end: new Date(y2+1,0,1) };
+  }
+  function collectPeriodStats(range){
+    var byType = {}, daysWorked = {}, totalHours = 0, otHours = 0;
+    var weekdayHours = 0, weekendHours = 0, weekdayCount=0, weekendCount=0;
+    var monthTotals = {}; // for year-in-review
+
+    Object.keys(state.shifts).forEach(function(dateKey){
+      var d = parseYmd(dateKey);
+      if (d < range.start || d >= range.end) return;
+      state.shifts[dateKey].forEach(function(s){
+        var t = state.typesById[s.typeId];
+        if (!t) return;
+        var h = effectiveHours(s);
+        var groupKey = s.typeId === OVERTIME_ID && s.baseTypeId ? (s.typeId + ":" + s.baseTypeId) : s.typeId;
+        var groupColor = entryColor(s);
+        byType[groupKey] = byType[groupKey] || {count:0, hours:0, t:t, name: entryDisplayName(s), color: groupColor.bg};
+        byType[groupKey].count++;
+        byType[groupKey].hours += h;
+        totalHours += h;
+        if (s.typeId === OVERTIME_ID) otHours += h;
+        daysWorked[dateKey] = true;
+        if (isWeekendDate(d)){ weekendHours += h; weekendCount++; } else { weekdayHours += h; weekdayCount++; }
+        var mk = d.getFullYear()+"-"+pad2(d.getMonth()+1);
+        monthTotals[mk] = (monthTotals[mk]||0) + h;
+      });
+    });
+    var leaveDays = 0;
+    Object.keys(state.leave).forEach(function(dateKey){
+      var d = parseYmd(dateKey);
+      if (d < range.start || d >= range.end) return;
+      leaveDays += state.leave[dateKey].length;
+    });
+    return { byType:byType, daysWorked:Object.keys(daysWorked).length, totalHours:totalHours, otHours:otHours,
+      weekdayHours:weekdayHours, weekendHours:weekendHours, weekdayCount:weekdayCount, weekendCount:weekendCount,
+      leaveDays:leaveDays, monthTotals:monthTotals };
+  }
+
+  function renderReports(){
+    var range = periodRange();
+    document.getElementById("repTitle").textContent = range.label;
+    document.querySelectorAll("#repModeSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-mode")===state.repMode);
+    });
+
+    var stats = collectPeriodStats(range);
+    document.getElementById("repTotalHours").textContent = fmtHours(stats.totalHours);
+    document.getElementById("repOTHours").textContent = fmtHours(stats.otHours);
+    document.getElementById("repDaysWorked").textContent = stats.daysWorked;
+    document.getElementById("repLeaveDays").textContent = stats.leaveDays;
+
+    var rate = state.settings.hourlyRate || 0;
+    document.getElementById("hourlyRateInput").value = rate || "";
+    document.getElementById("repPayEstimate").textContent = "$" + (Math.round(stats.totalHours * rate * 100)/100).toLocaleString();
+
+    var bars = document.getElementById("repBars");
+    bars.innerHTML = "";
+    var rows = Object.keys(stats.byType).map(function(id){ return stats.byType[id]; }).sort(function(a,b){ return b.hours-a.hours; });
+    var maxHours = rows.reduce(function(m,r){ return Math.max(m,r.hours); }, 0) || 1;
+    if (!rows.length) bars.appendChild(hintEl("No shifts logged this period."));
+    rows.forEach(function(r){
+      bars.appendChild(makeBarRow(r.name, r.color, r.hours, maxHours, fmtHours(r.hours)+"h · "+r.count+"x"));
+    });
+
+    var ww = document.getElementById("repWeekdayWeekend");
+    ww.innerHTML = "";
+    var wwMax = Math.max(stats.weekdayHours, stats.weekendHours) || 1;
+    ww.appendChild(makeBarRow("Weekdays", "#4C8DFF", stats.weekdayHours, wwMax, fmtHours(stats.weekdayHours)+"h · "+stats.weekdayCount+"x"));
+    ww.appendChild(makeBarRow("Weekends", "#E8B339", stats.weekendHours, wwMax, fmtHours(stats.weekendHours)+"h · "+stats.weekendCount+"x"));
+
+    var prevRange = prevPeriodRange();
+    var prevStats = collectPeriodStats(prevRange);
+    var cmp = document.getElementById("repComparison");
+    cmp.innerHTML = "";
+    cmp.appendChild(makeComparisonRow("This period", stats.totalHours, "var(--accent)"));
+    cmp.appendChild(makeComparisonRow("Previous period", prevStats.totalHours, "var(--prev-bar)"));
+    var delta = stats.totalHours - prevStats.totalHours;
+    var deltaEl = document.createElement("div");
+    deltaEl.className = "cmp-delta " + (delta >= 0 ? "up" : "down");
+    var pct = prevStats.totalHours > 0 ? Math.round((delta/prevStats.totalHours)*100) : (stats.totalHours>0 ? 100 : 0);
+    deltaEl.textContent = (delta>=0?"+":"") + fmtHours(delta) + "h (" + (pct>=0?"+":"") + pct + "%) vs previous period";
+    cmp.appendChild(deltaEl);
+
+    var yirHead = document.getElementById("yirHead");
+    var yir = document.getElementById("repYearInReview");
+    if (state.repMode === "year"){
+      yirHead.style.display = "flex";
+      yir.style.display = "block";
+      yir.innerHTML = "";
+      var busiestKey = null, busiestVal = 0;
+      Object.keys(stats.monthTotals).forEach(function(k){ if (stats.monthTotals[k] > busiestVal){ busiestVal = stats.monthTotals[k]; busiestKey = k; } });
+      var busiestLabel = busiestKey ? MONTH_LABELS[+busiestKey.split("-")[1]-1] : "—";
+      var rows2 = [
+        ["Total hours worked", fmtHours(stats.totalHours) + " h"],
+        ["Total overtime", fmtHours(stats.otHours) + " h"],
+        ["Busiest month", busiestLabel + (busiestKey ? " (" + fmtHours(busiestVal) + " h)" : "")],
+        ["Leave days taken", stats.leaveDays],
+        ["Estimated pay", "$" + (Math.round(stats.totalHours*rate*100)/100).toLocaleString()]
+      ];
+      rows2.forEach(function(r, i){
+        if (i>0){ var d=document.createElement("div"); d.className="row-divider"; yir.appendChild(d); }
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex; justify-content:space-between; padding:9px 4px; font-size:.85rem;";
+        row.innerHTML = "<span style='color:var(--text-dim)'>"+r[0]+"</span><b class='num'>"+r[1]+"</b>";
+        yir.appendChild(row);
+      });
+    } else {
+      yirHead.style.display = "none";
+      yir.style.display = "none";
+    }
+  }
+  function makeBarRow(name, color, val, max, amtText){
+    var row = document.createElement("div");
+    row.className = "bar-row";
+    var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=color; row.appendChild(sw);
+    var n = document.createElement("div"); n.className="name"; n.textContent=name; row.appendChild(n);
+    var track = document.createElement("div"); track.className="bar-track";
+    var fill = document.createElement("div"); fill.className="bar-fill"; fill.style.width=Math.max(4,(val/max*100))+"%"; fill.style.background=color;
+    track.appendChild(fill); row.appendChild(track);
+    var amt = document.createElement("div"); amt.className="amt num"; amt.textContent=amtText; row.appendChild(amt);
+    return row;
+  }
+  function makeComparisonRow(label, hours, color){
+    var wrap = document.createElement("div");
+    wrap.className = "cmp-row";
+    var lab = document.createElement("div");
+    lab.className = "cmp-label";
+    lab.innerHTML = "<span>"+label+"</span><b class='num'>"+fmtHours(hours)+"h</b>";
+    wrap.appendChild(lab);
+    var bar = document.createElement("div");
+    bar.className = "cmp-bar";
+    var fill = document.createElement("div");
+    var maxRef = Math.max(hours, 1);
+    fill.style.width = "100%";
+    fill.style.background = color;
+    bar.appendChild(fill);
+    wrap.appendChild(bar);
+    return wrap;
+  }
+
+  document.getElementById("hourlyRateInput").addEventListener("change", function(){
+    state.settings.hourlyRate = parseFloat(this.value) || 0;
+    saveStore();
+    renderReports();
+  });
+  document.querySelectorAll("#repModeSeg button").forEach(function(b){
+    b.addEventListener("click", function(){
+      state.repMode = b.getAttribute("data-mode");
+      renderReports();
+    });
+  });
+  document.getElementById("repPrev").addEventListener("click", function(){
+    if (state.repMode === "month") state.repMonth = addMonths(state.repMonth,-1); else state.repYear--;
+    renderReports();
+  });
+  document.getElementById("repNext").addEventListener("click", function(){
+    if (state.repMode === "month") state.repMonth = addMonths(state.repMonth,1); else state.repYear++;
+    renderReports();
+  });
+
+  /* ---------------- render: everything ---------------- */
+  function renderAll(){
+    renderCalendar();
+    renderTypes();
+    renderReports();
+    renderRoster();
+    if (document.getElementById("daySheetOverlay").classList.contains("show")) renderDaySheetBody();
+    renderModeBanner();
+  }
+  function renderModeBanner(){
+    var el = document.getElementById("modeBanner");
+    el.innerHTML = "";
+    if (!storageOk) el.appendChild(bannerEl("This browser won't save changes (private mode or storage blocked) — export your data before closing."));
+  }
+  function bannerEl(text){
+    var b = document.createElement("div");
+    b.className = "banner";
+    b.textContent = text;
+    return b;
+  }
+
+  /* ---------------- view switching ---------------- */
+  function setView(v){
+    state.view = v;
+    document.querySelectorAll(".view").forEach(function(el){ el.classList.remove("active"); });
+    document.getElementById("view-"+v).classList.add("active");
+    document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-view")===v); });
+    if (v === "roster") renderRoster();
+  }
+
+  /* ---------------- export ---------------- */
+  function downloadFile(filename, data, mime){
+    var blob = data instanceof Blob ? data : new Blob([data], {type: mime || "text/plain;charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    toast("Saved " + filename);
+  }
+  function exportCsv(){
+    var range = periodRange();
+    var rows = [["Date","Weekday","Shift type","Hours","Note"]];
+    Object.keys(state.shifts).sort().forEach(function(dateKey){
+      var d = parseYmd(dateKey);
+      if (d < range.start || d >= range.end) return;
+      state.shifts[dateKey].forEach(function(s){
+        var t = state.typesById[s.typeId];
+        if (!t) return;
+        rows.push([dateKey, WEEKDAY_FULL[d.getDay()], entryDisplayName(s), effectiveHours(s), s.tag || ""]);
+      });
+    });
+    var csv = rows.map(function(r){ return r.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(","); }).join("\n");
+    downloadFile("roster-" + (state.repMode==="month" ? ymd(range.start).slice(0,7) : range.start.getFullYear()) + ".csv", csv, "text/csv;charset=utf-8");
+  }
+  function exportJson(){
+    var payload = { exportedAt: new Date().toISOString(), types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps, roster: state.roster, settings: state.settings };
+    downloadFile("roster-board-backup.json", JSON.stringify(payload, null, 2), "application/json");
+  }
+  function exportPdf(){
+    if (state.repMode !== "month"){ toast("Switch to Month view to export a PDF roster"); return; }
+    if (!window.jspdf){ toast("PDF library didn't load"); return; }
+    var range = periodRange();
+    var doc = new window.jspdf.jsPDF({unit:"pt", format:"a4"});
+    var pageW = doc.internal.pageSize.getWidth();
+    var y = 56;
+    doc.setFont("helvetica","bold"); doc.setFontSize(18);
+    doc.text("Roster Board", 40, y); y += 22;
+    doc.setFontSize(12); doc.setFont("helvetica","normal");
+    doc.text(range.label, 40, y); y += 22;
+    doc.setDrawColor(210); doc.line(40, y, pageW-40, y); y += 18;
+
+    doc.setFontSize(9); doc.setFont("helvetica","bold");
+    doc.text("Date", 40, y); doc.text("Day", 130, y); doc.text("Shifts", 190, y); doc.text("Hours", pageW-90, y);
+    y += 6; doc.setDrawColor(230); doc.line(40, y, pageW-40, y); y += 12;
+    doc.setFont("helvetica","normal");
+
+    var totalHours = 0;
+    var cur = new Date(range.start);
+    while (cur < range.end){
+      if (y > 780){ doc.addPage(); y = 56; }
+      var key = ymd(cur);
+      var entries = state.shifts[key] || [];
+      var lv = state.leave[key] || [];
+      var names = entries.map(function(s){
+        var t = state.typesById[s.typeId];
+        var h = effectiveHours(s);
+        totalHours += h;
+        return t ? entryDisplayName(s) + " (" + fmtHours(h) + "h)" : "";
+      }).concat(lv.map(function(l){ return LEAVE_COLORS[l.kind].label; }));
+      if (names.length){
+        doc.text(pad2(cur.getDate())+"/"+pad2(cur.getMonth()+1), 40, y);
+        doc.text(WEEKDAY_FULL[cur.getDay()].slice(0,3), 130, y);
+        doc.text(names.join(", "), 190, y, {maxWidth: pageW-90-190});
+        var dayHours = entries.reduce(function(s,e){ return s+effectiveHours(e); }, 0);
+        doc.text(dayHours ? fmtHours(dayHours) : "—", pageW-90, y);
+        y += 16;
+      }
+      cur = addDays(cur, 1);
+    }
+    y += 8; doc.setDrawColor(210); doc.line(40, y, pageW-40, y); y += 16;
+    doc.setFont("helvetica","bold");
+    doc.text("Total hours: " + fmtHours(totalHours), 40, y);
+    doc.save("roster-" + ymd(range.start).slice(0,7) + ".pdf");
+    toast("PDF saved");
+  }
+
+  document.getElementById("exportCsv").addEventListener("click", exportCsv);
+  document.getElementById("exportJson").addEventListener("click", exportJson);
+  document.getElementById("exportPdf").addEventListener("click", exportPdf);
+
+  /* ---------------- events ---------------- */
+  document.getElementById("prevMonth").addEventListener("click", function(){ state.calMonth = addMonths(state.calMonth,-1); renderCalendar(); });
+  document.getElementById("nextMonth").addEventListener("click", function(){ state.calMonth = addMonths(state.calMonth,1); renderCalendar(); });
+  document.getElementById("todayBtn").addEventListener("click", function(){ state.calMonth = startOfMonth(new Date()); renderCalendar(); });
+
+  document.querySelectorAll(".tab-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){ setView(btn.getAttribute("data-view")); });
+  });
+
+  document.getElementById("sheetClose").addEventListener("click", closeDaySheet);
+  document.getElementById("daySheetOverlay").addEventListener("click", function(e){ if (e.target === this) closeDaySheet(); });
+  document.getElementById("addNoteBtn").addEventListener("click", function(){
+    var input = document.getElementById("noteInput");
+    var timeInput = document.getElementById("noteTime");
+    addNote(state.selectedDate, input.value, timeInput.value, state.noteCategory);
+    input.value = "";
+    timeInput.value = "";
+    state.noteCategory = "other";
+  });
+  document.getElementById("noteInput").addEventListener("keydown", function(e){ if (e.key === "Enter") document.getElementById("addNoteBtn").click(); });
+  document.getElementById("addAnnualLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "annual"); });
+  document.getElementById("addSickLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "sick"); });
+
+  document.getElementById("newTypeBtn").addEventListener("click", function(){ openTypeSheet(null); });
+  document.getElementById("typeSheetClose").addEventListener("click", closeTypeSheet);
+  document.getElementById("typeSheetOverlay").addEventListener("click", function(e){ if (e.target === this) closeTypeSheet(); });
+  document.getElementById("saveTypeBtn").addEventListener("click", saveType);
+  document.getElementById("deleteTypeBtn").addEventListener("click", deleteType);
+
+  /* ---------------- boot ---------------- */
+  loadIntoState();
+  renderAll();
+
+  if ("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    });
+  }
+})();
+</script>
+</body>
+</html>
