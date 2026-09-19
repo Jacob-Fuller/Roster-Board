@@ -192,6 +192,23 @@
   @keyframes pop-in{from{transform:scale(.96); opacity:0;} to{transform:scale(1); opacity:1;}}
   .sheet-handle{width:36px; height:4px; border-radius:4px; background:var(--border); margin:10px auto 2px;}
   .overlay.center .sheet-handle{display:none;}
+
+  .auth-screen{
+    position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center;
+    padding:28px 22px; background:
+      radial-gradient(120% 90% at 50% -10%, rgba(240,169,71,.22), transparent 60%),
+      linear-gradient(165deg, #14110B 0%, #221A0E 45%, #3A2A10 78%, #5C3E12 100%);
+  }
+  .auth-screen.show{display:flex;}
+  .auth-wrap{width:100%; max-width:360px;}
+  .auth-brand{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:22px; text-align:center;}
+  .auth-logo{width:56px; height:56px; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.35);}
+  .auth-appname{font-family:'Fraunces', Georgia, serif; font-size:1.5rem; font-weight:600; color:#FBF6EC;}
+  .auth-tagline{font-size:.82rem; color:rgba(251,246,236,.6); margin-top:-6px;}
+  .auth-card{
+    background:var(--surface); border-radius:20px; padding:26px 22px 22px; box-shadow:0 20px 60px rgba(0,0,0,.35);
+    animation:pop-in .18s ease-out;
+  }
   .sheet-head{display:flex; align-items:flex-start; justify-content:space-between; padding:14px 18px 10px;}
   .sheet-head h3{font-size:1.15rem;}
   .sheet-head .close{border:none; background:var(--surface-2); width:30px; height:30px; border-radius:50%; color:var(--text-dim); font-size:.95rem; flex:none;}
@@ -293,12 +310,17 @@
 <body>
 
 <div id="app">
-  <div class="overlay center show" id="authOverlay" style="z-index:200;">
-    <div class="sheet">
-      <div class="sheet-head">
-        <h3 id="authTitle">Log in</h3>
+  <div class="auth-screen show" id="authOverlay">
+    <div class="auth-wrap">
+      <div class="auth-brand">
+        <img src="icon-192.png" alt="" class="auth-logo">
+        <div class="auth-appname">Roster Board</div>
+        <div class="auth-tagline">Shifts, rosters and pay — all in one place</div>
       </div>
-      <div class="sheet-body">
+      <div class="auth-card">
+        <div class="sheet-head" style="padding:0 0 10px;">
+          <h3 id="authTitle">Log in</h3>
+        </div>
         <p class="section-sub" style="margin:0 0 4px;">One account works across every app in the family — sign in to sync your data.</p>
         <div class="form-row">
           <label for="authEmail">Email</label>
@@ -309,7 +331,7 @@
           <input type="password" id="authPassword" autocomplete="current-password">
         </div>
         <p id="authError" style="color:var(--danger); font-size:.8rem; margin:10px 0 0; display:none;"></p>
-        <div class="sheet-footer">
+        <div class="sheet-footer" style="padding:16px 0 0;">
           <button class="btn primary block" id="authSubmitBtn">Log in</button>
         </div>
         <p class="section-sub" style="margin:14px 0 0; text-align:center;">
