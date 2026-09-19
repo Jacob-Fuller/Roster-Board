@@ -1,0 +1,9 @@
+{
+  "name": "roster-board",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Roster Board — a shift and everyday calendar web app.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
