@@ -8,16 +8,27 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Excess Hours reworked to match Overtime**: Excess Hours is no longer a
+  leave category — it's now logged against a shift, exactly like Overtime.
+  In a day's shift picker you'll see "Excess Hours – Dayshift", "Excess
+  Hours – Nightshift" etc. (one per shift type) right next to the matching
+  "Overtime" buttons — tap one, enter the hours, and it shows on the
+  calendar as the same two-tier banner style as Overtime (gold strip on
+  top, the shift underneath). It now counts toward your worked hours and
+  shift-type breakdown in Reports instead of "Leave taken". Any Excess
+  Hours you logged before this update still show as before — only new
+  entries use the new style.
+- **Mass-select now also works on the Roster pattern grid**: the edit
+  (pencil) button appears in the Roster tab too. Tap it, pick a shift
+  type, then tap as many pattern cells as you like to add that type to
+  them — tap a cell again to remove it. Handy for quickly building a
+  repeating pattern instead of tapping one cell at a time.
+- **Fixed roster pattern cells changing size**: cells in the Roster
+  pattern grid now stay a fixed height, so rows no longer stretch out of
+  alignment when a shift name is longer or a cell has more than one shift
+  in it.
 - **Tab order changed**: the bottom bar now goes Calendar, Shifts, Reports,
   Roster, Account.
-- **Personal reminders as a new shift type**: when creating a shift type,
-  tick "Personal reminder — not a work shift" (e.g. "Call the kids") and
-  the start/end time and overtime options disappear — it's just a name
-  and a colour. It shows up on the calendar as a banner exactly like a
-  normal shift, and works with mass-select and the roster pattern too
-  (handy for something that repeats every week, like a twice-weekly call),
-  but it's left out of your logged hours, overtime, days worked, and
-  every report and export.
 - **Mass-select shifts straight from the calendar**: a new edit (pencil)
   button in the bottom-right corner of the Calendar tab. Tap it, pick a
   shift type from the bar that appears, then tap as many days as you like

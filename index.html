@@ -295,7 +295,7 @@
   .day-cell .event-line .edot{width:4px; height:4px; border-radius:50%; flex:none; margin-top:4px;}
   .day-cell .event-line > span:not(.edot){min-width:0; flex:1; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;}
   .leave-btns{display:flex; flex-wrap:wrap; gap:8px;}
-  .leave-btns .leave-btn{flex:1 1 28%; min-width:96px;}
+  .leave-btns .leave-btn{flex:1 1 45%; min-width:96px;}
   .leave-btn{flex:1; border-radius:10px; padding:9px; font-size:.8rem; font-weight:600; border:1px solid var(--border); background:var(--surface-2); color:var(--text);}
   .leave-list{margin-top:8px;}
   .chip.swap-chip-cal{ flex-direction:column; align-items:stretch; padding:0; border-top:none; gap:0; }
@@ -322,9 +322,6 @@
   .duration-preview{font-size:.76rem; color:var(--text-dim); margin-top:8px;}
   .checkbox-row{display:flex; align-items:center; gap:8px; margin-top:16px; font-size:.85rem; font-weight:600; cursor:pointer;}
   .checkbox-row input[type=checkbox]{width:18px; height:18px; flex:none; accent-color:var(--accent);}
-  .checkbox-row.wrap{align-items:flex-start;}
-  .checkbox-row.wrap input[type=checkbox]{margin-top:2px;}
-  .checkbox-row.wrap span{font-weight:500; color:var(--text-dim); line-height:1.35;}
   .color-grid{display:flex; flex-wrap:wrap; gap:9px;}
   .color-swatch{width:34px; height:34px; border-radius:10px; border:2px solid transparent; position:relative;}
   .color-swatch.sel{border-color:var(--text);}
@@ -349,7 +346,7 @@
   .roster-week-label{display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:var(--text-faint); background:var(--surface-2);}
   .roster-head-cell{text-align:center; font-size:.6rem; font-weight:700; color:var(--text-faint); padding:6px 0; text-transform:uppercase; background:var(--surface-2); display:flex; align-items:center; justify-content:center;}
   .roster-cell{
-    min-height:52px; padding:4px; display:flex; flex-direction:column; gap:2px;
+    height:52px; padding:4px; display:flex; flex-direction:column; gap:2px; overflow:hidden;
     background:var(--surface); text-align:left;
     border:none; margin:0; -webkit-appearance:none; appearance:none; font:inherit; color:inherit;
   }
@@ -368,6 +365,7 @@
     transition:background .15s, transform .15s;
   }
   .fab-btn.show{display:flex;}
+  .fab-btn:has(~ .overlay.show){display:none;}
   .fab-btn:active{transform:scale(.94);}
   .fab-btn svg{width:22px; height:22px;}
   .fab-btn .icon-x{display:none;}
@@ -390,6 +388,7 @@
     content:""; position:absolute; top:4px; right:4px; width:14px; height:14px; border-radius:50%;
     background:var(--accent); box-shadow:0 0 0 2px var(--surface);
   }
+  .roster-cell.bulk-selected{box-shadow:inset 0 0 0 2px var(--accent);}
 
   ::-webkit-scrollbar{width:0; height:0;}
 </style>
@@ -883,7 +882,6 @@
           <div class="leave-btns">
             <button class="leave-btn" id="addAnnualLeave">+ Annual leave</button>
             <button class="leave-btn" id="addSickLeave">+ Sick leave</button>
-            <button class="leave-btn" id="addExcessHours">+ Excess hours</button>
           </div>
         </div>
         <div class="sheet-section">
@@ -920,27 +918,21 @@
           <label>Color</label>
           <div class="color-grid" id="colorGrid"></div>
         </div>
-        <label class="checkbox-row wrap">
-          <input type="checkbox" id="typeNonWork">
-          <span>Personal reminder — not a work shift (e.g. "Call the kids"). Won't count toward your hours or reports.</span>
-        </label>
-        <div id="typeWorkFields">
-          <div class="time-row">
-            <div class="form-row">
-              <label for="typeStart">Start time</label>
-              <input type="time" id="typeStart" value="07:00">
-            </div>
-            <div class="form-row">
-              <label for="typeEnd">End time</label>
-              <input type="time" id="typeEnd" value="19:00">
-            </div>
+        <div class="time-row">
+          <div class="form-row">
+            <label for="typeStart">Start time</label>
+            <input type="time" id="typeStart" value="07:00">
           </div>
-          <div class="duration-preview" id="durationPreview">= 12 hours</div>
-          <label class="checkbox-row">
-            <input type="checkbox" id="typeOvertimeEligible" checked>
-            <span>Allow overtime for this shift type</span>
-          </label>
+          <div class="form-row">
+            <label for="typeEnd">End time</label>
+            <input type="time" id="typeEnd" value="19:00">
+          </div>
         </div>
+        <div class="duration-preview" id="durationPreview">= 12 hours</div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="typeOvertimeEligible" checked>
+          <span>Allow overtime for this shift type</span>
+        </label>
         <div class="sheet-footer">
           <button class="btn danger" id="deleteTypeBtn" style="display:none;">Delete</button>
           <button class="btn primary block" id="saveTypeBtn">Save</button>
@@ -1032,6 +1024,11 @@
   ];
   var OVERTIME_ID = "overtime";
   var OVERTIME_TYPE = {id:OVERTIME_ID, name:"Overtime", color:"#F0679E", ink:"#FFFFFF", isBuiltin:true};
+  var EXCESS_ID = "excess_hours";
+  var EXCESS_TYPE = {id:EXCESS_ID, name:"Excess Hours", color:"#C98A2B", ink:"#FFFFFF", isBuiltin:true};
+  var COMBO_TYPES = {}; COMBO_TYPES[OVERTIME_ID] = OVERTIME_TYPE; COMBO_TYPES[EXCESS_ID] = EXCESS_TYPE;
+  // "excess" leave kind kept here only so any shift types created before this change keep rendering; new
+  // Excess Hours entries are logged against a shift (like Overtime) rather than as leave — see EXCESS_ID above.
   var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual Leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick Leave"}, excess:{color:"#C98A2B", ink:"#FFFFFF", label:"Excess Hours"} };
   var EVENT_CATS = {
     appointment: {color:"#3FC5C0", label:"Appointment"},
@@ -1065,10 +1062,12 @@
     editingShiftKey: null,   // {date,id} for tag editing
     patternCell: null,       // {week, day}
     bulkMode: false,
+    bulkContext: null,       // 'calendar' | 'roster' | null
     bulkTypeId: null,
-    bulkSelectedDates: {}    // dateKey -> shiftEntryId added during this bulk-edit session
+    bulkSelectedDates: {}    // dateKey -> shiftEntryId added during this bulk-edit session (calendar context)
   };
   state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
+  state.typesById[EXCESS_ID] = EXCESS_TYPE;
 
   /* ---------------- date helpers ---------------- */
   function pad2(n){ return n < 10 ? "0"+n : ""+n; }
@@ -1193,6 +1192,7 @@
     state.types = data.types || [];
     state.typesById = {};
     state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
+    state.typesById[EXCESS_ID] = EXCESS_TYPE;
     state.types.forEach(function(t){ state.typesById[t.id] = t; });
     state.shifts = data.shifts || {};
     state.notes = data.notes || {};
@@ -1426,6 +1426,7 @@
     state.types = merged.types;
     state.typesById = {};
     state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
+    state.typesById[EXCESS_ID] = EXCESS_TYPE;
     state.types.forEach(function(t){ state.typesById[t.id] = t; });
     state.shifts = merged.shifts;
     state.notes = merged.notes;
@@ -1915,6 +1916,7 @@
       var data = res.data || { types: [], shifts: {}, leave: {}, swaps: {} };
       var typesById = {};
       typesById[OVERTIME_ID] = OVERTIME_TYPE;
+      typesById[EXCESS_ID] = EXCESS_TYPE;
       (data.types || []).forEach(function(t){ typesById[t.id] = t; });
       sharedRoster = {
         connectionId: conn.id, ownerId: ownerId, email: otherPartyEmail(conn),
@@ -1954,15 +1956,16 @@
     typesById = typesById || state.typesById;
     var t = typesById[entry.typeId];
     if (!t) return "";
-    if (entry.typeId === OVERTIME_ID && entry.baseTypeId){
+    var comboT = COMBO_TYPES[entry.typeId];
+    if (comboT && entry.baseTypeId){
       var bt = typesById[entry.baseTypeId];
-      if (bt) return "Overtime – " + bt.name;
+      if (bt) return comboT.name + " – " + bt.name;
     }
     return t.name;
   }
   function entryColor(entry, typesById){
     typesById = typesById || state.typesById;
-    if (entry.typeId === OVERTIME_ID && entry.baseTypeId){
+    if (COMBO_TYPES[entry.typeId] && entry.baseTypeId){
       var bt = typesById[entry.baseTypeId];
       if (bt) return {bg: bt.color, ink: bt.ink};
     }
@@ -1979,8 +1982,6 @@
       var d = parseYmd(dateKey);
       if (d.getFullYear()===y && d.getMonth()===m){
         state.shifts[dateKey].forEach(function(s){
-          var t = state.typesById[s.typeId];
-          if (t && t.nonWork) return;
           totalShifts++;
           var h = effectiveHours(s);
           totalH += h;
@@ -2061,21 +2062,23 @@
       dayShifts.slice(0, maxChips).forEach(function(s){
         var t = typesById[s.typeId];
         if (!t) return;
-        var isOT = s.typeId === OVERTIME_ID;
+        var comboT = COMBO_TYPES[s.typeId];
         var col = entryColor(s, typesById);
         var chip = document.createElement("div");
-        if (isOT){
+        if (comboT){
           chip.className = "chip ot-chip";
           var strip = document.createElement("span");
           strip.className = "ot-chip-strip";
-          strip.textContent = "Overtime";
+          strip.style.background = comboT.color;
+          strip.style.color = comboT.ink;
+          strip.textContent = comboT.name;
           chip.appendChild(strip);
           var baseLine = document.createElement("span");
           baseLine.className = "ot-chip-base";
           baseLine.style.background = col.bg;
           baseLine.style.color = col.ink;
           var bt = typesById[s.baseTypeId];
-          baseLine.textContent = (bt ? bt.name : "Overtime") + (s.hours!=null ? " " + fmtHours(s.hours) + "h" : "");
+          baseLine.textContent = (bt ? bt.name : comboT.name) + (s.hours!=null ? " " + fmtHours(s.hours) + "h" : "");
           chip.appendChild(baseLine);
         } else {
           chip.className = "chip";
@@ -2190,14 +2193,15 @@
       list.forEach(function(s){
         var t = state.typesById[s.typeId];
         if (!t) return;
-        var isOT = s.typeId === OVERTIME_ID;
+        var comboT = COMBO_TYPES[s.typeId];
         var col = entryColor(s);
         var tag = document.createElement("span");
-        tag.className = "shift-tag" + (isOT ? " ot" : "");
+        tag.className = "shift-tag" + (comboT ? " ot" : "");
         tag.style.background = col.bg;
         tag.style.color = col.ink;
+        if (comboT) tag.style.borderTopColor = comboT.color;
         var label = document.createElement("span");
-        label.textContent = entryDisplayName(s) + (isOT && s.hours!=null ? " · " + fmtHours(s.hours) + "h" : "");
+        label.textContent = entryDisplayName(s) + (comboT && s.hours!=null ? " · " + fmtHours(s.hours) + "h" : "");
         tag.appendChild(label);
         if (s.tag){
           var note = document.createElement("span");
@@ -2205,13 +2209,13 @@
           note.textContent = "· " + s.tag;
           tag.appendChild(note);
         }
-        if (isOT){
+        if (comboT){
           var hoursBtn = document.createElement("button");
           hoursBtn.textContent = "⏱";
-          hoursBtn.title = "Edit overtime hours";
+          hoursBtn.title = "Edit " + comboT.name.toLowerCase() + " hours";
           hoursBtn.addEventListener("click", function(){
             openMiniModal({
-              title: "Overtime hours",
+              title: comboT.name + " hours",
               message: entryDisplayName(s) + " on this day",
               inputType: "number", placeholder: "e.g. 4", min: 0.5, step: 0.5,
               value: s.hours != null ? s.hours : "",
@@ -2270,6 +2274,8 @@
       otBtn.className = "type-pick-btn ot-combo";
       var strip = document.createElement("span");
       strip.className = "ot-strip";
+      strip.style.background = OVERTIME_TYPE.color;
+      strip.style.color = OVERTIME_TYPE.ink;
       strip.textContent = "Overtime";
       otBtn.appendChild(strip);
       var base = document.createElement("span");
@@ -2280,6 +2286,24 @@
       otBtn.appendChild(base);
       otBtn.addEventListener("click", function(){ openOvertimeHoursPrompt(key, t.id); });
       picker.appendChild(otBtn);
+    });
+    state.types.filter(function(t){ return t.overtimeEligible !== false; }).forEach(function(t){
+      var exBtn = document.createElement("button");
+      exBtn.className = "type-pick-btn ot-combo";
+      var strip = document.createElement("span");
+      strip.className = "ot-strip";
+      strip.style.background = EXCESS_TYPE.color;
+      strip.style.color = EXCESS_TYPE.ink;
+      strip.textContent = "Excess Hours";
+      exBtn.appendChild(strip);
+      var base = document.createElement("span");
+      base.className = "ot-base";
+      base.style.background = t.color;
+      base.style.color = t.ink;
+      base.textContent = t.name;
+      exBtn.appendChild(base);
+      exBtn.addEventListener("click", function(){ openExcessHoursPrompt(key, t.id); });
+      picker.appendChild(exBtn);
     });
 
     var leaveWrap = document.getElementById("sheetLeave");
@@ -2413,7 +2437,7 @@
     document.getElementById("swapToDate").value = "";
     document.getElementById("swapPartner").value = "";
     document.getElementById("swapNote").value = "";
-    var effectiveTypeId = typeId === OVERTIME_ID ? baseTypeId : typeId;
+    var effectiveTypeId = COMBO_TYPES[typeId] ? baseTypeId : typeId;
     var sel = document.getElementById("swapReplaceType");
     sel.innerHTML = "";
     if (!state.types.length){
@@ -2456,7 +2480,7 @@
     list.splice(idx, 1);
     tomb(shiftId);
 
-    var effectiveOriginalType = typeId === OVERTIME_ID ? baseTypeId : typeId;
+    var effectiveOriginalType = COMBO_TYPES[typeId] ? baseTypeId : typeId;
     var newEntry;
     if (replacementTypeId && replacementTypeId !== effectiveOriginalType){
       newEntry = {id: mkId(), typeId: replacementTypeId};
@@ -2490,6 +2514,20 @@
         var h = parseFloat(val);
         if (!h || h <= 0){ toast("Enter a number of hours"); return; }
         addShift(dateKey, OVERTIME_ID, h, baseTypeId);
+      }
+    });
+  }
+  function openExcessHoursPrompt(dateKey, baseTypeId){
+    var bt = state.typesById[baseTypeId];
+    openMiniModal({
+      title: "Excess Hours – " + (bt ? bt.name : "shift"),
+      message: "How many excess hours?",
+      inputType: "number", placeholder: "e.g. 4", min: 0.5, step: 0.5,
+      confirmLabel: "Add",
+      onConfirm: function(val){
+        var h = parseFloat(val);
+        if (!h || h <= 0){ toast("Enter a number of hours"); return; }
+        addShift(dateKey, EXCESS_ID, h, baseTypeId);
       }
     });
   }
@@ -2612,15 +2650,13 @@
     var color = sel ? sel.getAttribute("data-hex") : PALETTE[0].hex;
     var ink = sel ? sel.getAttribute("data-ink") : PALETTE[0].ink;
     var overtimeEligible = document.getElementById("typeOvertimeEligible").checked;
-    var nonWork = document.getElementById("typeNonWork").checked;
-    if (nonWork){ hours = 0; overtimeEligible = false; }
 
     if (state.editingTypeId){
       var t = state.typesById[state.editingTypeId];
-      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.nonWork=nonWork; }
+      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; }
       toast("Type updated");
     } else {
-      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, nonWork:nonWork, order: state.types.length};
+      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, order: state.types.length};
       state.types.push(nt);
       state.typesById[nt.id] = nt;
       toast("Type created");
@@ -2643,10 +2679,8 @@
     document.getElementById("typeStart").value = t ? t.startTime : "07:00";
     document.getElementById("typeEnd").value = t ? t.endTime : "19:00";
     document.getElementById("typeOvertimeEligible").checked = t ? (t.overtimeEligible !== false) : true;
-    document.getElementById("typeNonWork").checked = t ? !!t.nonWork : false;
     document.getElementById("deleteTypeBtn").style.display = t ? "block" : "none";
     updateDurationPreview();
-    updateTypeWorkFieldsVisibility();
 
     var grid = document.getElementById("colorGrid");
     grid.innerHTML = "";
@@ -2677,43 +2711,31 @@
   }
   document.getElementById("typeStart").addEventListener("input", updateDurationPreview);
   document.getElementById("typeEnd").addEventListener("input", updateDurationPreview);
-  function updateTypeWorkFieldsVisibility(){
-    var nonWork = document.getElementById("typeNonWork").checked;
-    document.getElementById("typeWorkFields").style.display = nonWork ? "none" : "block";
-  }
-  document.getElementById("typeNonWork").addEventListener("change", updateTypeWorkFieldsVisibility);
 
   /* ---------------- render: types view ---------------- */
   function renderTypes(){
     var builtin = document.getElementById("builtinTypesList");
     builtin.innerHTML = "";
-    [OVERTIME_TYPE].forEach(function(t, i){
-      var row = document.createElement("div");
-      row.className = "type-row";
-      var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=t.color; row.appendChild(sw);
+    function appendBuiltinRow(color, label){
+      var row = document.createElement("div"); row.className = "type-row";
+      var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=color; row.appendChild(sw);
       var meta = document.createElement("div"); meta.className="meta";
-      var name = document.createElement("div"); name.className="name";
-      name.innerHTML = ""; name.textContent = t.name + " ";
+      var name = document.createElement("div"); name.className="name"; name.textContent = label + " ";
       var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Built-in";
       name.appendChild(pill);
       meta.appendChild(name);
       row.appendChild(meta);
       builtin.appendChild(row);
-    });
-    ["annual","sick","excess"].forEach(function(k, i){
+    }
+    [OVERTIME_TYPE, EXCESS_TYPE].forEach(function(t, i){
       if (i>0){ var div=document.createElement("div"); div.className="row-divider"; builtin.appendChild(div); }
-      var def = LEAVE_COLORS[k];
-      var row = document.createElement("div"); row.className="type-row";
-      var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=def.color; row.appendChild(sw);
-      var meta = document.createElement("div"); meta.className="meta";
-      var name = document.createElement("div"); name.className="name"; name.textContent=def.label+" ";
-      var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Built-in"; name.appendChild(pill);
-      meta.appendChild(name);
-      row.appendChild(meta);
-      builtin.appendChild(row);
+      appendBuiltinRow(t.color, t.name);
     });
-    var divTop = document.createElement("div"); divTop.className="row-divider";
-    builtin.insertBefore(divTop, builtin.children[1]);
+    var groupDivider = document.createElement("div"); groupDivider.className="row-divider"; builtin.appendChild(groupDivider);
+    ["annual","sick"].forEach(function(k, i){
+      if (i>0){ var div=document.createElement("div"); div.className="row-divider"; builtin.appendChild(div); }
+      appendBuiltinRow(LEAVE_COLORS[k].color, LEAVE_COLORS[k].label);
+    });
 
     var list = document.getElementById("typesList");
     list.innerHTML = "";
@@ -2724,15 +2746,9 @@
       var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=t.color; row.appendChild(sw);
       var meta = document.createElement("div"); meta.className="meta";
       var name = document.createElement("div"); name.className="name"; name.textContent=t.name;
-      if (t.nonWork){
-        var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Personal";
-        name.appendChild(pill);
-      }
       meta.appendChild(name);
       var hrs = document.createElement("div"); hrs.className="hrs num";
-      hrs.textContent = t.nonWork
-        ? "Doesn't count toward hours or reports"
-        : (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + (t.overtimeEligible === false ? "  ·  no overtime" : "");
+      hrs.textContent = (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + (t.overtimeEligible === false ? "  ·  no overtime" : "");
       meta.appendChild(hrs);
       row.appendChild(meta);
       var actions = document.createElement("div"); actions.className="actions";
@@ -2786,7 +2802,8 @@
       lastLabel = label;
       week.forEach(function(dayTypeIds, di){
         var cell = document.createElement("button");
-        cell.className = "roster-cell";
+        var isBulkOn = state.bulkMode && state.bulkContext === "roster" && state.bulkTypeId && dayTypeIds.indexOf(state.bulkTypeId) !== -1;
+        cell.className = "roster-cell" + (isBulkOn ? " bulk-selected" : "");
         var shown = dayTypeIds.slice(0,2);
         shown.forEach(function(tid){
           var t = state.typesById[tid];
@@ -2803,7 +2820,7 @@
           more.textContent = "+" + (dayTypeIds.length-2);
           cell.appendChild(more);
         }
-        cell.addEventListener("click", function(){ openPatternSheet(wi, di); });
+        cell.addEventListener("click", function(){ handleRosterCellClick(wi, di); });
         grid.appendChild(cell);
         lastCell = cell;
       });
@@ -2925,7 +2942,7 @@
     return { start: new Date(y2,0,1), end: new Date(y2+1,0,1) };
   }
   function collectPeriodStats(range){
-    var byType = {}, daysWorked = {}, totalHours = 0, otHours = 0;
+    var byType = {}, daysWorked = {}, totalHours = 0, otHours = 0, excessHours = 0;
     var weekdayHours = 0, weekendHours = 0, weekdayCount=0, weekendCount=0;
     var monthTotals = {}; // for year-in-review
 
@@ -2935,15 +2952,15 @@
       state.shifts[dateKey].forEach(function(s){
         var t = state.typesById[s.typeId];
         if (!t) return;
-        if (t.nonWork) return;
         var h = effectiveHours(s);
-        var groupKey = s.typeId === OVERTIME_ID && s.baseTypeId ? (s.typeId + ":" + s.baseTypeId) : s.typeId;
+        var groupKey = COMBO_TYPES[s.typeId] && s.baseTypeId ? (s.typeId + ":" + s.baseTypeId) : s.typeId;
         var groupColor = entryColor(s);
         byType[groupKey] = byType[groupKey] || {count:0, hours:0, t:t, name: entryDisplayName(s), color: groupColor.bg};
         byType[groupKey].count++;
         byType[groupKey].hours += h;
         totalHours += h;
         if (s.typeId === OVERTIME_ID) otHours += h;
+        if (s.typeId === EXCESS_ID) excessHours += h;
         daysWorked[dateKey] = true;
         if (isWeekendDate(d)){ weekendHours += h; weekendCount++; } else { weekdayHours += h; weekdayCount++; }
         var mk = d.getFullYear()+"-"+pad2(d.getMonth()+1);
@@ -2962,6 +2979,7 @@
       });
     });
     return { byType:byType, daysWorked:Object.keys(daysWorked).length, totalHours:totalHours, otHours:otHours,
+      excessHours:excessHours,
       ordinaryHours: totalHours - otHours,
       weekdayHours:weekdayHours, weekendHours:weekendHours, weekdayCount:weekdayCount, weekendCount:weekendCount,
       leaveDays:leaveDays, leaveHours:leaveHours, leaveHoursByKind:leaveHoursByKind, monthTotals:monthTotals };
@@ -3104,29 +3122,41 @@
   function enterBulkMode(){
     if (!state.types.length){ toast("Add a shift type first"); return; }
     state.bulkMode = true;
+    state.bulkContext = state.view === "roster" ? "roster" : "calendar";
     state.bulkTypeId = null;
     state.bulkSelectedDates = {};
     document.getElementById("bulkFab").classList.add("active");
     document.getElementById("bulkBar").classList.add("show");
     renderBulkBar();
-    renderCalendar();
+    if (state.bulkContext === "roster") renderRoster(); else renderCalendar();
   }
   function exitBulkMode(){
+    var context = state.bulkContext;
     var count = Object.keys(state.bulkSelectedDates||{}).length;
+    var typeWasPicked = !!state.bulkTypeId;
     state.bulkMode = false;
+    state.bulkContext = null;
     state.bulkTypeId = null;
     state.bulkSelectedDates = {};
     document.getElementById("bulkFab").classList.remove("active");
     document.getElementById("bulkBar").classList.remove("show");
-    renderCalendar();
-    if (count > 0) toast("Added " + count + " shift" + (count===1 ? "" : "s"));
+    if (context === "roster"){
+      renderRoster();
+      if (typeWasPicked) toast("Pattern updated");
+    } else {
+      renderCalendar();
+      if (count > 0) toast("Added " + count + " shift" + (count===1 ? "" : "s"));
+    }
   }
   function renderBulkBar(){
     var bar = document.getElementById("bulkBar");
     bar.innerHTML = "";
+    var isRoster = state.bulkContext === "roster";
     var hint = document.createElement("div");
     hint.className = "bulk-hint";
-    hint.textContent = state.bulkTypeId ? "Tap days to add or remove this shift" : "Choose a shift type, then tap days on the calendar";
+    hint.textContent = state.bulkTypeId
+      ? (isRoster ? "Tap pattern cells to add or remove this shift" : "Tap days to add or remove this shift")
+      : (isRoster ? "Choose a shift type, then tap cells in your pattern" : "Choose a shift type, then tap days on the calendar");
     bar.appendChild(hint);
     var row = document.createElement("div");
     row.className = "bulk-chip-row";
@@ -3142,6 +3172,7 @@
         b.addEventListener("click", function(){
           state.bulkTypeId = t.id;
           renderBulkBar();
+          if (state.bulkContext === "roster") renderRoster(); else renderCalendar();
         });
         row.appendChild(b);
       });
@@ -3163,19 +3194,32 @@
     saveStore();
     renderCalendar();
   }
+  function handleRosterCellClick(weekIdx, dayIdx){
+    if (state.bulkMode && state.bulkContext === "roster"){ rosterBulkToggleCell(weekIdx, dayIdx); return; }
+    openPatternSheet(weekIdx, dayIdx);
+  }
+  function rosterBulkToggleCell(weekIdx, dayIdx){
+    if (!state.bulkTypeId){ toast("Pick a shift type first"); return; }
+    var arr = state.roster.pattern[weekIdx][dayIdx];
+    var idx = arr.indexOf(state.bulkTypeId);
+    if (idx !== -1) arr.splice(idx, 1); else arr.push(state.bulkTypeId);
+    state.roster.updatedAt = Date.now();
+    saveStore();
+    renderRoster();
+  }
   document.getElementById("bulkFab").addEventListener("click", function(){
     if (state.bulkMode) exitBulkMode(); else enterBulkMode();
   });
 
   /* ---------------- view switching ---------------- */
   function setView(v){
-    if (v !== "calendar" && state.bulkMode) exitBulkMode();
+    if (state.bulkMode && v !== state.bulkContext) exitBulkMode();
     state.view = v;
     document.querySelectorAll(".view").forEach(function(el){ el.classList.remove("active"); });
     document.getElementById("view-"+v).classList.add("active");
     document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-view")===v); });
     document.getElementById("appHeader").style.display = (v === "calendar") ? "flex" : "none";
-    document.getElementById("bulkFab").classList.toggle("show", v === "calendar");
+    document.getElementById("bulkFab").classList.toggle("show", v === "calendar" || v === "roster");
     if (v === "roster") renderRoster();
     if (v === "shared") refreshConnections();
   }
@@ -3198,7 +3242,7 @@
       if (d < range.start || d >= range.end) return;
       state.shifts[dateKey].forEach(function(s){
         var t = state.typesById[s.typeId];
-        if (!t || t.nonWork) return;
+        if (!t) return;
         rows.push([dateKey, WEEKDAY_FULL[d.getDay()], entryDisplayName(s), effectiveHours(s), s.tag || ""]);
       });
     });
@@ -3236,17 +3280,15 @@
       var lv = state.leave[key] || [];
       var names = entries.map(function(s){
         var t = state.typesById[s.typeId];
-        if (!t) return "";
-        if (t.nonWork) return entryDisplayName(s);
         var h = effectiveHours(s);
         totalHours += h;
-        return entryDisplayName(s) + " (" + fmtHours(h) + "h)";
+        return t ? entryDisplayName(s) + " (" + fmtHours(h) + "h)" : "";
       }).concat(lv.map(function(l){ return LEAVE_COLORS[l.kind].label + (l.hours != null ? " (" + fmtHours(l.hours) + "h)" : ""); }));
       if (names.length){
         doc.text(pad2(cur.getDate())+"/"+pad2(cur.getMonth()+1), 40, y);
         doc.text(WEEKDAY_FULL[cur.getDay()].slice(0,3), 130, y);
         doc.text(names.join(", "), 190, y, {maxWidth: pageW-90-190});
-        var dayHours = entries.reduce(function(s,e){ var t=state.typesById[e.typeId]; return (t && t.nonWork) ? s : s+effectiveHours(e); }, 0);
+        var dayHours = entries.reduce(function(s,e){ return s+effectiveHours(e); }, 0);
         doc.text(dayHours ? fmtHours(dayHours) : "—", pageW-90, y);
         y += 16;
       }
@@ -3290,7 +3332,6 @@
   document.getElementById("noteInput").addEventListener("keydown", function(e){ if (e.key === "Enter") document.getElementById("addNoteBtn").click(); });
   document.getElementById("addAnnualLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "annual"); });
   document.getElementById("addSickLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "sick"); });
-  document.getElementById("addExcessHours").addEventListener("click", function(){ addLeave(state.selectedDate, "excess"); });
 
   document.getElementById("newTypeBtn").addEventListener("click", function(){ openTypeSheet(null); });
   document.getElementById("typeSheetClose").addEventListener("click", closeTypeSheet);
