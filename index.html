@@ -1706,6 +1706,7 @@
     var d = parseYmd(dateKey);
     document.getElementById("sheetDate").textContent = WEEKDAY_FULL[d.getDay()] + ", " + d.getDate() + " " + MONTH_LABELS[d.getMonth()];
     renderDaySheetBody();
+    document.getElementById("noteTime").value = "00:00";
     document.getElementById("daySheetOverlay").classList.add("show");
   }
   function closeDaySheet(){ document.getElementById("daySheetOverlay").classList.remove("show"); }
@@ -1872,7 +1873,6 @@
     }
 
     renderEventCatPicker();
-    document.getElementById("noteTime").value = "00:00";
   }
   function renderEventCatPicker(){
     var row = document.getElementById("eventCatRow");
@@ -2275,20 +2275,27 @@
     outer.className = "roster-grid-outer";
     var grid = document.createElement("div");
     grid.className = "roster-grid";
+    var cornerRadius = "13px";
     var corner = document.createElement("div");
     corner.className = "roster-head-cell";
+    corner.style.borderTopLeftRadius = cornerRadius;
     grid.appendChild(corner);
+    var lastHeadCell = null;
     ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].forEach(function(w){
       var h = document.createElement("div");
       h.className = "roster-head-cell";
       h.textContent = w;
       grid.appendChild(h);
+      lastHeadCell = h;
     });
+    if (lastHeadCell) lastHeadCell.style.borderTopRightRadius = cornerRadius;
+    var lastLabel = null, lastCell = null;
     state.roster.pattern.forEach(function(week, wi){
       var label = document.createElement("div");
       label.className = "roster-week-label";
       label.textContent = "W" + (wi+1);
       grid.appendChild(label);
+      lastLabel = label;
       week.forEach(function(dayTypeIds, di){
         var cell = document.createElement("button");
         cell.className = "roster-cell";
@@ -2310,8 +2317,11 @@
         }
         cell.addEventListener("click", function(){ openPatternSheet(wi, di); });
         grid.appendChild(cell);
+        lastCell = cell;
       });
     });
+    if (lastLabel) lastLabel.style.borderBottomLeftRadius = cornerRadius;
+    if (lastCell) lastCell.style.borderBottomRightRadius = cornerRadius;
     outer.appendChild(grid);
     wrap.appendChild(outer);
 

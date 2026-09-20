@@ -8,6 +8,22 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Note time no longer resets while you're picking it**: the "default to
+  00:00" fix from last round was resetting the time field on *every*
+  re-render, including ones triggered by something else entirely (adding
+  leave, a shift, anything) while the day sheet was still open — so picking
+  a custom time and then doing almost anything else would silently snap it
+  back to 00:00 before you hit Add. It now only defaults to 00:00 when the
+  day sheet is first opened and right after a note is successfully added,
+  not on every re-render — your selection sticks.
+- **Roster pattern grid — bottom-right corner, actually fixed**: the
+  previous fix (stripping the button's default border) was necessary but
+  not sufficient — depending on the browser's rendering engine, clipping a
+  CSS grid's corner cell via the container's `overflow:hidden` isn't
+  perfectly reliable. Each corner cell (top-left, top-right, bottom-left,
+  bottom-right of the last row) now also gets its own matching
+  `border-radius` directly, so the rounding doesn't depend on clipping
+  alone.
 - **Reminders for personal events**: a "Remind me at this time" checkbox
   next to the note time/text fields. If checked (and you allow notification
   permission when prompted), the app shows a browser notification at that
