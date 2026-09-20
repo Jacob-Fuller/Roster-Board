@@ -519,11 +519,15 @@
 
         <div class="section-head" id="sharedRequestsHead" style="margin-top:20px; display:none;"><h2>Requests for you</h2></div>
         <div class="card" id="sharedRequestsList" style="display:none;"></div>
+        <p id="sharedReqError" style="color:var(--danger); font-size:.8rem; margin:8px 4px 0; display:none;"></p>
 
         <div class="section-head" id="sharedSentHead" style="margin-top:20px; display:none;"><h2>Sent, awaiting reply</h2></div>
         <div class="card" id="sharedSentList" style="display:none;"></div>
 
-        <div class="section-head" style="margin-top:20px;"><h2>Connected</h2></div>
+        <div class="section-head" style="margin-top:20px;">
+          <h2>Connected</h2>
+          <button class="icon-btn" id="sharedRefreshBtn" aria-label="Refresh connections" title="Refresh">&#8635;</button>
+        </div>
         <div class="card" id="sharedConnectedList"><div class="section-sub" style="margin:0;">No connections yet.</div></div>
       </div>
 
@@ -1251,12 +1255,25 @@
     el.style.display = msg ? "block" : "none";
   }
 
+  function setSharedReqError(msg){
+    var el = document.getElementById("sharedReqError");
+    if (!el) return;
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
   function refreshConnections(){
     if (!sb || !currentUser) return;
     var uid = currentUser.id;
     sb.from("connections").select("*").or("requester_id.eq." + uid + ",target_id.eq." + uid)
       .then(function(res){
-        if (res.error){ toast("Couldn't load connections"); return; }
+        if (res.error){
+          console.error("refreshConnections error:", res.error);
+          setSharedReqError("Couldn't load connections: " + (res.error.message || "unknown error"));
+          toast("Couldn't load connections");
+          return;
+        }
+        setSharedReqError("");
         connections = res.data || [];
         renderSharedList();
       });
@@ -1338,10 +1355,21 @@
     });
   }
 
+  document.getElementById("sharedRefreshBtn").addEventListener("click", function(){
+    refreshConnections();
+    toast("Refreshing…");
+  });
+
   function respondConnection(id, accept){
     if (!sb) return;
+    setSharedReqError("");
     sb.rpc("respond_connection", { p_connection_id: id, p_accept: accept }).then(function(res){
-      if (res.error){ toast(res.error.message || "Couldn't respond to request"); return; }
+      if (res.error){
+        console.error("respond_connection error:", res.error);
+        setSharedReqError("Couldn't respond to request: " + (res.error.message || "unknown error"));
+        toast(res.error.message || "Couldn't respond to request");
+        return;
+      }
       toast(accept ? "Connected" : "Request declined");
       refreshConnections();
     });
@@ -1349,7 +1377,12 @@
   function removeConnection(id){
     if (!sb) return;
     sb.rpc("remove_connection", { p_connection_id: id }).then(function(res){
-      if (res.error){ toast("Couldn't remove connection"); return; }
+      if (res.error){
+        console.error("remove_connection error:", res.error);
+        setSharedReqError("Couldn't remove connection: " + (res.error.message || "unknown error"));
+        toast("Couldn't remove connection");
+        return;
+      }
       refreshConnections();
     });
   }

@@ -8,6 +8,13 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Connections errors are now visible**: if accepting/declining/removing a
+  shared-roster connection fails (e.g. a Supabase permissions/grant issue),
+  the app now shows the real error message on screen and logs it to the
+  console, instead of a toast that disappears after 2 seconds. There's also
+  a manual refresh button next to "Connected" on the Account tab. If accept
+  isn't sticking for you, check what this error says — see "Shared rosters
+  troubleshooting" below.
 - **Account is now a drill-down page**: the Account tab's top "Account" card
   is now a single tappable row (like a Settings app) instead of showing
   everything at once — tap it to go into a dedicated Account page with
@@ -379,6 +386,43 @@ Notes on how this stays private:
 - A person can only be invited by an email that already has an account —
   there's no way to probe for arbitrary emails otherwise, since the function
   only ever says "sent" or "no account found."
+
+### Shared rosters troubleshooting
+
+If sending an invite works but **Accept doesn't move the request into
+"Connected"**, the app now shows the real error inline under "Requests for
+you" instead of just a toast — check what it says first (there's also a
+refresh button next to "Connected" in case it's just a stale list).
+
+The most common cause is that the SQL block above didn't fully run — this
+happens if it was run more than once, since `create policy` (unlike `create
+table`) errors on a policy that already exists, which stops the script
+partway through and can leave `respond_connection` (or its `grant`) missing
+even though `invite_connection` is fine (invites use a different function,
+which is why sending works but accepting doesn't).
+
+To check: in the Supabase dashboard, go to **Database → Functions** and
+confirm `invite_connection`, `respond_connection`, `remove_connection`, and
+`get_shared_roster` are all listed. If any are missing, or if the inline
+error mentions "permission denied" or "does not exist", run this safe,
+repeatable version in the SQL Editor — it can be run any number of times
+without erroring:
+
+```sql
+drop policy if exists "Users can view their own connections" on connections;
+create policy "Users can view their own connections"
+  on connections for select
+  using (auth.uid() = requester_id or auth.uid() = target_id);
+
+grant execute on function invite_connection(text) to authenticated;
+grant execute on function respond_connection(uuid, boolean) to authenticated;
+grant execute on function remove_connection(uuid) to authenticated;
+grant execute on function get_shared_roster(uuid) to authenticated;
+```
+
+(The `create or replace function` statements from the original block are
+already safe to re-run any time — only `create policy` needed the `drop
+policy if exists` guard above.)
 
 ## Run it locally
 
