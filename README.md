@@ -8,6 +8,91 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Tab order changed**: the bottom bar now goes Calendar, Shifts, Reports,
+  Roster, Account.
+- **Personal reminders as a new shift type**: when creating a shift type,
+  tick "Personal reminder — not a work shift" (e.g. "Call the kids") and
+  the start/end time and overtime options disappear — it's just a name
+  and a colour. It shows up on the calendar as a banner exactly like a
+  normal shift, and works with mass-select and the roster pattern too
+  (handy for something that repeats every week, like a twice-weekly call),
+  but it's left out of your logged hours, overtime, days worked, and
+  every report and export.
+- **Mass-select shifts straight from the calendar**: a new edit (pencil)
+  button in the bottom-right corner of the Calendar tab. Tap it, pick a
+  shift type from the bar that appears, then tap as many days as you like
+  to apply that shift to all of them at once — tap a day again to remove
+  it. Tap the button again (now an ✕) to finish; it tells you how many
+  shifts were added. This sits alongside the existing Roster pattern tool
+  (for a repeating weekly template) as a faster way to paint the same
+  shift onto a handful of specific days.
+- **Contact address updated to contact@rosterboard.net**: every "Contact
+  us" / feedback / privacy-policy email link in the app now points to
+  `contact@rosterboard.net` instead of the old personal address.
+- **Fixed cloud sync silently deleting notes/shifts (the big one)**: the
+  root cause of the "notes disappearing" reports. The old sync just
+  overwrote the cloud's whole record with whatever one device had, and
+  vice versa when pulling. If a note was added on your phone and your
+  tablet still had an older copy open, the next thing the tablet saved —
+  even something unrelated, like adding a shift type — would silently wipe
+  the phone's note back out of the cloud. The same thing happened the
+  first time you signed in if you'd already been using the app locally:
+  your local notes could get replaced outright by whatever was already in
+  the account. Sync now merges by record instead of overwriting: it pulls
+  the cloud's current copy, combines it with what's changed on this
+  device, and only drops something if it was actually deleted (tracked
+  explicitly, so a deletion on one device doesn't get "undone" by another
+  device that hadn't caught up yet). This applies to shifts, leave, notes,
+  shift swaps and shift types.
+- **Fixed the page zooming in when adding a note**: on iPhone, tapping into
+  the note text field (or several other fields — invite email, change
+  name/email, swap details, roster dates) made Safari auto-zoom the whole
+  page in, because those fields' text was smaller than 16px. Safari does
+  this automatically for small inputs — all text fields are now 16px so it
+  no longer happens.
+- **Personal event notes wrap instead of getting cut off**: a note that's
+  too long for the calendar day cell now wraps onto a second line instead
+  of being truncated on the first. Day cells stay a fixed size (so the
+  calendar grid doesn't get uneven) — if a note is still too long after two
+  lines, it's trimmed there instead of pushing the cell taller.
+- **Privacy Policy now opens as an in-app popup**: tapping "Privacy Policy"
+  (on the sign-in screen or in About) no longer navigates away to a
+  separate page — it slides open right inside the app with a "‹ Back"
+  button, so you're never taken out of the app to read it.
+- **Excess Hours is now a built-in type**: alongside Overtime, Annual Leave
+  and Sick Leave, there's now a built-in "Excess Hours" entry — tap "+
+  Excess hours" on a day and enter the amount, just like Annual/Sick Leave.
+- **About us now says who it's for**: added a line that Roster Board is
+  made by a shift worker, for shift workers.
+- **Calendar shift chips — bigger text, better centered**: the text inside
+  each shift pill is now larger and better fills the pill, and a lingering
+  centering issue (the label sitting slightly low) is fixed — verified it
+  still fits a 10-character shift name without overflowing.
+- **Roster tab polish**: "Pattern length" is now labelled "Rotation
+  length"; the "Start date" box on "Stamp onto calendar" no longer
+  overflows past the edge of its card on iOS and matches the width of the
+  "Repeat for" box next to it.
+- **Account is now optional**: you can use Roster Board fully on one device
+  without ever signing in — tap "Continue without an account" on the
+  sign-in screen. Everything (calendar, roster, shifts, reports) works
+  locally. Signing in is only needed to sync across devices or use "Share
+  your roster" — those areas now show a "Sign in or create account" prompt
+  instead of blocking you outright. This is a per-device choice (not synced
+  data), so skipping it on one device doesn't affect any other device
+  you're signed in on.
+- **First-run intro slides**: the first time you open the app, a short
+  swipeable set of slides walks through Calendar, Roster, Shifts, Reports
+  and the optional-account model. It only appears once — dismiss it with
+  Skip or by reaching the end, and it won't pop up again. You can replay it
+  any time from About → "Replay intro".
+- **Send feedback from the About section**: About now has a "Send
+  feedback" button. It opens a small prompt to write your suggestion or
+  issue, then hands off to a pre-filled email addressed to us — you still
+  hit send yourself, since the app has no backend to send email silently.
+- **Calendar shift chips — text now properly centered**: the colored shift
+  pill on each calendar day had an invisible 3px top border left over from
+  an earlier design that pushed the text off-center (closer to the bottom
+  of the pill). Removed it — the label now sits evenly centered.
 - **Privacy Policy "Back" now returns to Calendar**: tapping "‹ Back to
   Roster Board" on the Privacy Policy page now explicitly lands you back on
   the Calendar tab, instead of wherever the app happened to default to.

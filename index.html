@@ -90,7 +90,7 @@
   .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px;}
   .day-cell{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
-    min-height:86px; padding:5px 3px 4px; display:flex; flex-direction:column; gap:3px;
+    height:86px; padding:5px 3px 4px; display:flex; flex-direction:column; gap:3px;
     text-align:left; color:var(--text); position:relative; overflow:hidden;
   }
   .day-cell.out{opacity:.38;}
@@ -98,10 +98,11 @@
   .day-cell.leave{box-shadow:inset 0 0 0 1.5px var(--text-faint);}
   .day-cell .dnum{font-size:.78rem; font-weight:600; display:flex; align-items:center; gap:4px;}
   .chip{
-    font-size:.58rem; font-weight:600; line-height:1.5; border-radius:5px; padding:0 2px;
+    font-size:.66rem; font-weight:600; line-height:1.45; border-radius:5px; padding:2.5px 1.5px;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; justify-content:center; gap:2px;
-    border-top:3px solid transparent; text-align:center;
+    text-align:center;
   }
+  .chip .chip-label{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; text-align:center;}
   .chip.ot-chip{ flex-direction:column; align-items:stretch; padding:0; border-top:none; gap:0; }
   .ot-chip-strip{ background:#F0679E; color:#fff; font-size:.44rem; font-weight:700; text-align:center; line-height:1.15; padding:1px 4px; }
   .ot-chip-base{ font-size:.66rem; font-weight:600; text-align:center; line-height:1.6; padding:0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -213,6 +214,49 @@
     background:var(--surface); border-radius:20px; padding:26px 22px 22px; box-shadow:0 20px 60px rgba(0,0,0,.35);
     animation:pop-in .18s ease-out;
   }
+  .onboarding-screen{
+    position:fixed; inset:0; z-index:300; display:none; flex-direction:column;
+    background:var(--bg);
+  }
+  .onboarding-screen.show{display:flex;}
+  .onboarding-skip{
+    position:absolute; top:calc(env(safe-area-inset-top, 0px) + 14px); right:16px; z-index:1;
+    background:none; border:none; color:var(--text-dim); font-size:.85rem; font-weight:600; padding:8px;
+  }
+  .onboarding-slides{
+    flex:1; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
+  }
+  .onboarding-slide{
+    flex:0 0 100%; scroll-snap-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:60px 32px 20px; gap:12px;
+  }
+  .onboarding-icon{font-size:3.2rem; line-height:1; margin-bottom:8px;}
+  .onboarding-slide h2{font-family:'Fraunces', Georgia, serif; font-size:1.4rem; font-weight:600; color:var(--text);}
+  .onboarding-slide p{font-size:.92rem; color:var(--text-dim); max-width:320px; line-height:1.5;}
+  .onboarding-footer{flex:none; padding:8px 22px calc(env(safe-area-inset-bottom, 0px) + 22px); display:flex; flex-direction:column; align-items:center; gap:16px;}
+  .onboarding-dots{display:flex; gap:6px;}
+  .onboarding-dots span{width:6px; height:6px; border-radius:50%; background:var(--border); transition:background .15s, width .15s;}
+  .onboarding-dots span.active{background:var(--accent); width:16px; border-radius:3px;}
+  .onboarding-footer .btn{max-width:360px;}
+
+  .privacy-screen{
+    position:fixed; inset:0; z-index:320; display:none; flex-direction:column; background:var(--bg);
+  }
+  .privacy-screen.show{display:flex;}
+  .privacy-head{
+    flex:none; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:calc(env(safe-area-inset-top, 0px) + 14px) 14px 12px; border-bottom:1px solid var(--border); background:var(--bg);
+  }
+  .privacy-head h2{font-size:1.05rem; font-weight:600;}
+  .privacy-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:18px 20px calc(env(safe-area-inset-bottom, 0px) + 40px);}
+  .privacy-body h3{font-family:'Fraunces', Georgia, serif; font-size:1rem; margin:26px 0 8px;}
+  .privacy-body h3:first-child{margin-top:0;}
+  .privacy-body p, .privacy-body li{color:var(--text); font-size:.88rem; line-height:1.55;}
+  .privacy-body ul{padding-left:20px; margin:0;}
+  .privacy-body a{color:var(--accent); font-weight:600; text-decoration:none;}
+  .policy-updated{color:var(--text-dim); font-size:.8rem; margin:0 0 18px;}
+  .policy-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-top:10px;}
+
   .sheet-head{display:flex; align-items:flex-start; justify-content:space-between; padding:14px 18px 10px;}
   .sheet-head h3{font-size:1.15rem;}
   .sheet-head .close{border:none; background:var(--surface-2); width:30px; height:30px; border-radius:50%; color:var(--text-dim); font-size:.95rem; flex:none;}
@@ -234,8 +278,8 @@
   .ot-combo .ot-strip{display:block; background:#F0679E; color:#fff; font-size:.5rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:2px 12px;}
   .ot-combo .ot-base{display:block; font-size:.86rem; font-weight:600; padding:9px 12px;}
   .add-note-row{display:flex; gap:8px; margin-top:6px;}
-  .add-note-row input[type=text]{flex:1; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 12px; font-size:.85rem; color:var(--text);}
-  .add-note-row input[type=time]{flex:none; width:98px; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 8px; font-size:.8rem; color:var(--text);}
+  .add-note-row input[type=text]{flex:1; min-width:0; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 12px; font-size:16px; color:var(--text); -webkit-appearance:none; appearance:none;}
+  .add-note-row input[type=time]{flex:none; width:98px; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 8px; font-size:16px; color:var(--text); -webkit-appearance:none; appearance:none;}
   .remind-row{display:flex; align-items:center; gap:7px; margin-top:9px; font-size:.78rem; color:var(--text-dim);}
   .remind-row input[type=checkbox]{width:16px; height:16px; accent-color:var(--accent); flex:none;}
   .event-cat-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
@@ -247,9 +291,11 @@
   .event-item .etime{font-size:.72rem; color:var(--text-faint); font-variant-numeric:tabular-nums; flex:none;}
   .event-item span.etext{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .event-item button{background:none; border:none; color:var(--text-faint); font-size:.85rem;}
-  .day-cell .event-line{font-size:.6rem; font-weight:600; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:4px;}
-  .day-cell .event-line .edot{width:4px; height:4px; border-radius:50%; flex:none;}
-  .leave-btns{display:flex; gap:8px;}
+  .day-cell .event-line{font-size:.54rem; font-weight:600; color:var(--text-dim); white-space:normal; overflow-wrap:break-word; line-height:1.3; display:flex; align-items:flex-start; gap:3px;}
+  .day-cell .event-line .edot{width:4px; height:4px; border-radius:50%; flex:none; margin-top:4px;}
+  .day-cell .event-line > span:not(.edot){min-width:0; flex:1; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;}
+  .leave-btns{display:flex; flex-wrap:wrap; gap:8px;}
+  .leave-btns .leave-btn{flex:1 1 28%; min-width:96px;}
   .leave-btn{flex:1; border-radius:10px; padding:9px; font-size:.8rem; font-weight:600; border:1px solid var(--border); background:var(--surface-2); color:var(--text);}
   .leave-list{margin-top:8px;}
   .chip.swap-chip-cal{ flex-direction:column; align-items:stretch; padding:0; border-top:none; gap:0; }
@@ -267,14 +313,18 @@
 
   .form-row{margin-top:14px;}
   .form-row label{display:block; font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px;}
-  .form-row input[type=text], .form-row input[type=number], .form-row input[type=time], .form-row select, .form-row input[type=date]{
-    width:100%; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:10px 12px; font-size:.9rem; color:var(--text);
+  .form-row input, .form-row select{
+    width:100%; max-width:100%; min-width:0; box-sizing:border-box; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:10px 12px; font-size:16px; color:var(--text); -webkit-appearance:none; appearance:none;
   }
+  .form-row{overflow:hidden;}
   .time-row{display:flex; gap:10px; align-items:flex-end;}
   .time-row .form-row{flex:1; margin-top:0;}
   .duration-preview{font-size:.76rem; color:var(--text-dim); margin-top:8px;}
   .checkbox-row{display:flex; align-items:center; gap:8px; margin-top:16px; font-size:.85rem; font-weight:600; cursor:pointer;}
   .checkbox-row input[type=checkbox]{width:18px; height:18px; flex:none; accent-color:var(--accent);}
+  .checkbox-row.wrap{align-items:flex-start;}
+  .checkbox-row.wrap input[type=checkbox]{margin-top:2px;}
+  .checkbox-row.wrap span{font-weight:500; color:var(--text-dim); line-height:1.35;}
   .color-grid{display:flex; flex-wrap:wrap; gap:9px;}
   .color-swatch{width:34px; height:34px; border-radius:10px; border:2px solid transparent; position:relative;}
   .color-swatch.sel{border-color:var(--text);}
@@ -309,6 +359,38 @@
   .toggle-chip{border:1.5px solid var(--border); background:var(--surface-2); border-radius:10px; padding:8px 12px; font-size:.8rem; font-weight:600; color:var(--text-dim);}
   .toggle-chip.on{border-color:transparent;}
 
+  /* Bulk (mass-select) edit mode */
+  .fab-btn{
+    position:absolute; z-index:60; width:52px; height:52px; border-radius:50%; border:none;
+    background:var(--accent); color:var(--accent-ink); box-shadow:0 6px 18px rgba(0,0,0,.32);
+    display:none; align-items:center; justify-content:center;
+    right:calc(16px + env(safe-area-inset-right,0px)); bottom:calc(76px + env(safe-area-inset-bottom,0px));
+    transition:background .15s, transform .15s;
+  }
+  .fab-btn.show{display:flex;}
+  .fab-btn:active{transform:scale(.94);}
+  .fab-btn svg{width:22px; height:22px;}
+  .fab-btn .icon-x{display:none;}
+  .fab-btn.active{background:var(--surface); color:var(--text); border:1px solid var(--border);}
+  .fab-btn.active .icon-pencil{display:none;}
+  .fab-btn.active .icon-x{display:block;}
+
+  .bulk-bar{
+    position:absolute; left:0; right:0; bottom:0; z-index:55; display:none; flex-direction:column; gap:8px;
+    background:var(--surface); border-top:1px solid var(--border); padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));
+    box-shadow:0 -8px 24px rgba(0,0,0,.22);
+  }
+  .bulk-bar.show{display:flex;}
+  .bulk-bar .bulk-hint{font-size:.74rem; font-weight:600; color:var(--text-dim);}
+  .bulk-bar .bulk-chip-row{display:flex; flex-wrap:wrap; gap:8px; max-height:132px; overflow-y:auto;}
+  .bulk-chip-row .toggle-chip{border-radius:999px;}
+
+  .day-cell.bulk-selected{box-shadow:inset 0 0 0 2px var(--accent);}
+  .day-cell.bulk-selected::after{
+    content:""; position:absolute; top:4px; right:4px; width:14px; height:14px; border-radius:50%;
+    background:var(--accent); box-shadow:0 0 0 2px var(--surface);
+  }
+
   ::-webkit-scrollbar{width:0; height:0;}
 </style>
 </head>
@@ -326,7 +408,7 @@
         <div class="sheet-head" style="padding:0 0 10px;">
           <h3 id="authTitle">Log in</h3>
         </div>
-        <p class="section-sub" id="authIntro" style="margin:0 0 4px;">One account works across every app in the family — sign in to sync your data.</p>
+        <p class="section-sub" id="authIntro" style="margin:0 0 4px;">Sign in to sync your data across devices and share rosters with someone — or skip this and use Roster Board on this device only.</p>
 
         <div id="authFieldsNormal">
           <div class="form-row">
@@ -361,12 +443,132 @@
           <span id="authTogglePrompt">Don't have an account?</span>
           <a href="#" id="authToggleMode" style="color:var(--accent); font-weight:600;">Sign up</a>
         </p>
+        <p class="section-sub" id="authSkipRow" style="margin:6px 0 0; text-align:center;">
+          <a href="#" id="authSkipLink" style="color:var(--text-dim);">Continue without an account</a>
+        </p>
       </div>
       <p style="text-align:center; margin:16px 0 0; font-size:.74rem; color:rgba(251,246,236,.55);">
-        By continuing you agree to our <a href="privacy.html" style="color:rgba(251,246,236,.85);">Privacy Policy</a>.
+        By continuing you agree to our <a href="#" id="authPrivacyLink" style="color:rgba(251,246,236,.85);">Privacy Policy</a>.
       </p>
     </div>
   </div>
+
+  <div class="onboarding-screen" id="onboardingOverlay">
+    <button class="onboarding-skip" id="onboardingSkipBtn">Skip</button>
+    <div class="onboarding-slides" id="onboardingSlides">
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#128197;</div>
+        <h2>Welcome to Roster Board</h2>
+        <p>A quick look at how it works — swipe through to get started.</p>
+      </div>
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#128198;</div>
+        <h2>Calendar</h2>
+        <p>Tap any day to add shifts, leave or personal events, and see your hours and shift count for the month at a glance.</p>
+      </div>
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#128257;</div>
+        <h2>Roster</h2>
+        <p>Build a repeating shift pattern once, then stamp it onto the calendar as a starting template.</p>
+      </div>
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#9200;</div>
+        <h2>Shifts</h2>
+        <p>Set up your own shift types with times and colors, alongside built-in ones like Overtime, Annual Leave, Sick Leave and Excess Hours.</p>
+      </div>
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#128202;</div>
+        <h2>Reports</h2>
+        <p>See totals for the month and export your hours whenever you need them.</p>
+      </div>
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#128101;</div>
+        <h2>Account is optional</h2>
+        <p>Roster Board works fully on this device without an account. Sign in only if you want to sync across devices or share your roster with someone.</p>
+      </div>
+    </div>
+    <div class="onboarding-footer">
+      <div class="onboarding-dots" id="onboardingDots"></div>
+      <button class="btn primary block" id="onboardingNextBtn">Next</button>
+    </div>
+  </div>
+
+  <div class="privacy-screen" id="privacyOverlay">
+    <div class="privacy-head">
+      <button class="icon-btn" id="privacyBackBtn" aria-label="Back">&#8249;</button>
+      <h2>Privacy Policy</h2>
+      <span></span>
+    </div>
+    <div class="privacy-body">
+      <p class="policy-updated">Last updated 19 September 2026</p>
+
+      <p>Roster Board is a shift calendar and roster app. This explains what
+      information the app collects, how it's used, and what control you have
+      over it.</p>
+
+      <h3>Who this is</h3>
+      <p>Roster Board is operated by Jacob Fuller. If you have questions about
+      this policy or your data, contact
+      <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a>.</p>
+
+      <h3>What we collect</h3>
+      <div class="policy-card">
+        <ul>
+          <li><strong>Account details</strong> — the email address and password you sign up with, if you choose to create one. Your password is hashed and never stored or seen in plain text.</li>
+          <li><strong>Roster data you enter</strong> — shift types, dates, hours, overtime, leave, and shift swaps.</li>
+          <li><strong>Personal events</strong> — any appointments, reminders, or notes you choose to add to your calendar.</li>
+        </ul>
+      </div>
+
+      <h3>Account is optional</h3>
+      <p>You can use Roster Board fully on one device without creating an
+      account — your data then stays only in that device's local storage.
+      An account is only needed to sync your data across devices or to share
+      your roster with someone else.</p>
+
+      <h3>How it's used</h3>
+      <p>Your data is used only to run the app for you: showing your calendar,
+      calculating your reports, and syncing your data between your own
+      devices when you're signed in. We don't use your data for advertising,
+      and we don't sell it to anyone.</p>
+
+      <h3>Where it's stored</h3>
+      <p>If you're signed in, your data is stored with Supabase, a
+      third-party database and authentication provider, and the app itself is
+      hosted with Render. Both are standard infrastructure providers used to
+      run the app — they process data on our behalf and don't use it for
+      their own purposes. If you're not signed in, your data never leaves
+      your device.</p>
+
+      <h3>Shared rosters</h3>
+      <p>If you choose to connect your account with someone else (Account →
+      "Share your roster"), and they accept, each of you can see the other's
+      shift types, overtime, leave, and shift swaps only. Your personal
+      events/notes are never included in this, no matter what — this is
+      enforced on the server, not just hidden in the app. You can remove a
+      connection at any time, which stops the sharing immediately.</p>
+
+      <h3>Security</h3>
+      <p>Connections to the app are encrypted (HTTPS). Access to your data is
+      restricted at the database level so that only your own account can read
+      or write it, other than the limited shared-roster case above.</p>
+
+      <h3>Your choices</h3>
+      <p>You can sign out at any time from the Account tab. To have your
+      account and data deleted, email
+      <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a>
+      and it will be removed.</p>
+
+      <h3>Children's privacy</h3>
+      <p>Roster Board isn't directed at children and isn't intended for use by
+      anyone under 16.</p>
+
+      <h3>Changes to this policy</h3>
+      <p>This policy may be updated from time to time as the app changes. The
+      "last updated" date at the top will reflect the most recent version.</p>
+    </div>
+  </div>
+
   <header id="appHeader">
     <div class="header-top">
       <div class="month-nav">
@@ -398,7 +600,7 @@
       <div class="card">
         <div class="roster-controls">
           <div class="form-row">
-            <label for="rosterWeeksInput">Pattern length (weeks)</label>
+            <label for="rosterWeeksInput">Rotation length (weeks)</label>
             <input type="number" id="rosterWeeksInput" min="1" max="52" value="1">
           </div>
           <button class="btn sm" id="rosterWeeksApplyBtn">Update</button>
@@ -494,42 +696,55 @@
           </div>
         </div>
 
-        <div class="section-head" style="margin-top:24px;"><h2>Invite a friend</h2></div>
-        <div class="section-sub">Not on Roster Board yet? Send them a quick invite to download it and set up their own account — then you can connect below.</div>
-        <div class="card">
-          <button class="btn primary block" id="inviteFriendBtn">Share invite</button>
-        </div>
-
-        <div class="section-head" style="margin-top:24px;"><h2>Share your roster</h2></div>
-        <div class="section-sub">Connect with someone to swap views of each other's work schedule — shifts, overtime, leave and swaps only. Your personal events, notes and pay rate are never shared.</div>
-        <div class="card">
-          <div class="form-row" style="margin-top:0;">
-            <label for="inviteEmailInput">Invite by email</label>
-            <input type="email" id="inviteEmailInput" placeholder="name@example.com">
+        <div id="shareRosterSignedOut" style="display:none;">
+          <div class="section-head" style="margin-top:24px;"><h2>Share your roster</h2></div>
+          <div class="section-sub">Connect with someone to swap views of each other's work schedule — shifts, overtime, leave and swaps only. Your personal events, notes and pay rate are never shared.</div>
+          <div class="card">
+            <div class="section-sub" style="margin:0 0 12px;">Sign in or create a free account to invite someone and share rosters.</div>
+            <button class="btn primary block" id="shareSignInBtn">Sign in or create account</button>
           </div>
-          <p id="inviteError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
-          <button class="btn primary block" id="inviteSendBtn" style="margin-top:12px;">Send invite</button>
         </div>
 
-        <div class="section-head" id="sharedRequestsHead" style="margin-top:20px; display:none;"><h2>Requests for you</h2></div>
-        <div class="card" id="sharedRequestsList" style="display:none;"></div>
-        <p id="sharedReqError" style="color:var(--danger); font-size:.8rem; margin:8px 4px 0; display:none;"></p>
+        <div id="shareRosterSignedIn">
+          <div class="section-head" style="margin-top:24px;"><h2>Invite a friend</h2></div>
+          <div class="section-sub">Not on Roster Board yet? Send them a quick invite to download it and set up their own account — then you can connect below.</div>
+          <div class="card">
+            <button class="btn primary block" id="inviteFriendBtn">Share invite</button>
+          </div>
 
-        <div class="section-head" id="sharedSentHead" style="margin-top:20px; display:none;"><h2>Sent, awaiting reply</h2></div>
-        <div class="card" id="sharedSentList" style="display:none;"></div>
+          <div class="section-head" style="margin-top:24px;"><h2>Share your roster</h2></div>
+          <div class="section-sub">Connect with someone to swap views of each other's work schedule — shifts, overtime, leave and swaps only. Your personal events, notes and pay rate are never shared.</div>
+          <div class="card">
+            <div class="form-row" style="margin-top:0;">
+              <label for="inviteEmailInput">Invite by email</label>
+              <input type="email" id="inviteEmailInput" placeholder="name@example.com">
+            </div>
+            <p id="inviteError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+            <button class="btn primary block" id="inviteSendBtn" style="margin-top:12px;">Send invite</button>
+          </div>
 
-        <div class="section-head" style="margin-top:20px;">
-          <h2>Connected</h2>
-          <button class="icon-btn" id="sharedRefreshBtn" aria-label="Refresh connections" title="Refresh">&#8635;</button>
+          <div class="section-head" id="sharedRequestsHead" style="margin-top:20px; display:none;"><h2>Requests for you</h2></div>
+          <div class="card" id="sharedRequestsList" style="display:none;"></div>
+          <p id="sharedReqError" style="color:var(--danger); font-size:.8rem; margin:8px 4px 0; display:none;"></p>
+
+          <div class="section-head" id="sharedSentHead" style="margin-top:20px; display:none;"><h2>Sent, awaiting reply</h2></div>
+          <div class="card" id="sharedSentList" style="display:none;"></div>
+
+          <div class="section-head" style="margin-top:20px;">
+            <h2>Connected</h2>
+            <button class="icon-btn" id="sharedRefreshBtn" aria-label="Refresh connections" title="Refresh">&#8635;</button>
+          </div>
+          <div class="card" id="sharedConnectedList"><div class="section-sub" style="margin:0;">No connections yet.</div></div>
         </div>
-        <div class="card" id="sharedConnectedList"><div class="section-sub" style="margin:0;">No connections yet.</div></div>
 
         <div class="section-head" style="margin-top:24px;"><h2>About</h2></div>
         <div class="card">
           <button class="btn sm block" id="aboutUsBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">About us</button>
           <button class="btn sm block" id="helpBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Help</button>
-          <a class="btn sm block" href="mailto:jacob.fuller@outlook.com.au" style="text-align:left; justify-content:flex-start; margin-bottom:8px; text-decoration:none; display:flex; align-items:center;">Contact us</a>
-          <a class="btn sm block" href="privacy.html" style="text-align:left; justify-content:flex-start; text-decoration:none; display:flex; align-items:center;">Privacy Policy</a>
+          <button class="btn sm block" id="replayIntroBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Replay intro</button>
+          <button class="btn sm block" id="feedbackBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Send feedback</button>
+          <a class="btn sm block" href="mailto:contact@rosterboard.net" style="text-align:left; justify-content:flex-start; margin-bottom:8px; text-decoration:none; display:flex; align-items:center;">Contact us</a>
+          <button class="btn sm block" id="privacyPolicyBtn" style="text-align:left; justify-content:flex-start;">Privacy Policy</button>
         </div>
       </div>
 
@@ -560,60 +775,72 @@
           <span></span>
         </div>
 
-        <div class="card" style="margin-top:12px;">
-          <div class="rate-row" style="justify-content:space-between;">
-            <span>Signed in as</span>
-            <span id="accountEmail" style="font-weight:600;"></span>
+        <div id="acctSignedOutSection" style="display:none;">
+          <div class="card" style="margin-top:12px;">
+            <div class="section-sub" style="margin:0 0 12px;">You're using Roster Board on this device only. Sign in or create a free account to sync your data across devices and share rosters with someone.</div>
+            <button class="btn primary block" id="acctSignInBtn">Sign in or create account</button>
           </div>
         </div>
 
-        <div class="section-head" style="margin-top:20px;"><h2>Change name</h2></div>
-        <div class="card">
-          <div class="form-row" style="margin-top:0;">
-            <label for="changeNameInput">Display name</label>
-            <input type="text" id="changeNameInput" autocomplete="name" placeholder="Your name">
+        <div id="acctSignedInSection" style="display:none;">
+          <div class="card" style="margin-top:12px;">
+            <div class="rate-row" style="justify-content:space-between;">
+              <span>Signed in as</span>
+              <span id="accountEmail" style="font-weight:600;"></span>
+            </div>
           </div>
-          <p id="changeNameError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
-          <button class="btn sm block" id="changeNameBtn" style="margin-top:12px;">Update name</button>
-        </div>
 
-        <div class="section-head" style="margin-top:20px;"><h2>Change email</h2></div>
-        <div class="card">
-          <div class="form-row" style="margin-top:0;">
-            <label for="changeEmailInput">New email</label>
-            <input type="email" id="changeEmailInput" autocomplete="email">
+          <div class="section-head" style="margin-top:20px;"><h2>Change name</h2></div>
+          <div class="card">
+            <div class="form-row" style="margin-top:0;">
+              <label for="changeNameInput">Display name</label>
+              <input type="text" id="changeNameInput" autocomplete="name" placeholder="Your name">
+            </div>
+            <p id="changeNameError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+            <button class="btn sm block" id="changeNameBtn" style="margin-top:12px;">Update name</button>
           </div>
-          <p id="changeEmailError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
-          <button class="btn sm block" id="changeEmailBtn" style="margin-top:12px;">Update email</button>
-        </div>
 
-        <div class="section-head" style="margin-top:20px;"><h2>Change password</h2></div>
-        <div class="card">
-          <div class="form-row" style="margin-top:0;">
-            <label for="changePwNew">New password</label>
-            <input type="password" id="changePwNew" autocomplete="new-password">
+          <div class="section-head" style="margin-top:20px;"><h2>Change email</h2></div>
+          <div class="card">
+            <div class="form-row" style="margin-top:0;">
+              <label for="changeEmailInput">New email</label>
+              <input type="email" id="changeEmailInput" autocomplete="email">
+            </div>
+            <p id="changeEmailError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+            <button class="btn sm block" id="changeEmailBtn" style="margin-top:12px;">Update email</button>
           </div>
-          <div class="form-row">
-            <label for="changePwConfirm">Confirm new password</label>
-            <input type="password" id="changePwConfirm" autocomplete="new-password">
-          </div>
-          <p id="changePwError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
-          <button class="btn sm block" id="changePwBtn" style="margin-top:12px;">Update password</button>
-        </div>
 
-        <button class="btn sm block" id="signOutBtn" style="margin-top:24px; margin-bottom:4px;">Sign out</button>
+          <div class="section-head" style="margin-top:20px;"><h2>Change password</h2></div>
+          <div class="card">
+            <div class="form-row" style="margin-top:0;">
+              <label for="changePwNew">New password</label>
+              <input type="password" id="changePwNew" autocomplete="new-password">
+            </div>
+            <div class="form-row">
+              <label for="changePwConfirm">Confirm new password</label>
+              <input type="password" id="changePwConfirm" autocomplete="new-password">
+            </div>
+            <p id="changePwError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+            <button class="btn sm block" id="changePwBtn" style="margin-top:12px;">Update password</button>
+          </div>
+
+          <button class="btn sm block" id="signOutBtn" style="margin-top:24px; margin-bottom:4px;">Sign out</button>
+        </div>
       </div>
     </div>
   </main>
+
+  <div class="bulk-bar" id="bulkBar"></div>
+
+  <button class="fab-btn" id="bulkFab" aria-label="Mass-edit shifts">
+    <svg class="icon-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    <svg class="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
 
   <nav class="tabbar">
     <button class="tab-btn active" data-view="calendar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
       Calendar
-    </button>
-    <button class="tab-btn" data-view="roster">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 2l4 4-4 4M21 6H8a5 5 0 0 0 0 10h1M7 22l-4-4 4-4M3 18h13a5 5 0 0 0 0-10h-1"/></svg>
-      Roster
     </button>
     <button class="tab-btn" data-view="types">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
@@ -622,6 +849,10 @@
     <button class="tab-btn" data-view="reports">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
       Reports
+    </button>
+    <button class="tab-btn" data-view="roster">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 2l4 4-4 4M21 6H8a5 5 0 0 0 0 10h1M7 22l-4-4 4-4M3 18h13a5 5 0 0 0 0-10h-1"/></svg>
+      Roster
     </button>
     <button class="tab-btn" data-view="shared">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4.1 3.4-7 7.5-7s7.5 2.9 7.5 7"/></svg>
@@ -652,6 +883,7 @@
           <div class="leave-btns">
             <button class="leave-btn" id="addAnnualLeave">+ Annual leave</button>
             <button class="leave-btn" id="addSickLeave">+ Sick leave</button>
+            <button class="leave-btn" id="addExcessHours">+ Excess hours</button>
           </div>
         </div>
         <div class="sheet-section">
@@ -688,21 +920,27 @@
           <label>Color</label>
           <div class="color-grid" id="colorGrid"></div>
         </div>
-        <div class="time-row">
-          <div class="form-row">
-            <label for="typeStart">Start time</label>
-            <input type="time" id="typeStart" value="07:00">
-          </div>
-          <div class="form-row">
-            <label for="typeEnd">End time</label>
-            <input type="time" id="typeEnd" value="19:00">
-          </div>
-        </div>
-        <div class="duration-preview" id="durationPreview">= 12 hours</div>
-        <label class="checkbox-row">
-          <input type="checkbox" id="typeOvertimeEligible" checked>
-          <span>Allow overtime for this shift type</span>
+        <label class="checkbox-row wrap">
+          <input type="checkbox" id="typeNonWork">
+          <span>Personal reminder — not a work shift (e.g. "Call the kids"). Won't count toward your hours or reports.</span>
         </label>
+        <div id="typeWorkFields">
+          <div class="time-row">
+            <div class="form-row">
+              <label for="typeStart">Start time</label>
+              <input type="time" id="typeStart" value="07:00">
+            </div>
+            <div class="form-row">
+              <label for="typeEnd">End time</label>
+              <input type="time" id="typeEnd" value="19:00">
+            </div>
+          </div>
+          <div class="duration-preview" id="durationPreview">= 12 hours</div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="typeOvertimeEligible" checked>
+            <span>Allow overtime for this shift type</span>
+          </label>
+        </div>
         <div class="sheet-footer">
           <button class="btn danger" id="deleteTypeBtn" style="display:none;">Delete</button>
           <button class="btn primary block" id="saveTypeBtn">Save</button>
@@ -794,7 +1032,7 @@
   ];
   var OVERTIME_ID = "overtime";
   var OVERTIME_TYPE = {id:OVERTIME_ID, name:"Overtime", color:"#F0679E", ink:"#FFFFFF", isBuiltin:true};
-  var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual Leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick Leave"} };
+  var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual Leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick Leave"}, excess:{color:"#C98A2B", ink:"#FFFFFF", label:"Excess Hours"} };
   var EVENT_CATS = {
     appointment: {color:"#3FC5C0", label:"Appointment"},
     family: {color:"#F0679E", label:"Social"},
@@ -819,12 +1057,16 @@
     swaps: {},    // date -> [{id,kind:'off'|'on',partner,note,linkedDate,linkedSwapId,typeId,hours,shiftEntryId?}]
     swapPending: null, // {date, shiftId, typeId, hours, baseTypeId}
     noteCategory: "other",
-    roster: { weeks: 1, pattern: [[[],[],[],[],[],[],[]]] }, // pattern[weekIdx][dayIdx] = [typeId,...]
+    roster: { weeks: 1, pattern: [[[],[],[],[],[],[],[]]], updatedAt: 0 }, // pattern[weekIdx][dayIdx] = [typeId,...]
     settings: { hourlyRate: 0 },
+    tombstones: {}, // id -> deletedAt ms, so a deletion on one device isn't resurrected by another device's sync
     selectedDate: null,
     editingTypeId: null,
     editingShiftKey: null,   // {date,id} for tag editing
-    patternCell: null        // {week, day}
+    patternCell: null,       // {week, day}
+    bulkMode: false,
+    bulkTypeId: null,
+    bulkSelectedDates: {}    // dateKey -> shiftEntryId added during this bulk-edit session
   };
   state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
 
@@ -929,12 +1171,16 @@
         if (parsed && Array.isArray(parsed.types)) return parsed;
       }
     } catch(e){ storageOk = false; }
-    return { types: [], shifts:{}, notes:{}, leave:{}, swaps:{}, roster:{ weeks:1, pattern:[[[],[],[],[],[],[],[]]] }, settings:{ hourlyRate:0 } };
+    return { types: [], shifts:{}, notes:{}, leave:{}, swaps:{}, roster:{ weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 }, settings:{ hourlyRate:0 }, tombstones:{} };
+  }
+  function tomb(id){
+    if (!id) return;
+    state.tombstones[id] = Date.now();
   }
   function saveStore(){
     var snapshot = {
       types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps,
-      roster: state.roster, settings: state.settings
+      roster: state.roster, settings: state.settings, tombstones: state.tombstones
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
@@ -952,8 +1198,17 @@
     state.notes = data.notes || {};
     state.leave = data.leave || {};
     state.swaps = data.swaps || {};
-    state.roster = data.roster && data.roster.pattern ? data.roster : { weeks:1, pattern:[[[],[],[],[],[],[],[]]] };
+    state.roster = data.roster && data.roster.pattern ? data.roster : { weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 };
+    if (state.roster.updatedAt == null) state.roster.updatedAt = 0;
     state.settings = data.settings || { hourlyRate:0 };
+    state.tombstones = data.tombstones || {};
+    pruneTombstones();
+  }
+  function pruneTombstones(){
+    var cutoff = Date.now() - (400*24*60*60*1000);
+    Object.keys(state.tombstones).forEach(function(id){
+      if (state.tombstones[id] < cutoff) delete state.tombstones[id];
+    });
   }
 
   /* ---------------- account (Supabase auth + cloud sync) ---------------- */
@@ -975,34 +1230,120 @@
     document.getElementById("authFieldsNormal").style.display = isRecovery ? "none" : "block";
     document.getElementById("authFieldsRecovery").style.display = isRecovery ? "block" : "none";
     document.getElementById("authToggleRow").style.display = isRecovery ? "none" : "block";
+    document.getElementById("authSkipRow").style.display = isRecovery ? "none" : "block";
     if (isRecovery){
       document.getElementById("authTitle").textContent = "Set a new password";
       document.getElementById("authIntro").textContent = "Choose a new password for your account.";
       document.getElementById("authSubmitBtn").textContent = "Save new password";
     } else {
       document.getElementById("authTitle").textContent = authMode === "signup" ? "Sign up" : "Log in";
-      document.getElementById("authIntro").textContent = "One account works across every app in the family — sign in to sync your data.";
+      document.getElementById("authIntro").textContent = "Sign in to sync your data across devices and share rosters with someone — or skip this and use Roster Board on this device only.";
       document.getElementById("authSubmitBtn").textContent = authMode === "signup" ? "Sign up" : "Log in";
       document.getElementById("authTogglePrompt").textContent = authMode === "signup" ? "Already have an account?" : "Don't have an account?";
       document.getElementById("authToggleMode").textContent = authMode === "signup" ? "Log in" : "Sign up";
     }
     setAuthError("");
   }
-  function showAuthOverlay(){
+  function hasSkippedAuth(){
+    try { return localStorage.getItem("rosterBoard.skipAuth") === "1"; } catch(e){ return false; }
+  }
+  function setSkippedAuth(){
+    try { localStorage.setItem("rosterBoard.skipAuth", "1"); } catch(e){}
+  }
+  function clearSkippedAuth(){
+    try { localStorage.removeItem("rosterBoard.skipAuth"); } catch(e){}
+  }
+  function showAuthOverlay(force){
+    if (!force && hasSkippedAuth()) return;
     document.getElementById("authOverlay").classList.add("show");
   }
   function hideAuthOverlay(){
     document.getElementById("authOverlay").classList.remove("show");
   }
+
+  /* ---------------- onboarding slides ---------------- */
+  function hasSeenOnboarding(){
+    try { return localStorage.getItem("rosterBoard.onboardingSeen") === "1"; } catch(e){ return false; }
+  }
+  function markOnboardingSeen(){
+    try { localStorage.setItem("rosterBoard.onboardingSeen", "1"); } catch(e){}
+  }
+  var onboardingSlideEls = null;
+  var onboardingDotEls = [];
+  var onboardingIdx = 0;
+  function onboardingSetup(){
+    onboardingSlideEls = document.querySelectorAll("#onboardingSlides .onboarding-slide");
+    var dotsWrap = document.getElementById("onboardingDots");
+    dotsWrap.innerHTML = "";
+    onboardingDotEls = [];
+    onboardingSlideEls.forEach(function(){
+      var d = document.createElement("span");
+      dotsWrap.appendChild(d);
+      onboardingDotEls.push(d);
+    });
+    onboardingUpdateActive(0);
+  }
+  function onboardingUpdateActive(idx){
+    onboardingIdx = idx;
+    onboardingDotEls.forEach(function(d,i){ d.classList.toggle("active", i===idx); });
+    var isLast = idx === onboardingSlideEls.length - 1;
+    document.getElementById("onboardingNextBtn").textContent = isLast ? "Get started" : "Next";
+  }
+  function showOnboarding(){
+    if (!onboardingSlideEls) onboardingSetup();
+    var slides = document.getElementById("onboardingSlides");
+    slides.scrollLeft = 0;
+    onboardingUpdateActive(0);
+    document.getElementById("onboardingOverlay").classList.add("show");
+  }
+  function hideOnboarding(){
+    document.getElementById("onboardingOverlay").classList.remove("show");
+    markOnboardingSeen();
+  }
+  document.getElementById("onboardingSlides").addEventListener("scroll", function(){
+    if (!onboardingSlideEls || !onboardingSlideEls.length) return;
+    var slides = document.getElementById("onboardingSlides");
+    var w = slides.clientWidth || 1;
+    var idx = Math.round(slides.scrollLeft / w);
+    if (idx !== onboardingIdx) onboardingUpdateActive(idx);
+  });
+  document.getElementById("onboardingSkipBtn").addEventListener("click", hideOnboarding);
+
+  /* ---------------- privacy policy popup ---------------- */
+  function showPrivacyPolicy(){
+    document.getElementById("privacyOverlay").classList.add("show");
+  }
+  function hidePrivacyPolicy(){
+    document.getElementById("privacyOverlay").classList.remove("show");
+  }
+  document.getElementById("privacyBackBtn").addEventListener("click", hidePrivacyPolicy);
+  document.getElementById("privacyPolicyBtn").addEventListener("click", showPrivacyPolicy);
+  document.getElementById("authPrivacyLink").addEventListener("click", function(e){
+    e.preventDefault();
+    showPrivacyPolicy();
+  });
+  document.getElementById("onboardingNextBtn").addEventListener("click", function(){
+    if (!onboardingSlideEls) onboardingSetup();
+    var isLast = onboardingIdx === onboardingSlideEls.length - 1;
+    if (isLast){ hideOnboarding(); return; }
+    var slides = document.getElementById("onboardingSlides");
+    var w = slides.clientWidth || 1;
+    slides.scrollTo({ left: (onboardingIdx+1) * w, behavior: "smooth" });
+  });
   function updateAccountCard(){
     document.getElementById("accountEmail").textContent = currentUser ? (currentUser.email || "") : "";
     var name = currentUser && currentUser.user_metadata && currentUser.user_metadata.full_name;
-    document.getElementById("acctMenuSub").textContent = currentUser ? (name || currentUser.email || "Signed in") : "Not signed in";
+    document.getElementById("acctMenuSub").textContent = currentUser ? (name || currentUser.email || "Signed in") : "Not signed in — tap to sign in";
     document.getElementById("changeNameInput").value = name || "";
+    document.getElementById("acctSignedInSection").style.display = currentUser ? "block" : "none";
+    document.getElementById("acctSignedOutSection").style.display = currentUser ? "none" : "block";
+    document.getElementById("shareRosterSignedIn").style.display = currentUser ? "block" : "none";
+    document.getElementById("shareRosterSignedOut").style.display = currentUser ? "none" : "block";
   }
 
   function onSignedIn(user){
     currentUser = user;
+    clearSkippedAuth();
     hideAuthOverlay();
     updateAccountCard();
     pullCloudData();
@@ -1013,24 +1354,100 @@
     showAuthOverlay();
   }
 
+  // ---- merge helpers -------------------------------------------------
+  // The old sync simply overwrote the cloud's whole record with whatever
+  // this device had (and vice versa on pull). If two devices — or this
+  // device before/after signing in — had different data, whichever one
+  // saved/pulled last would silently wipe out the other's notes/shifts.
+  // These helpers merge by record id instead, unioning both sides and only
+  // ever dropping a record when a tombstone says it was deliberately
+  // deleted, so an "invisible" concurrent edit on another device can no
+  // longer erase what's on this one.
+  function mergeTombstones(a, b){
+    var out = {};
+    Object.keys(a||{}).forEach(function(id){ out[id] = a[id]; });
+    Object.keys(b||{}).forEach(function(id){ if (!out[id] || b[id] > out[id]) out[id] = b[id]; });
+    return out;
+  }
+  function mergeBucketed(localBuckets, remoteBuckets, tombstones){
+    var result = {};
+    var seen = {};
+    function addFrom(buckets){
+      Object.keys(buckets||{}).forEach(function(dateKey){
+        (buckets[dateKey]||[]).forEach(function(item){
+          if (!item || !item.id) return;
+          if (tombstones[item.id]) return;
+          if (seen[item.id]) return;
+          seen[item.id] = true;
+          (result[dateKey] = result[dateKey] || []).push(item);
+        });
+      });
+    }
+    addFrom(localBuckets);
+    addFrom(remoteBuckets);
+    return result;
+  }
+  function mergeArrayById(localArr, remoteArr, tombstones){
+    var seen = {}, out = [];
+    (localArr||[]).concat(remoteArr||[]).forEach(function(item){
+      if (!item || !item.id) return;
+      if (tombstones[item.id]) return;
+      if (seen[item.id]) return;
+      seen[item.id] = true;
+      out.push(item);
+    });
+    return out;
+  }
+  function mergeRoster(local, remote){
+    if (!remote || !remote.pattern) return local;
+    if (!local || !local.pattern) return remote;
+    return (remote.updatedAt||0) > (local.updatedAt||0) ? remote : local;
+  }
+  function mergeSnapshots(local, remote){
+    var tombstones = mergeTombstones(local.tombstones, remote && remote.tombstones);
+    return {
+      types: mergeArrayById(local.types, remote && remote.types, tombstones),
+      shifts: mergeBucketed(local.shifts, remote && remote.shifts, tombstones),
+      notes: mergeBucketed(local.notes, remote && remote.notes, tombstones),
+      leave: mergeBucketed(local.leave, remote && remote.leave, tombstones),
+      swaps: mergeBucketed(local.swaps, remote && remote.swaps, tombstones),
+      roster: mergeRoster(local.roster, remote && remote.roster),
+      settings: local.settings || (remote && remote.settings) || {hourlyRate:0},
+      tombstones: tombstones
+    };
+  }
+  function localSnapshot(){
+    return {
+      types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps,
+      roster: state.roster, settings: state.settings, tombstones: state.tombstones
+    };
+  }
+  function applyMergedLocally(merged){
+    state.types = merged.types;
+    state.typesById = {};
+    state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
+    state.types.forEach(function(t){ state.typesById[t.id] = t; });
+    state.shifts = merged.shifts;
+    state.notes = merged.notes;
+    state.leave = merged.leave;
+    state.swaps = merged.swaps;
+    state.roster = merged.roster;
+    state.tombstones = merged.tombstones;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch(e){}
+    renderAll();
+  }
+
   function pullCloudData(){
     if (!sb || !currentUser) return;
     sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle().then(function(res){
       if (res.error){ toast("Couldn't reach the cloud — using data on this device"); return; }
-      if (res.data && res.data.data){
-        applyingCloudData = true;
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(res.data.data)); } catch(e){}
-        loadIntoState();
-        renderAll();
-        applyingCloudData = false;
-        toast("Synced");
-      } else {
-        // first time this account has signed in anywhere — push whatever is on this device up
-        queueCloudSync({
-          types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave,
-          swaps: state.swaps, roster: state.roster, settings: state.settings
-        }, true);
-      }
+      var remote = (res.data && res.data.data) || null;
+      var merged = mergeSnapshots(localSnapshot(), remote);
+      applyMergedLocally(merged);
+      sb.from("app_data").upsert({
+        user_id: currentUser.id, data: merged, updated_at: new Date().toISOString()
+      }).then(function(res2){ if (res2.error) toast("Couldn't sync to the cloud"); });
+      toast("Synced");
     });
   }
 
@@ -1039,20 +1456,34 @@
     if (!sb || !currentUser || applyingCloudData) return;
     clearTimeout(cloudSyncTimer);
     pendingSyncSnapshot = snapshot;
-    var run = function(){
-      var toSend = pendingSyncSnapshot;
-      pendingSyncSnapshot = null;
+    if (immediate) runCloudSync(); else cloudSyncTimer = setTimeout(runCloudSync, 1200);
+  }
+  // Pull the cloud's current copy, merge it with what's pending on this
+  // device (by record id, respecting tombstones), apply the merged result
+  // back locally, then push it — so a change made on another device since
+  // this device's last sync is picked up instead of getting clobbered.
+  function runCloudSync(){
+    if (!sb || !currentUser || !pendingSyncSnapshot) return;
+    var toSend = pendingSyncSnapshot;
+    pendingSyncSnapshot = null;
+    sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle().then(function(res){
+      var remote = (res && res.data && res.data.data) || null;
+      var merged = mergeSnapshots(toSend, remote);
+      applyMergedLocally(merged);
+      sb.from("app_data").upsert({
+        user_id: currentUser.id, data: merged, updated_at: new Date().toISOString()
+      }).then(function(res2){ if (res2.error) toast("Couldn't sync to the cloud"); });
+    }).catch(function(){
+      // Couldn't reach the cloud to merge first — push what we have rather than lose it entirely.
       sb.from("app_data").upsert({
         user_id: currentUser.id, data: toSend, updated_at: new Date().toISOString()
-      }).then(function(res){
-        if (res.error) toast("Couldn't sync to the cloud");
       });
-    };
-    if (immediate) run(); else cloudSyncTimer = setTimeout(run, 1200);
+    });
   }
   // If a sync is still pending when the app is backgrounded/closed (e.g. right after
-  // adding a note), flush it immediately instead of losing it to the 1.2s debounce —
-  // this is what was causing entries to "disappear" on other devices.
+  // adding a note), push it immediately instead of losing it to the 1.2s debounce.
+  // There's no time for a merge round-trip here, so this is a best-effort direct
+  // push — the next normal sync (on this or another device) merges it in properly.
   function flushCloudSync(){
     if (!pendingSyncSnapshot) return;
     clearTimeout(cloudSyncTimer);
@@ -1080,7 +1511,7 @@
         // treating this as a normal sign-in, even though Supabase has issued a session.
         authMode = "recovery";
         updateAuthModeUI();
-        showAuthOverlay();
+        showAuthOverlay(true);
         return;
       }
       if (session && session.user) onSignedIn(session.user); else onSignedOut();
@@ -1091,6 +1522,12 @@
     e.preventDefault();
     authMode = authMode === "signup" ? "login" : "signup";
     updateAuthModeUI();
+  });
+  document.getElementById("authSkipLink").addEventListener("click", function(e){
+    e.preventDefault();
+    setSkippedAuth();
+    hideAuthOverlay();
+    updateAccountCard();
   });
   document.getElementById("authForgotLink").addEventListener("click", function(e){
     e.preventDefault();
@@ -1168,6 +1605,12 @@
   document.getElementById("acctDetailBackBtn").addEventListener("click", function(){
     document.getElementById("accountDetailPane").style.display = "none";
     document.getElementById("sharedListPane").style.display = "block";
+  });
+  document.getElementById("acctSignInBtn").addEventListener("click", function(){
+    showAuthOverlay(true);
+  });
+  document.getElementById("shareSignInBtn").addEventListener("click", function(){
+    showAuthOverlay(true);
   });
 
   /* ---------------- change name ---------------- */
@@ -1260,15 +1703,32 @@
   document.getElementById("aboutUsBtn").addEventListener("click", function(){
     openMiniModal({
       title: "About Roster Board",
-      message: "Roster Board is a shift calendar and roster app for managing your work schedule, overtime, leave and shift roster in one place.\n\nIt's built to grow into a small family of everyday apps that all share one account and subscription.",
+      message: "Roster Board is a shift calendar and roster app for managing your work schedule, overtime, leave and shift roster in one place.\n\nMade by a shift worker, for shift workers.\n\nIt's built to grow into a small family of everyday apps that all share one account and subscription.",
       showInput: false, confirmLabel: "Close"
     });
   });
   document.getElementById("helpBtn").addEventListener("click", function(){
     openMiniModal({
       title: "Help",
-      message: "Tap a day on the Calendar to add shifts, leave or personal events.\n\nUse Roster to build a repeating shift pattern and stamp it onto the calendar.\n\nUse Shifts to set up your own shift types and see built-in ones (Overtime, Annual Leave, Sick Leave).\n\nUse Reports for totals and exports.\n\nUse Account to sign in, manage your name, email and password, connect with others to share rosters, and invite friends.",
+      message: "Tap a day on the Calendar to add shifts, leave or personal events.\n\nUse Roster to build a repeating shift pattern and stamp it onto the calendar.\n\nUse Shifts to set up your own shift types and see built-in ones (Overtime, Annual Leave, Sick Leave, Excess Hours).\n\nUse Reports for totals and exports.\n\nUse Account to sign in, manage your name, email and password, connect with others to share rosters, and invite friends.",
       showInput: false, confirmLabel: "Close"
+    });
+  });
+  document.getElementById("replayIntroBtn").addEventListener("click", function(){
+    showOnboarding();
+  });
+  document.getElementById("feedbackBtn").addEventListener("click", function(){
+    openMiniModal({
+      title: "Send feedback",
+      message: "Got a suggestion or found a problem? Write it below — this opens an email addressed to us with your message pre-filled, ready for you to send.",
+      showInput: true, inputType: "text", placeholder: "Your feedback...",
+      confirmLabel: "Continue",
+      onConfirm: function(val){
+        var text = (val || "").trim();
+        if (!text){ toast("Write your feedback first"); return; }
+        var subject = "Roster Board feedback";
+        window.location.href = "mailto:contact@rosterboard.net?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(text);
+      }
     });
   });
 
@@ -1519,6 +1979,8 @@
       var d = parseYmd(dateKey);
       if (d.getFullYear()===y && d.getMonth()===m){
         state.shifts[dateKey].forEach(function(s){
+          var t = state.typesById[s.typeId];
+          if (t && t.nonWork) return;
           totalShifts++;
           var h = effectiveHours(s);
           totalH += h;
@@ -1535,8 +1997,12 @@
   function renderCalendar(){
     renderCalendarGrid("calGrid", state.calMonth, {
       shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById
-    }, { onDayClick: openDaySheet });
+    }, { onDayClick: handleCalendarDayClick, bulkSelectedDates: state.bulkMode ? state.bulkSelectedDates : null });
     renderHeader();
+  }
+  function handleCalendarDayClick(dateKey){
+    if (state.bulkMode){ bulkToggleDay(dateKey); return; }
+    openDaySheet(dateKey);
   }
 
   // Generic month-grid renderer, reused for the user's own calendar and for a
@@ -1551,8 +2017,9 @@
     cells.forEach(function(cell){
       var key = ymd(cell.date);
       var hasLeave = ((dataSrc.leave && dataSrc.leave[key])||[]).length > 0;
+      var isBulkSelected = !!(opts.bulkSelectedDates && opts.bulkSelectedDates[key]);
       var btn = document.createElement(opts.onDayClick ? "button" : "div");
-      btn.className = "day-cell" + (cell.inMonth ? "" : " out") + (isSameDay(cell.date, today) ? " today" : "") + (hasLeave ? " leave" : "");
+      btn.className = "day-cell" + (cell.inMonth ? "" : " out") + (isSameDay(cell.date, today) ? " today" : "") + (hasLeave ? " leave" : "") + (isBulkSelected ? " bulk-selected" : "");
       btn.setAttribute("data-date", key);
 
       var numRow = document.createElement("div");
@@ -1677,7 +2144,7 @@
     document.querySelectorAll(fullSelector).forEach(function(chip){
       var label = chip.querySelector(".chip-label");
       if (!label) return;
-      fitOneLine(label, 8, 5.5);
+      fitOneLine(label, 9.5, 6.5);
     });
   }
   function fitPairedChips(fullSelector){
@@ -1987,6 +2454,7 @@
     var idx = list.findIndex(function(s){ return s.id === shiftId; });
     if (idx === -1){ toast("Couldn't find that shift"); return; }
     list.splice(idx, 1);
+    tomb(shiftId);
 
     var effectiveOriginalType = typeId === OVERTIME_ID ? baseTypeId : typeId;
     var newEntry;
@@ -2040,6 +2508,7 @@
     }
     if (onRec && state.shifts[onDate]){
       state.shifts[onDate] = state.shifts[onDate].filter(function(s){ return s.id !== onRec.shiftEntryId; });
+      tomb(onRec.shiftEntryId);
     }
     var srcRec = offRec || rec;
     var restored = {id: mkId(), typeId: srcRec.typeId};
@@ -2047,8 +2516,8 @@
     if (srcRec.baseTypeId) restored.baseTypeId = srcRec.baseTypeId;
     (state.shifts[offDate] = state.shifts[offDate] || []).push(restored);
 
-    if (offRec) state.swaps[offDate] = (state.swaps[offDate]||[]).filter(function(r){ return r.id !== offRec.id; });
-    if (onRec) state.swaps[onDate] = (state.swaps[onDate]||[]).filter(function(r){ return r.id !== onRec.id; });
+    if (offRec){ state.swaps[offDate] = (state.swaps[offDate]||[]).filter(function(r){ return r.id !== offRec.id; }); tomb(offRec.id); }
+    if (onRec){ state.swaps[onDate] = (state.swaps[onDate]||[]).filter(function(r){ return r.id !== onRec.id; }); tomb(onRec.id); }
 
     saveStore(); renderAll(); toast("Swap undone");
   }
@@ -2063,6 +2532,7 @@
   }
   function removeShift(dateKey, id){
     if (state.shifts[dateKey]) state.shifts[dateKey] = state.shifts[dateKey].filter(function(s){ return s.id!==id; });
+    tomb(id);
     saveStore(); renderAll(); toast("Shift removed");
   }
   function setShiftTag(dateKey, id, text){
@@ -2094,6 +2564,7 @@
   }
   function removeLeave(dateKey, id){
     if (state.leave[dateKey]) state.leave[dateKey] = state.leave[dateKey].filter(function(l){ return l.id!==id; });
+    tomb(id);
     saveStore(); renderAll();
   }
   function addNote(dateKey, text, time, category, remind){
@@ -2107,6 +2578,7 @@
   }
   function removeNote(dateKey, id){
     if (state.notes[dateKey]) state.notes[dateKey] = state.notes[dateKey].filter(function(n){ return n.id!==id; });
+    tomb(id);
     saveStore(); renderAll();
   }
 
@@ -2140,13 +2612,15 @@
     var color = sel ? sel.getAttribute("data-hex") : PALETTE[0].hex;
     var ink = sel ? sel.getAttribute("data-ink") : PALETTE[0].ink;
     var overtimeEligible = document.getElementById("typeOvertimeEligible").checked;
+    var nonWork = document.getElementById("typeNonWork").checked;
+    if (nonWork){ hours = 0; overtimeEligible = false; }
 
     if (state.editingTypeId){
       var t = state.typesById[state.editingTypeId];
-      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; }
+      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.nonWork=nonWork; }
       toast("Type updated");
     } else {
-      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, order: state.types.length};
+      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, nonWork:nonWork, order: state.types.length};
       state.types.push(nt);
       state.typesById[nt.id] = nt;
       toast("Type created");
@@ -2157,6 +2631,7 @@
     if (!state.editingTypeId) return;
     state.types = state.types.filter(function(t){ return t.id!==state.editingTypeId; });
     delete state.typesById[state.editingTypeId];
+    tomb(state.editingTypeId);
     saveStore(); renderAll(); toast("Type deleted"); closeTypeSheet();
   }
 
@@ -2168,8 +2643,10 @@
     document.getElementById("typeStart").value = t ? t.startTime : "07:00";
     document.getElementById("typeEnd").value = t ? t.endTime : "19:00";
     document.getElementById("typeOvertimeEligible").checked = t ? (t.overtimeEligible !== false) : true;
+    document.getElementById("typeNonWork").checked = t ? !!t.nonWork : false;
     document.getElementById("deleteTypeBtn").style.display = t ? "block" : "none";
     updateDurationPreview();
+    updateTypeWorkFieldsVisibility();
 
     var grid = document.getElementById("colorGrid");
     grid.innerHTML = "";
@@ -2200,6 +2677,11 @@
   }
   document.getElementById("typeStart").addEventListener("input", updateDurationPreview);
   document.getElementById("typeEnd").addEventListener("input", updateDurationPreview);
+  function updateTypeWorkFieldsVisibility(){
+    var nonWork = document.getElementById("typeNonWork").checked;
+    document.getElementById("typeWorkFields").style.display = nonWork ? "none" : "block";
+  }
+  document.getElementById("typeNonWork").addEventListener("change", updateTypeWorkFieldsVisibility);
 
   /* ---------------- render: types view ---------------- */
   function renderTypes(){
@@ -2218,7 +2700,7 @@
       row.appendChild(meta);
       builtin.appendChild(row);
     });
-    ["annual","sick"].forEach(function(k, i){
+    ["annual","sick","excess"].forEach(function(k, i){
       if (i>0){ var div=document.createElement("div"); div.className="row-divider"; builtin.appendChild(div); }
       var def = LEAVE_COLORS[k];
       var row = document.createElement("div"); row.className="type-row";
@@ -2242,9 +2724,15 @@
       var sw = document.createElement("div"); sw.className="swatch"; sw.style.background=t.color; row.appendChild(sw);
       var meta = document.createElement("div"); meta.className="meta";
       var name = document.createElement("div"); name.className="name"; name.textContent=t.name;
+      if (t.nonWork){
+        var pill = document.createElement("span"); pill.className="tagpill"; pill.textContent="Personal";
+        name.appendChild(pill);
+      }
       meta.appendChild(name);
       var hrs = document.createElement("div"); hrs.className="hrs num";
-      hrs.textContent = (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + (t.overtimeEligible === false ? "  ·  no overtime" : "");
+      hrs.textContent = t.nonWork
+        ? "Doesn't count toward hours or reports"
+        : (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + (t.overtimeEligible === false ? "  ·  no overtime" : "");
       meta.appendChild(hrs);
       row.appendChild(meta);
       var actions = document.createElement("div"); actions.className="actions";
@@ -2353,6 +2841,7 @@
       b.addEventListener("click", function(){
         var idx = cur.indexOf(t.id);
         if (idx === -1) cur.push(t.id); else cur.splice(idx,1);
+        state.roster.updatedAt = Date.now();
         saveStore();
         renderPatternPicker();
         renderRoster();
@@ -2373,9 +2862,10 @@
     if (n > 52) n = 52;
     state.roster.weeks = n;
     ensurePatternShape();
+    state.roster.updatedAt = Date.now();
     saveStore();
     renderRoster();
-    toast("Pattern length updated");
+    toast("Rotation length updated");
   });
 
   document.getElementById("rosterApplyBtn").addEventListener("click", function(){
@@ -2445,6 +2935,7 @@
       state.shifts[dateKey].forEach(function(s){
         var t = state.typesById[s.typeId];
         if (!t) return;
+        if (t.nonWork) return;
         var h = effectiveHours(s);
         var groupKey = s.typeId === OVERTIME_ID && s.baseTypeId ? (s.typeId + ":" + s.baseTypeId) : s.typeId;
         var groupColor = entryColor(s);
@@ -2459,7 +2950,7 @@
         monthTotals[mk] = (monthTotals[mk]||0) + h;
       });
     });
-    var leaveDays = 0, leaveHours = 0, leaveHoursByKind = { annual: 0, sick: 0 };
+    var leaveDays = 0, leaveHours = 0, leaveHoursByKind = { annual: 0, sick: 0, excess: 0 };
     Object.keys(state.leave).forEach(function(dateKey){
       var d = parseYmd(dateKey);
       if (d < range.start || d >= range.end) return;
@@ -2609,13 +3100,82 @@
     return b;
   }
 
+  /* ---------------- bulk (mass-select) edit mode ---------------- */
+  function enterBulkMode(){
+    if (!state.types.length){ toast("Add a shift type first"); return; }
+    state.bulkMode = true;
+    state.bulkTypeId = null;
+    state.bulkSelectedDates = {};
+    document.getElementById("bulkFab").classList.add("active");
+    document.getElementById("bulkBar").classList.add("show");
+    renderBulkBar();
+    renderCalendar();
+  }
+  function exitBulkMode(){
+    var count = Object.keys(state.bulkSelectedDates||{}).length;
+    state.bulkMode = false;
+    state.bulkTypeId = null;
+    state.bulkSelectedDates = {};
+    document.getElementById("bulkFab").classList.remove("active");
+    document.getElementById("bulkBar").classList.remove("show");
+    renderCalendar();
+    if (count > 0) toast("Added " + count + " shift" + (count===1 ? "" : "s"));
+  }
+  function renderBulkBar(){
+    var bar = document.getElementById("bulkBar");
+    bar.innerHTML = "";
+    var hint = document.createElement("div");
+    hint.className = "bulk-hint";
+    hint.textContent = state.bulkTypeId ? "Tap days to add or remove this shift" : "Choose a shift type, then tap days on the calendar";
+    bar.appendChild(hint);
+    var row = document.createElement("div");
+    row.className = "bulk-chip-row";
+    if (!state.types.length){
+      row.appendChild(hintEl("No shift types yet — add one from the Shifts tab first."));
+    } else {
+      state.types.forEach(function(t){
+        var b = document.createElement("button");
+        var on = state.bulkTypeId === t.id;
+        b.className = "toggle-chip" + (on ? " on" : "");
+        if (on){ b.style.background = t.color; b.style.color = t.ink; }
+        b.textContent = t.name;
+        b.addEventListener("click", function(){
+          state.bulkTypeId = t.id;
+          renderBulkBar();
+        });
+        row.appendChild(b);
+      });
+    }
+    bar.appendChild(row);
+  }
+  function bulkToggleDay(dateKey){
+    if (!state.bulkTypeId){ toast("Pick a shift type first"); return; }
+    var existingId = state.bulkSelectedDates[dateKey];
+    if (existingId){
+      if (state.shifts[dateKey]) state.shifts[dateKey] = state.shifts[dateKey].filter(function(s){ return s.id !== existingId; });
+      tomb(existingId);
+      delete state.bulkSelectedDates[dateKey];
+    } else {
+      var entry = {id: mkId(), typeId: state.bulkTypeId};
+      (state.shifts[dateKey] = state.shifts[dateKey] || []).push(entry);
+      state.bulkSelectedDates[dateKey] = entry.id;
+    }
+    saveStore();
+    renderCalendar();
+  }
+  document.getElementById("bulkFab").addEventListener("click", function(){
+    if (state.bulkMode) exitBulkMode(); else enterBulkMode();
+  });
+
   /* ---------------- view switching ---------------- */
   function setView(v){
+    if (v !== "calendar" && state.bulkMode) exitBulkMode();
     state.view = v;
     document.querySelectorAll(".view").forEach(function(el){ el.classList.remove("active"); });
     document.getElementById("view-"+v).classList.add("active");
     document.querySelectorAll(".tab-btn").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-view")===v); });
     document.getElementById("appHeader").style.display = (v === "calendar") ? "flex" : "none";
+    document.getElementById("bulkFab").classList.toggle("show", v === "calendar");
     if (v === "roster") renderRoster();
     if (v === "shared") refreshConnections();
   }
@@ -2638,7 +3198,7 @@
       if (d < range.start || d >= range.end) return;
       state.shifts[dateKey].forEach(function(s){
         var t = state.typesById[s.typeId];
-        if (!t) return;
+        if (!t || t.nonWork) return;
         rows.push([dateKey, WEEKDAY_FULL[d.getDay()], entryDisplayName(s), effectiveHours(s), s.tag || ""]);
       });
     });
@@ -2676,15 +3236,17 @@
       var lv = state.leave[key] || [];
       var names = entries.map(function(s){
         var t = state.typesById[s.typeId];
+        if (!t) return "";
+        if (t.nonWork) return entryDisplayName(s);
         var h = effectiveHours(s);
         totalHours += h;
-        return t ? entryDisplayName(s) + " (" + fmtHours(h) + "h)" : "";
+        return entryDisplayName(s) + " (" + fmtHours(h) + "h)";
       }).concat(lv.map(function(l){ return LEAVE_COLORS[l.kind].label + (l.hours != null ? " (" + fmtHours(l.hours) + "h)" : ""); }));
       if (names.length){
         doc.text(pad2(cur.getDate())+"/"+pad2(cur.getMonth()+1), 40, y);
         doc.text(WEEKDAY_FULL[cur.getDay()].slice(0,3), 130, y);
         doc.text(names.join(", "), 190, y, {maxWidth: pageW-90-190});
-        var dayHours = entries.reduce(function(s,e){ return s+effectiveHours(e); }, 0);
+        var dayHours = entries.reduce(function(s,e){ var t=state.typesById[e.typeId]; return (t && t.nonWork) ? s : s+effectiveHours(e); }, 0);
         doc.text(dayHours ? fmtHours(dayHours) : "—", pageW-90, y);
         y += 16;
       }
@@ -2728,6 +3290,7 @@
   document.getElementById("noteInput").addEventListener("keydown", function(e){ if (e.key === "Enter") document.getElementById("addNoteBtn").click(); });
   document.getElementById("addAnnualLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "annual"); });
   document.getElementById("addSickLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "sick"); });
+  document.getElementById("addExcessHours").addEventListener("click", function(){ addLeave(state.selectedDate, "excess"); });
 
   document.getElementById("newTypeBtn").addEventListener("click", function(){ openTypeSheet(null); });
   document.getElementById("typeSheetClose").addEventListener("click", closeTypeSheet);
@@ -2736,6 +3299,10 @@
   document.getElementById("deleteTypeBtn").addEventListener("click", deleteType);
 
   /* ---------------- boot ---------------- */
+  if (hasSkippedAuth()) hideAuthOverlay();
+  updateAccountCard();
+  onboardingSetup();
+  if (!hasSeenOnboarding()) showOnboarding();
   loadIntoState();
   applyTheme(state.settings.theme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
   renderAll();
