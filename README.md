@@ -8,6 +8,23 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Account is now a drill-down page**: the Account tab's top "Account" card
+  is now a single tappable row (like a Settings app) instead of showing
+  everything at once — tap it to go into a dedicated Account page with
+  Change name, Change email and Change password, and Sign out at the very
+  bottom of that page.
+- **Pay calculator removed**: the itemized pay/payslip section on Reports
+  (hourly rate, overtime multiplier, recurring pay items, estimated net pay)
+  has been taken out for now.
+- **Roster pattern grid fixed**: the pattern grid's borders are now uniform
+  on every side — no more uneven gap between the day-of-week header and the
+  week row below it.
+- **Cleaner day sheet**: the "No shift types yet — add one from the Types
+  tab first" message no longer shows under the shift picker when you open a
+  day on the Calendar tab.
+- **Privacy Policy link fixed**: it now opens in the same window instead of
+  trying to open a new tab, which could silently fail when the app is
+  installed as a Home Screen app on iPhone.
 - **Account tab**: the last tab is now called Account (previously Shared) and
   is the home for everything account-related — signed-in email/sign out,
   Change password, Appearance (theme), About us/Help/Contact us/Privacy
@@ -35,13 +52,6 @@ server-side code, nothing to install beyond a static file server.
   The explanatory subtext under the built-in shift types (e.g. "Enter hours
   each time") has been removed from the Shifts tab list to keep it tidy —
   the built-in types themselves are unchanged.
-- **Payslip-style pay breakdown**: Reports → Estimated pay is now a full
-  itemized breakdown — Ordinary hours, Overtime (at your multiplier),
-  optionally Leave at full rate — plus a **Recurring pay items** section
-  where you can add your own standing additions or deductions (e.g. salary
-  sacrifice, a fixed allowance) that apply every period. Everything rolls
-  into a single "Estimated net pay this period" total, and the year-in-review
-  card uses the same calculation.
 - **Roster tab visual fix**: cleaned up a rendering artifact that could show
   thin black gaps between cells at the edge of the weekly pattern grid.
 - **Invite a friend**: the Shared tab now has an "Invite a friend" section
@@ -452,9 +462,8 @@ JavaScript, no framework). Data model, in `localStorage` under the key
   if you picked a different "Swapping for" type)
 - `roster` — `{weeks, pattern}`, where `pattern[weekIndex][dayIndex]` is an
   array of type ids for that day of the repeating cycle (`dayIndex` 0 = Monday)
-- `settings` — `{hourlyRate, otMultiplier, payLeaveFullRate, payItems, theme}` —
-  `payItems` is an array of `{id, name, type: "addition"|"deduction", amount}`
-  recurring pay line items; `theme` is `"system"|"light"|"dark"`
+- `settings` — `{hourlyRate, theme}` — `hourlyRate` is currently unused (the
+  pay calculator was removed); `theme` is `"system"|"light"|"dark"`
 
 If you change what `index.html` caches or add files, bump the `CACHE`
 version string at the top of `sw.js` so returning visitors pick up the

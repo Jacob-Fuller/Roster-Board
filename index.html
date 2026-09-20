@@ -149,6 +149,10 @@
   .rate-row input{width:90px; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 10px; font-size:.9rem; color:var(--text);}
   .rate-row span{font-size:.78rem; color:var(--text-dim);}
 
+  .menu-row{display:flex; align-items:center; justify-content:space-between; width:100%; background:none; border:none; padding:14px 2px; font-size:.9rem; color:var(--text); text-align:left; cursor:pointer;}
+  .menu-row .chev{color:var(--text-faint); font-size:1.1rem;}
+  .menu-row .sub{color:var(--text-dim); font-size:.78rem;}
+
   .type-row{display:flex; align-items:center; gap:10px; padding:11px 4px;}
   .type-row .swatch{width:26px; height:26px; border-radius:8px; flex:none;}
   .type-row .meta{flex:1; min-width:0;}
@@ -288,12 +292,10 @@
   /* Roster tab */
   .roster-controls{display:flex; align-items:flex-end; gap:10px;}
   .roster-controls .form-row{margin-top:0; flex:1;}
-  .roster-grid{margin-top:14px; border-radius:var(--radius-md); overflow:hidden; background:var(--border); border:1px solid var(--border);}
-  .roster-week{display:grid; grid-template-columns:52px repeat(7,1fr); gap:1px; background:var(--border);}
-  .roster-week + .roster-week{margin-top:1px;}
+  .roster-grid-outer{margin-top:14px; border-radius:var(--radius-md); overflow:hidden; background:var(--border); padding:1px;}
+  .roster-grid{display:grid; grid-template-columns:52px repeat(7,1fr); gap:1px; background:var(--border);}
   .roster-week-label{display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:700; color:var(--text-faint); background:var(--surface-2);}
-  .roster-head{display:grid; grid-template-columns:52px repeat(7,1fr); gap:1px; background:var(--border);}
-  .roster-head span{text-align:center; font-size:.6rem; font-weight:700; color:var(--text-faint); padding:6px 0; text-transform:uppercase; background:var(--surface-2);}
+  .roster-head-cell{text-align:center; font-size:.6rem; font-weight:700; color:var(--text-faint); padding:6px 0; text-transform:uppercase; background:var(--surface-2); display:flex; align-items:center; justify-content:center;}
   .roster-cell{
     min-height:52px; padding:4px; display:flex; flex-direction:column; gap:2px;
     background:var(--surface); text-align:left;
@@ -358,7 +360,7 @@
         </p>
       </div>
       <p style="text-align:center; margin:16px 0 0; font-size:.74rem; color:rgba(251,246,236,.55);">
-        By continuing you agree to our <a href="privacy.html" target="_blank" style="color:rgba(251,246,236,.85);">Privacy Policy</a>.
+        By continuing you agree to our <a href="privacy.html" style="color:rgba(251,246,236,.85);">Privacy Policy</a>.
       </p>
     </div>
   </div>
@@ -441,39 +443,6 @@
         <div class="stat-tile"><div class="label">Leave taken</div><div class="value num" id="repLeaveDays">0</div></div>
       </div>
 
-      <div class="section-head"><h2>Estimated pay</h2></div>
-      <div class="card">
-        <div class="rate-row">
-          <span>Hourly rate</span>
-          <input type="number" id="hourlyRateInput" min="0" step="0.5" placeholder="0.00">
-          <span>/hr</span>
-        </div>
-        <div class="rate-row" style="margin-top:10px;">
-          <span>Overtime multiplier</span>
-          <input type="number" id="otMultiplierInput" min="1" step="0.05" placeholder="1.5">
-          <span>×</span>
-        </div>
-        <div class="rate-row" style="margin-top:10px;">
-          <span>Pay leave at full rate</span>
-          <input type="checkbox" id="payLeaveToggle" style="width:18px; height:18px; accent-color:var(--accent);">
-        </div>
-      </div>
-
-      <div class="section-head" style="margin-top:16px;"><h2>Payslip estimate</h2></div>
-      <div class="card" id="payBreakdown"></div>
-
-      <div class="section-head" style="margin-top:16px;">
-        <h2>Recurring pay items</h2>
-        <button class="btn sm primary" id="addPayItemBtn">+ Add</button>
-      </div>
-      <div class="section-sub">Things that apply every pay period on top of your hours — salary sacrifice, a fixed allowance, a standing deduction. Additions increase the estimate, deductions reduce it.</div>
-      <div class="card" id="payItemsList"><div class="section-sub" style="margin:0;">No recurring items yet.</div></div>
-
-      <div class="stat-tile" style="margin-top:14px; border:none; background:var(--surface-2); padding:12px;">
-        <div class="label">Estimated net pay this period</div>
-        <div class="value num" id="repPayEstimate">$0</div>
-      </div>
-
       <div class="section-head"><h2>By shift type</h2></div>
       <div class="card" id="repBars"></div>
 
@@ -504,28 +473,14 @@
     <div class="view" id="view-shared">
       <div id="sharedListPane">
         <div class="section-head"><h2>Account</h2></div>
-        <div class="card" id="accountCard">
-          <div id="accountSignedIn" style="display:none;">
-            <div class="rate-row"><span>Signed in as</span><span id="accountEmail" style="font-weight:600;"></span></div>
-            <button class="btn sm block" id="signOutBtn" style="margin-top:12px;">Sign out</button>
-          </div>
-          <div id="accountSignedOut" style="display:none;">
-            <div class="section-sub" style="margin:0;">Not signed in.</div>
-          </div>
-        </div>
-
-        <div class="section-head" style="margin-top:20px;"><h2>Change password</h2></div>
-        <div class="card">
-          <div class="form-row" style="margin-top:0;">
-            <label for="changePwNew">New password</label>
-            <input type="password" id="changePwNew" autocomplete="new-password">
-          </div>
-          <div class="form-row">
-            <label for="changePwConfirm">Confirm new password</label>
-            <input type="password" id="changePwConfirm" autocomplete="new-password">
-          </div>
-          <p id="changePwError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
-          <button class="btn sm block" id="changePwBtn" style="margin-top:12px;">Update password</button>
+        <div class="card" id="accountCard" style="padding:2px 14px;">
+          <button class="menu-row" id="acctMenuRow" type="button">
+            <span style="display:flex; flex-direction:column; gap:2px; align-items:flex-start;">
+              <span style="font-weight:600;">Account</span>
+              <span class="sub" id="acctMenuSub">Not signed in</span>
+            </span>
+            <span class="chev">&#8250;</span>
+          </button>
         </div>
 
         <div class="section-head" style="margin-top:20px;"><h2>Appearance</h2></div>
@@ -542,7 +497,7 @@
           <button class="btn sm block" id="aboutUsBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">About us</button>
           <button class="btn sm block" id="helpBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Help</button>
           <a class="btn sm block" href="mailto:jacob.fuller@outlook.com.au" style="text-align:left; justify-content:flex-start; margin-bottom:8px; text-decoration:none; display:flex; align-items:center;">Contact us</a>
-          <a class="btn sm block" href="privacy.html" target="_blank" style="text-align:left; justify-content:flex-start; text-decoration:none; display:flex; align-items:center;">Privacy Policy</a>
+          <a class="btn sm block" href="privacy.html" style="text-align:left; justify-content:flex-start; text-decoration:none; display:flex; align-items:center;">Privacy Policy</a>
         </div>
 
         <div class="section-head" style="margin-top:24px;"><h2>Invite a friend</h2></div>
@@ -590,6 +545,57 @@
           <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
         </div>
         <div class="cal-grid" id="sharedCalGrid"></div>
+      </div>
+
+      <div id="accountDetailPane" style="display:none;">
+        <div class="section-head">
+          <button class="icon-btn" id="acctDetailBackBtn" aria-label="Back">&#8249;</button>
+          <h2 style="font-size:1rem;">Account</h2>
+          <span></span>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <div class="rate-row" style="justify-content:space-between;">
+            <span>Signed in as</span>
+            <span id="accountEmail" style="font-weight:600;"></span>
+          </div>
+        </div>
+
+        <div class="section-head" style="margin-top:20px;"><h2>Change name</h2></div>
+        <div class="card">
+          <div class="form-row" style="margin-top:0;">
+            <label for="changeNameInput">Display name</label>
+            <input type="text" id="changeNameInput" autocomplete="name" placeholder="Your name">
+          </div>
+          <p id="changeNameError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+          <button class="btn sm block" id="changeNameBtn" style="margin-top:12px;">Update name</button>
+        </div>
+
+        <div class="section-head" style="margin-top:20px;"><h2>Change email</h2></div>
+        <div class="card">
+          <div class="form-row" style="margin-top:0;">
+            <label for="changeEmailInput">New email</label>
+            <input type="email" id="changeEmailInput" autocomplete="email">
+          </div>
+          <p id="changeEmailError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+          <button class="btn sm block" id="changeEmailBtn" style="margin-top:12px;">Update email</button>
+        </div>
+
+        <div class="section-head" style="margin-top:20px;"><h2>Change password</h2></div>
+        <div class="card">
+          <div class="form-row" style="margin-top:0;">
+            <label for="changePwNew">New password</label>
+            <input type="password" id="changePwNew" autocomplete="new-password">
+          </div>
+          <div class="form-row">
+            <label for="changePwConfirm">Confirm new password</label>
+            <input type="password" id="changePwConfirm" autocomplete="new-password">
+          </div>
+          <p id="changePwError" style="color:var(--danger); font-size:.8rem; margin:8px 0 0; display:none;"></p>
+          <button class="btn sm block" id="changePwBtn" style="margin-top:12px;">Update password</button>
+        </div>
+
+        <button class="btn sm block" id="signOutBtn" style="margin-top:24px; margin-bottom:4px;">Sign out</button>
       </div>
     </div>
   </main>
@@ -757,36 +763,6 @@
         <div class="sheet-footer">
           <button class="btn block" id="swapFormCancel">Cancel</button>
           <button class="btn primary block" id="swapFormConfirm">Swap shift</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="overlay center" id="payItemFormOverlay">
-    <div class="sheet">
-      <div class="sheet-head">
-        <h3 id="payItemFormTitle">Recurring pay item</h3>
-        <button class="close" id="payItemFormClose">&#10005;</button>
-      </div>
-      <div class="sheet-body">
-        <div class="form-row">
-          <label for="payItemName">Name</label>
-          <input type="text" id="payItemName" placeholder="e.g. Salary sacrifice">
-        </div>
-        <div class="form-row">
-          <label for="payItemType">Type</label>
-          <select id="payItemType">
-            <option value="deduction">Deduction (reduces pay)</option>
-            <option value="addition">Addition (adds to pay)</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label for="payItemAmount">Amount per period</label>
-          <input type="number" id="payItemAmount" min="0" step="0.5" placeholder="0.00">
-        </div>
-        <div class="sheet-footer">
-          <button class="btn block" id="payItemFormCancel">Cancel</button>
-          <button class="btn primary block" id="payItemFormConfirm">Save</button>
         </div>
       </div>
     </div>
@@ -1009,16 +985,10 @@
     document.getElementById("authOverlay").classList.remove("show");
   }
   function updateAccountCard(){
-    var signedIn = document.getElementById("accountSignedIn");
-    var signedOut = document.getElementById("accountSignedOut");
-    if (currentUser){
-      document.getElementById("accountEmail").textContent = currentUser.email || "";
-      signedIn.style.display = "block";
-      signedOut.style.display = "none";
-    } else {
-      signedIn.style.display = "none";
-      signedOut.style.display = "block";
-    }
+    document.getElementById("accountEmail").textContent = currentUser ? (currentUser.email || "") : "";
+    var name = currentUser && currentUser.user_metadata && currentUser.user_metadata.full_name;
+    document.getElementById("acctMenuSub").textContent = currentUser ? (name || currentUser.email || "Signed in") : "Not signed in";
+    document.getElementById("changeNameInput").value = name || "";
   }
 
   function onSignedIn(user){
@@ -1159,6 +1129,59 @@
     if (sb) sb.auth.signOut();
   });
 
+  /* ---------------- account detail pane navigation ---------------- */
+  document.getElementById("acctMenuRow").addEventListener("click", function(){
+    document.getElementById("sharedListPane").style.display = "none";
+    document.getElementById("accountDetailPane").style.display = "block";
+  });
+  document.getElementById("acctDetailBackBtn").addEventListener("click", function(){
+    document.getElementById("accountDetailPane").style.display = "none";
+    document.getElementById("sharedListPane").style.display = "block";
+  });
+
+  /* ---------------- change name ---------------- */
+  function setChangeNameError(msg){
+    var el = document.getElementById("changeNameError");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+  document.getElementById("changeNameBtn").addEventListener("click", function(){
+    if (!sb || !currentUser){ setChangeNameError("Sign in first."); return; }
+    var name = document.getElementById("changeNameInput").value.trim();
+    if (!name){ setChangeNameError("Enter a name."); return; }
+    setChangeNameError("");
+    var btn = document.getElementById("changeNameBtn");
+    btn.disabled = true;
+    sb.auth.updateUser({ data: { full_name: name } }).then(function(res){
+      btn.disabled = false;
+      if (res.error){ setChangeNameError(res.error.message); return; }
+      if (res.data && res.data.user) currentUser = res.data.user;
+      updateAccountCard();
+      toast("Name updated");
+    });
+  });
+
+  /* ---------------- change email ---------------- */
+  function setChangeEmailError(msg){
+    var el = document.getElementById("changeEmailError");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+  document.getElementById("changeEmailBtn").addEventListener("click", function(){
+    if (!sb || !currentUser){ setChangeEmailError("Sign in first."); return; }
+    var email = document.getElementById("changeEmailInput").value.trim();
+    if (!email){ setChangeEmailError("Enter a new email."); return; }
+    setChangeEmailError("");
+    var btn = document.getElementById("changeEmailBtn");
+    btn.disabled = true;
+    sb.auth.updateUser({ email: email }).then(function(res){
+      btn.disabled = false;
+      if (res.error){ setChangeEmailError(res.error.message); return; }
+      document.getElementById("changeEmailInput").value = "";
+      toast("Check your new email to confirm the change");
+    });
+  });
+
   /* ---------------- change password ---------------- */
   function setChangePwError(msg){
     var el = document.getElementById("changePwError");
@@ -1206,14 +1229,14 @@
   document.getElementById("aboutUsBtn").addEventListener("click", function(){
     openMiniModal({
       title: "About Roster Board",
-      message: "Roster Board is a shift calendar and roster app for managing your work schedule, overtime, leave and pay estimates in one place.\n\nIt's built to grow into a small family of everyday apps that all share one account and subscription.",
+      message: "Roster Board is a shift calendar and roster app for managing your work schedule, overtime, leave and shift roster in one place.\n\nIt's built to grow into a small family of everyday apps that all share one account and subscription.",
       showInput: false, confirmLabel: "Close"
     });
   });
   document.getElementById("helpBtn").addEventListener("click", function(){
     openMiniModal({
       title: "Help",
-      message: "Tap a day on the Calendar to add shifts, leave or personal events.\n\nUse Roster to build a repeating shift pattern and stamp it onto the calendar.\n\nUse Shifts to set up your own shift types and see built-in ones (Overtime, Annual Leave, Sick Leave).\n\nUse Reports for totals, pay estimates and exports.\n\nUse Account to sign in, manage your password, connect with others to share rosters, and invite friends.",
+      message: "Tap a day on the Calendar to add shifts, leave or personal events.\n\nUse Roster to build a repeating shift pattern and stamp it onto the calendar.\n\nUse Shifts to set up your own shift types and see built-in ones (Overtime, Annual Leave, Sick Leave).\n\nUse Reports for totals and exports.\n\nUse Account to sign in, manage your name, email and password, connect with others to share rosters, and invite friends.",
       showInput: false, confirmLabel: "Close"
     });
   });
@@ -1696,9 +1719,6 @@
 
     var picker = document.getElementById("sheetTypePicker");
     picker.innerHTML = "";
-    if (!state.types.length){
-      picker.appendChild(hintEl("No shift types yet — add one from the Types tab first."));
-    }
     state.types.forEach(function(t){
       var b = document.createElement("button");
       b.className = "type-pick-btn";
@@ -2160,19 +2180,24 @@
     document.getElementById("rosterWeeksInput").value = state.roster.weeks;
     var wrap = document.getElementById("rosterGridWrap");
     wrap.innerHTML = "";
-    var head = document.createElement("div");
-    head.className = "roster-head";
-    head.innerHTML = "<span></span>" + ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(function(w){ return "<span>"+w+"</span>"; }).join("");
-    wrap.appendChild(head);
+    var outer = document.createElement("div");
+    outer.className = "roster-grid-outer";
     var grid = document.createElement("div");
     grid.className = "roster-grid";
+    var corner = document.createElement("div");
+    corner.className = "roster-head-cell";
+    grid.appendChild(corner);
+    ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].forEach(function(w){
+      var h = document.createElement("div");
+      h.className = "roster-head-cell";
+      h.textContent = w;
+      grid.appendChild(h);
+    });
     state.roster.pattern.forEach(function(week, wi){
-      var row = document.createElement("div");
-      row.className = "roster-week";
       var label = document.createElement("div");
       label.className = "roster-week-label";
       label.textContent = "W" + (wi+1);
-      row.appendChild(label);
+      grid.appendChild(label);
       week.forEach(function(dayTypeIds, di){
         var cell = document.createElement("button");
         cell.className = "roster-cell";
@@ -2193,11 +2218,11 @@
           cell.appendChild(more);
         }
         cell.addEventListener("click", function(){ openPatternSheet(wi, di); });
-        row.appendChild(cell);
+        grid.appendChild(cell);
       });
-      grid.appendChild(row);
     });
-    wrap.appendChild(grid);
+    outer.appendChild(grid);
+    wrap.appendChild(outer);
 
     if (!document.getElementById("rosterStartDate").value){
       document.getElementById("rosterStartDate").value = ymd(new Date());
@@ -2350,141 +2375,6 @@
       leaveDays:leaveDays, leaveHours:leaveHours, leaveHoursByKind:leaveHoursByKind, monthTotals:monthTotals };
   }
 
-  /* ---------------- pay items + breakdown ---------------- */
-  function getPayItems(){ return state.settings.payItems || []; }
-  function fmtMoney(n){
-    var sign = n < 0 ? "-" : "";
-    return sign + "$" + Math.abs(Math.round(n*100)/100).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-  }
-  function computePay(stats){
-    var rate = state.settings.hourlyRate || 0;
-    var otMult = state.settings.otMultiplier || 1.5;
-    var payLeave = !!state.settings.payLeaveFullRate;
-    var lines = [];
-    var net = 0;
-
-    var ordinaryPay = stats.ordinaryHours * rate;
-    lines.push({ label: "Ordinary hours (" + fmtHours(stats.ordinaryHours) + "h)", amount: ordinaryPay });
-    net += ordinaryPay;
-
-    if (stats.otHours > 0){
-      var otPay = stats.otHours * rate * otMult;
-      lines.push({ label: "Overtime (" + fmtHours(stats.otHours) + "h @ " + otMult + "×)", amount: otPay });
-      net += otPay;
-    }
-
-    if (payLeave){
-      if (stats.leaveHoursByKind.annual > 0){
-        var aPay = stats.leaveHoursByKind.annual * rate;
-        lines.push({ label: "Annual Leave (" + fmtHours(stats.leaveHoursByKind.annual) + "h)", amount: aPay });
-        net += aPay;
-      }
-      if (stats.leaveHoursByKind.sick > 0){
-        var sPay = stats.leaveHoursByKind.sick * rate;
-        lines.push({ label: "Sick Leave (" + fmtHours(stats.leaveHoursByKind.sick) + "h)", amount: sPay });
-        net += sPay;
-      }
-    }
-
-    getPayItems().forEach(function(item){
-      var amt = item.type === "deduction" ? -Math.abs(item.amount) : Math.abs(item.amount);
-      lines.push({ label: item.name, amount: amt });
-      net += amt;
-    });
-
-    return { lines: lines, net: net };
-  }
-  function renderPayBreakdown(stats){
-    var wrap = document.getElementById("payBreakdown");
-    wrap.innerHTML = "";
-    var pay = computePay(stats);
-    if (!pay.lines.length){
-      wrap.appendChild(hintEl("Nothing logged this period yet."));
-      return;
-    }
-    pay.lines.forEach(function(line, i){
-      if (i > 0){ var d = document.createElement("div"); d.className = "row-divider"; wrap.appendChild(d); }
-      var row = document.createElement("div");
-      row.style.cssText = "display:flex; justify-content:space-between; padding:9px 4px; font-size:.85rem;";
-      var neg = line.amount < 0;
-      row.innerHTML = "<span style='color:var(--text-dim)'>" + line.label + "</span><b class='num'" + (neg ? " style='color:var(--danger)'" : "") + ">" + fmtMoney(line.amount) + "</b>";
-      wrap.appendChild(row);
-    });
-    return pay.net;
-  }
-  function renderPayItemsList(){
-    var wrap = document.getElementById("payItemsList");
-    wrap.innerHTML = "";
-    var items = getPayItems();
-    if (!items.length){
-      wrap.appendChild(hintEl("No recurring items yet."));
-      return;
-    }
-    items.forEach(function(item, i){
-      if (i > 0){ var d = document.createElement("div"); d.className = "row-divider"; wrap.appendChild(d); }
-      var row = document.createElement("div");
-      row.className = "rate-row";
-      var label = document.createElement("span");
-      label.textContent = item.name + " · " + (item.type === "deduction" ? "-" : "+") + fmtMoney(Math.abs(item.amount));
-      row.appendChild(label);
-      var btns = document.createElement("div");
-      btns.style.display = "flex"; btns.style.gap = "6px";
-      var editBtn = document.createElement("button");
-      editBtn.className = "icon-btn"; editBtn.textContent = "✎"; editBtn.setAttribute("aria-label","Edit");
-      editBtn.addEventListener("click", function(){ openPayItemForm(item.id); });
-      var delBtn = document.createElement("button");
-      delBtn.className = "icon-btn"; delBtn.textContent = "✕"; delBtn.setAttribute("aria-label","Remove");
-      delBtn.addEventListener("click", function(){
-        state.settings.payItems = getPayItems().filter(function(p){ return p.id !== item.id; });
-        saveStore(); renderReports();
-      });
-      btns.appendChild(editBtn); btns.appendChild(delBtn);
-      row.appendChild(btns);
-      wrap.appendChild(row);
-    });
-  }
-  var editingPayItemId = null;
-  function openPayItemForm(id){
-    editingPayItemId = id || null;
-    var item = id ? getPayItems().find(function(p){ return p.id === id; }) : null;
-    document.getElementById("payItemFormTitle").textContent = item ? "Edit pay item" : "Recurring pay item";
-    document.getElementById("payItemName").value = item ? item.name : "";
-    document.getElementById("payItemType").value = item ? item.type : "deduction";
-    document.getElementById("payItemAmount").value = item ? item.amount : "";
-    document.getElementById("payItemFormOverlay").classList.add("show");
-  }
-  function closePayItemForm(){
-    document.getElementById("payItemFormOverlay").classList.remove("show");
-  }
-  document.getElementById("addPayItemBtn").addEventListener("click", function(){ openPayItemForm(null); });
-  document.getElementById("payItemFormClose").addEventListener("click", closePayItemForm);
-  document.getElementById("payItemFormCancel").addEventListener("click", closePayItemForm);
-  document.getElementById("payItemFormOverlay").addEventListener("click", function(e){ if (e.target === this) closePayItemForm(); });
-  document.getElementById("payItemFormConfirm").addEventListener("click", function(){
-    var name = document.getElementById("payItemName").value.trim();
-    var type = document.getElementById("payItemType").value;
-    var amount = parseFloat(document.getElementById("payItemAmount").value);
-    if (!name){ toast("Enter a name"); return; }
-    if (!amount || amount <= 0){ toast("Enter an amount"); return; }
-    var items = getPayItems();
-    if (editingPayItemId){
-      var existing = items.find(function(p){ return p.id === editingPayItemId; });
-      if (existing){ existing.name = name; existing.type = type; existing.amount = amount; }
-    } else {
-      items.push({ id: mkId(), name: name, type: type, amount: amount });
-    }
-    state.settings.payItems = items;
-    saveStore(); closePayItemForm(); renderReports();
-  });
-  document.getElementById("otMultiplierInput").addEventListener("change", function(){
-    state.settings.otMultiplier = parseFloat(this.value) || 1.5;
-    saveStore(); renderReports();
-  });
-  document.getElementById("payLeaveToggle").addEventListener("change", function(){
-    state.settings.payLeaveFullRate = this.checked;
-    saveStore(); renderReports();
-  });
-
   function renderReports(){
     var range = periodRange();
     document.getElementById("repTitle").textContent = range.label;
@@ -2497,14 +2387,6 @@
     document.getElementById("repOTHours").textContent = fmtHours(stats.otHours);
     document.getElementById("repDaysWorked").textContent = stats.daysWorked;
     document.getElementById("repLeaveDays").textContent = stats.leaveDays;
-
-    var rate = state.settings.hourlyRate || 0;
-    document.getElementById("hourlyRateInput").value = rate || "";
-    document.getElementById("otMultiplierInput").value = state.settings.otMultiplier || 1.5;
-    document.getElementById("payLeaveToggle").checked = !!state.settings.payLeaveFullRate;
-    renderPayItemsList();
-    var netPay = renderPayBreakdown(stats) || 0;
-    document.getElementById("repPayEstimate").textContent = fmtMoney(netPay);
 
     var bars = document.getElementById("repBars");
     bars.innerHTML = "";
@@ -2547,8 +2429,7 @@
         ["Total hours worked", fmtHours(stats.totalHours) + " h"],
         ["Total overtime", fmtHours(stats.otHours) + " h"],
         ["Busiest month", busiestLabel + (busiestKey ? " (" + fmtHours(busiestVal) + " h)" : "")],
-        ["Leave days taken", stats.leaveDays],
-        ["Estimated pay", fmtMoney(computePay(stats).net)]
+        ["Leave days taken", stats.leaveDays]
       ];
       rows2.forEach(function(r, i){
         if (i>0){ var d=document.createElement("div"); d.className="row-divider"; yir.appendChild(d); }
@@ -2591,11 +2472,6 @@
     return wrap;
   }
 
-  document.getElementById("hourlyRateInput").addEventListener("change", function(){
-    state.settings.hourlyRate = parseFloat(this.value) || 0;
-    saveStore();
-    renderReports();
-  });
   document.querySelectorAll("#repModeSeg button").forEach(function(b){
     b.addEventListener("click", function(){
       state.repMode = b.getAttribute("data-mode");
