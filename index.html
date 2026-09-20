@@ -87,10 +87,10 @@
   .view{display:none; padding:10px 10px 20px;}
   .view.active{display:block;}
 
-  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+  .cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:3px;}
   .day-cell{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
-    min-height:86px; padding:5px 4px 4px; display:flex; flex-direction:column; gap:3px;
+    min-height:86px; padding:5px 3px 4px; display:flex; flex-direction:column; gap:3px;
     text-align:left; color:var(--text); position:relative; overflow:hidden;
   }
   .day-cell.out{opacity:.38;}
@@ -98,13 +98,13 @@
   .day-cell.leave{box-shadow:inset 0 0 0 1.5px var(--text-faint);}
   .day-cell .dnum{font-size:.78rem; font-weight:600; display:flex; align-items:center; gap:4px;}
   .chip{
-    font-size:.62rem; font-weight:600; line-height:1.5; border-radius:5px; padding:0 5px;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; gap:3px;
-    border-top:3px solid transparent;
+    font-size:.58rem; font-weight:600; line-height:1.5; border-radius:5px; padding:0 2px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:flex; align-items:center; justify-content:center; gap:2px;
+    border-top:3px solid transparent; text-align:center;
   }
   .chip.ot-chip{ flex-direction:column; align-items:stretch; padding:0; border-top:none; gap:0; }
   .ot-chip-strip{ background:#F0679E; color:#fff; font-size:.44rem; font-weight:700; text-align:center; line-height:1.15; padding:1px 4px; }
-  .ot-chip-base{ font-size:.66rem; font-weight:600; text-align:center; line-height:1.6; padding:0 4px; white-space:nowrap; }
+  .ot-chip-base{ font-size:.66rem; font-weight:600; text-align:center; line-height:1.6; padding:0 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .chip .tagdot{width:4px; height:4px; border-radius:50%; background:currentColor; opacity:.7; flex:none;}
   .day-cell .more{font-size:.6rem; color:var(--text-faint); font-weight:600; padding-left:1px;}
   .day-cell .leave-line{font-size:.6rem; font-weight:600; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -236,6 +236,8 @@
   .add-note-row{display:flex; gap:8px; margin-top:6px;}
   .add-note-row input[type=text]{flex:1; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 12px; font-size:.85rem; color:var(--text);}
   .add-note-row input[type=time]{flex:none; width:98px; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:9px 8px; font-size:.8rem; color:var(--text);}
+  .remind-row{display:flex; align-items:center; gap:7px; margin-top:9px; font-size:.78rem; color:var(--text-dim);}
+  .remind-row input[type=checkbox]{width:16px; height:16px; accent-color:var(--accent); flex:none;}
   .event-cat-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
   .cat-chip{border:1.5px solid var(--border); background:var(--surface-2); border-radius:9px; padding:6px 10px; font-size:.72rem; font-weight:600; color:var(--text-dim); display:flex; align-items:center; gap:5px;}
   .cat-chip .dot{width:7px; height:7px; border-radius:50%; flex:none;}
@@ -299,6 +301,7 @@
   .roster-cell{
     min-height:52px; padding:4px; display:flex; flex-direction:column; gap:2px;
     background:var(--surface); text-align:left;
+    border:none; margin:0; -webkit-appearance:none; appearance:none; font:inherit; color:inherit;
   }
   .roster-cell .rchip{font-size:.56rem; font-weight:700; border-radius:4px; padding:1px 4px; line-height:1.5; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .roster-cell .rmore{font-size:.55rem; color:var(--text-faint); font-weight:700;}
@@ -486,18 +489,9 @@
         <div class="section-head" style="margin-top:20px;"><h2>Appearance</h2></div>
         <div class="card">
           <div class="seg" id="themeSeg">
-            <button data-theme-choice="system">System</button>
             <button data-theme-choice="light">Light</button>
             <button data-theme-choice="dark">Dark</button>
           </div>
-        </div>
-
-        <div class="section-head" style="margin-top:20px;"><h2>About</h2></div>
-        <div class="card">
-          <button class="btn sm block" id="aboutUsBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">About us</button>
-          <button class="btn sm block" id="helpBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Help</button>
-          <a class="btn sm block" href="mailto:jacob.fuller@outlook.com.au" style="text-align:left; justify-content:flex-start; margin-bottom:8px; text-decoration:none; display:flex; align-items:center;">Contact us</a>
-          <a class="btn sm block" href="privacy.html" style="text-align:left; justify-content:flex-start; text-decoration:none; display:flex; align-items:center;">Privacy Policy</a>
         </div>
 
         <div class="section-head" style="margin-top:24px;"><h2>Invite a friend</h2></div>
@@ -529,6 +523,14 @@
           <button class="icon-btn" id="sharedRefreshBtn" aria-label="Refresh connections" title="Refresh">&#8635;</button>
         </div>
         <div class="card" id="sharedConnectedList"><div class="section-sub" style="margin:0;">No connections yet.</div></div>
+
+        <div class="section-head" style="margin-top:24px;"><h2>About</h2></div>
+        <div class="card">
+          <button class="btn sm block" id="aboutUsBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">About us</button>
+          <button class="btn sm block" id="helpBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Help</button>
+          <a class="btn sm block" href="mailto:jacob.fuller@outlook.com.au" style="text-align:left; justify-content:flex-start; margin-bottom:8px; text-decoration:none; display:flex; align-items:center;">Contact us</a>
+          <a class="btn sm block" href="privacy.html" style="text-align:left; justify-content:flex-start; text-decoration:none; display:flex; align-items:center;">Privacy Policy</a>
+        </div>
       </div>
 
       <div id="sharedRosterPane" style="display:none;">
@@ -661,6 +663,10 @@
             <input type="text" id="noteInput" placeholder="e.g. Dentist, Birthday dinner...">
             <button class="btn sm primary" id="addNoteBtn">Add</button>
           </div>
+          <label class="remind-row">
+            <input type="checkbox" id="noteRemindToggle">
+            <span>Remind me at this time</span>
+          </label>
         </div>
       </div>
     </div>
@@ -1028,18 +1034,39 @@
     });
   }
 
+  var pendingSyncSnapshot = null;
   function queueCloudSync(snapshot, immediate){
     if (!sb || !currentUser || applyingCloudData) return;
     clearTimeout(cloudSyncTimer);
+    pendingSyncSnapshot = snapshot;
     var run = function(){
+      var toSend = pendingSyncSnapshot;
+      pendingSyncSnapshot = null;
       sb.from("app_data").upsert({
-        user_id: currentUser.id, data: snapshot, updated_at: new Date().toISOString()
+        user_id: currentUser.id, data: toSend, updated_at: new Date().toISOString()
       }).then(function(res){
         if (res.error) toast("Couldn't sync to the cloud");
       });
     };
     if (immediate) run(); else cloudSyncTimer = setTimeout(run, 1200);
   }
+  // If a sync is still pending when the app is backgrounded/closed (e.g. right after
+  // adding a note), flush it immediately instead of losing it to the 1.2s debounce —
+  // this is what was causing entries to "disappear" on other devices.
+  function flushCloudSync(){
+    if (!pendingSyncSnapshot) return;
+    clearTimeout(cloudSyncTimer);
+    var toSend = pendingSyncSnapshot;
+    pendingSyncSnapshot = null;
+    if (!sb || !currentUser) return;
+    sb.from("app_data").upsert({
+      user_id: currentUser.id, data: toSend, updated_at: new Date().toISOString()
+    });
+  }
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "hidden") flushCloudSync();
+  });
+  window.addEventListener("pagehide", flushCloudSync);
 
   function initAuth(){
     if (!sb){ hideAuthOverlay(); return; }
@@ -1588,6 +1615,7 @@
           chip.style.background = col.bg;
           chip.style.color = col.ink;
           var label = document.createElement("span");
+          label.className = "chip-label";
           label.textContent = entryDisplayName(s, typesById);
           chip.appendChild(label);
           if (s.tag){
@@ -1642,14 +1670,22 @@
     if (opts.fit !== false){
       fitPairedChips("#" + gridId + " .swap-chip-cal");
       fitPairedChips("#" + gridId + " .ot-chip");
+      fitSimpleChips("#" + gridId + " .chip:not(.ot-chip):not(.swap-chip-cal)");
     }
+  }
+  function fitSimpleChips(fullSelector){
+    document.querySelectorAll(fullSelector).forEach(function(chip){
+      var label = chip.querySelector(".chip-label");
+      if (!label) return;
+      fitOneLine(label, 8, 5.5);
+    });
   }
   function fitPairedChips(fullSelector){
     document.querySelectorAll(fullSelector).forEach(function(chip){
       var base = chip.querySelector(".ot-chip-base, .swap-chip-cal-base");
       var strip = chip.querySelector(".ot-chip-strip, .swap-chip-cal-strip");
       if (!base || !strip) return;
-      var baseSize = fitOneLine(base, 10, 6);
+      var baseSize = fitOneLine(base, 10, 5.2);
       fitOneLine(strip, Math.min(6.5, baseSize - 1), 4.5);
     });
   }
@@ -1820,7 +1856,7 @@
         if (n.time){
           var t = document.createElement("span");
           t.className = "etime";
-          t.textContent = n.time;
+          t.textContent = n.time + (n.remind ? " 🔔" : "");
           row.appendChild(t);
         }
         var span = document.createElement("span");
@@ -1836,6 +1872,7 @@
     }
 
     renderEventCatPicker();
+    document.getElementById("noteTime").value = "00:00";
   }
   function renderEventCatPicker(){
     var row = document.getElementById("eventCatRow");
@@ -2059,11 +2096,12 @@
     if (state.leave[dateKey]) state.leave[dateKey] = state.leave[dateKey].filter(function(l){ return l.id!==id; });
     saveStore(); renderAll();
   }
-  function addNote(dateKey, text, time, category){
+  function addNote(dateKey, text, time, category, remind){
     text = text.trim();
     if (!text) return;
     var entry = {id: mkId(), text: text, category: category || "other"};
     if (time) entry.time = time;
+    if (remind && time){ entry.remind = true; entry.notified = false; }
     (state.notes[dateKey] = state.notes[dateKey] || []).push(entry);
     saveStore(); renderAll(); toast("Event added");
   }
@@ -2071,6 +2109,26 @@
     if (state.notes[dateKey]) state.notes[dateKey] = state.notes[dateKey].filter(function(n){ return n.id!==id; });
     saveStore(); renderAll();
   }
+
+  /* ---------------- note reminders (while the app is open) ---------------- */
+  function checkReminders(){
+    if (!window.Notification || Notification.permission !== "granted") return;
+    var now = new Date();
+    var todayKey = ymd(now);
+    var hhmm = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+    var list = state.notes[todayKey];
+    if (!list || !list.length) return;
+    var fired = false;
+    list.forEach(function(n){
+      if (n.remind && !n.notified && n.time && n.time <= hhmm){
+        try { new Notification(n.text, { body: "Personal event — " + n.time, tag: n.id }); } catch(e){}
+        n.notified = true;
+        fired = true;
+      }
+    });
+    if (fired) saveStore();
+  }
+  setInterval(checkReminders, 30000);
 
   function saveType(){
     var name = document.getElementById("typeName").value.trim();
@@ -2647,9 +2705,14 @@
   document.getElementById("addNoteBtn").addEventListener("click", function(){
     var input = document.getElementById("noteInput");
     var timeInput = document.getElementById("noteTime");
-    addNote(state.selectedDate, input.value, timeInput.value, state.noteCategory);
+    var remindToggle = document.getElementById("noteRemindToggle");
+    if (remindToggle.checked && window.Notification && Notification.permission === "default"){
+      Notification.requestPermission();
+    }
+    addNote(state.selectedDate, input.value, timeInput.value, state.noteCategory, remindToggle.checked);
     input.value = "";
-    timeInput.value = "";
+    timeInput.value = "00:00";
+    remindToggle.checked = false;
     state.noteCategory = "other";
   });
   document.getElementById("noteInput").addEventListener("keydown", function(e){ if (e.key === "Enter") document.getElementById("addNoteBtn").click(); });
@@ -2664,9 +2727,10 @@
 
   /* ---------------- boot ---------------- */
   loadIntoState();
-  applyTheme(state.settings.theme || "system");
+  applyTheme(state.settings.theme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
   renderAll();
   initAuth();
+  checkReminders();
 
   if ("serviceWorker" in navigator){
     window.addEventListener("load", function(){

@@ -8,6 +8,39 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Reminders for personal events**: a "Remind me at this time" checkbox
+  next to the note time/text fields. If checked (and you allow notification
+  permission when prompted), the app shows a browser notification at that
+  time — while the app is open on your device (checked every 30s). This is
+  not a true background push notification, so it won't fire if the app
+  isn't open/running at that moment — worth knowing since iOS is strict
+  about backgrounded web apps.
+- **Note time defaults to 00:00**: the time field for personal events now
+  shows 00:00 by default (instead of quietly defaulting to the current
+  time), so it's clear it's an empty time box waiting for input.
+- **About moved to the bottom of the Account tab**, after Invite a
+  friend/Share your roster/Connected.
+- **Theme is now Light or Dark only** — removed "System" from Appearance,
+  since it added a third option without much benefit; first run still
+  picks based on your device's current setting, then remembers your choice.
+- **Roster pattern grid — bottom-right corner fixed**: the pattern grid's
+  cells are `<button>` elements, and they were never stripped of the
+  browser's own default button border. That extra border was invisible on
+  three corners but poked out past the rounded corner on the bottom-right
+  cell specifically. Removed the default border — all four corners are
+  clean now.
+- **Shift chips on the calendar — centered and resized to fit**: shift name
+  chips (Dayshift, Nightshift, etc.) are now centered in the cell instead
+  of hugging the left edge, and automatically shrink their font size so
+  longer names like "Nightshift" fit on one line instead of being cut off
+  mid-word.
+- **Personal events possibly not syncing before closing the app**: cloud
+  sync was debounced by 1.2 seconds after any change, so adding a note and
+  immediately closing/backgrounding the app (common on a phone) could mean
+  that note never reached the cloud, and would then look like it
+  "disappeared" when opening on another device. The app now flushes any
+  pending sync immediately when it's backgrounded or closed, instead of
+  waiting out the debounce.
 - **Connections errors are now visible**: if accepting/declining/removing a
   shared-roster connection fails (e.g. a Supabase permissions/grant issue),
   the app now shows the real error message on screen and logs it to the
@@ -498,7 +531,10 @@ JavaScript, no framework). Data model, in `localStorage` under the key
   type it's overtime for (used for its "Overtime – Dayshift" label and color)
 - `leave` — keyed by date, array of `{id, kind: "annual"|"sick", hours}`
 - `notes` — personal events, keyed by date, array of
-  `{id, text, category: "appointment"|"family"|"reminder"|"other", time?}`
+  `{id, text, category: "appointment"|"family"|"reminder"|"other", time?,
+  remind?, notified?}` — `remind` is set when the "Remind me" checkbox was
+  used, `notified` flips to `true` once that reminder has fired so it
+  doesn't repeat
 - `swaps` — keyed by date, array of `{id, kind: "off"|"on", partner, note,
   linkedDate, linkedSwapId, typeId, baseTypeId?, hours?, shiftEntryId?}` —
   the "off" record always describes the original shift given up; the "on"
