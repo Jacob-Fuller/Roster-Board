@@ -8,6 +8,9 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Privacy Policy "Back" now returns to Calendar**: tapping "‹ Back to
+  Roster Board" on the Privacy Policy page now explicitly lands you back on
+  the Calendar tab, instead of wherever the app happened to default to.
 - **Note time no longer resets while you're picking it**: the "default to
   00:00" fix from last round was resetting the time field on *every*
   re-render, including ones triggered by something else entirely (adding

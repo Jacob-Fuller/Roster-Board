@@ -2739,6 +2739,14 @@
   loadIntoState();
   applyTheme(state.settings.theme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
   renderAll();
+  // Coming back from privacy.html's "Back to Roster Board" link — land on Calendar
+  // specifically, regardless of whatever tab was open before, then clean the URL.
+  if (window.location.search.indexOf("view=calendar") !== -1){
+    setView("calendar");
+    if (window.history && window.history.replaceState){
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }
   initAuth();
   checkReminders();
 
