@@ -3,11 +3,31 @@
 A shift calendar web app: custom shift types with auto-calculated duration,
 overtime, leave tracking, a repeating roster pattern that bulk-fills the
 calendar, month/year analytics with comparisons, pay estimates, per-shift
-notes, and CSV/PDF/JSON export. Plain HTML/CSS/JS — no build step, no
-server-side code, nothing to install beyond a static file server.
+notes, and a calendar-grid PDF roster export. Plain HTML/CSS/JS — no build
+step, no server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Account deletion**: added a "Delete account" option under Account,
+  underneath Sign out — confirm by typing DELETE and it emails
+  contact@rosterboard.net to process the request.
+- **Personal entries can now fill a date range**: when creating a personal
+  entry type, set an optional start and end date underneath the time —
+  saving adds it to every day in that range in one go, instead of tapping
+  each day individually.
+- **Privacy Policy replaced** with a more detailed, Australian-law-oriented
+  policy (16 numbered sections covering information collected, how it's
+  used, shared rosters, service providers, international transfers,
+  retention, account deletion and data requests, your rights, and how to
+  make a complaint via the OAIC).
+- **New PDF roster export**: Reports now has a single "PDF roster" export
+  that lays your month out as a calendar grid (like a wall planner) with a
+  coloured dot and label per entry — CSV and full-backup export have been
+  removed.
+- **Fixed the month title sometimes wrapping to two lines** on some phones
+  (it could shrink further than needed and, on others, not shrink enough)
+  — it now sizes itself correctly to stay on one line across screen widths
+  and text-size settings.
 - **Tidier day sheet shift picker**: instead of separate "Dayshift",
   "Overtime – Dayshift" and "Excess Hours – Dayshift" buttons cluttering
   the list, there's now just one button per shift type. Tap it and, if

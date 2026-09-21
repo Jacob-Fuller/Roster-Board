@@ -65,7 +65,10 @@
     border-bottom:1px solid var(--border); background:var(--bg);
   }
   .header-top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
-  .month-title{font-size:1.7rem; font-weight:600; letter-spacing:-.01em;}
+  .month-title{
+    font-size:1.7rem; font-weight:600; letter-spacing:-.01em;
+    flex:1; min-width:0; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
   .month-nav{display:flex; align-items:center; gap:4px;}
   .icon-btn{
     width:36px; height:36px; border-radius:50%; border:1px solid var(--border);
@@ -520,128 +523,298 @@
       <p class="policy-updated">Last updated 21 September 2026</p>
 
       <p>This Privacy Policy explains how Roster Board ("Roster Board", "we",
-      "us" or "our") collects, uses, discloses and protects information when
-      you use the Roster Board application and any related services
-      (together, the "Service"). By using the Service, you agree to the
-      collection and use of information in accordance with this policy. If
-      you do not agree with this policy, please do not use the Service.</p>
+      "us" or "our") collects, uses, stores, discloses and protects personal
+      information when you use the Roster Board application, website and
+      related services (together, the "Service").</p>
+
+      <p>Roster Board is designed to give shift workers a simple way to
+      record, manage and analyse their rosters, overtime, leave and personal
+      commitments.</p>
+
+      <p>By using the Service, you acknowledge that you have read this
+      Privacy Policy. Where applicable, we will obtain any consent required
+      by law before collecting or using your information.</p>
 
       <h3>1. Who we are</h3>
-      <p>Roster Board is a shift calendar and roster management product
-      designed for shift workers to record and analyse their work schedule,
-      overtime, leave and personal commitments. For any question about this
-      policy or how your information is handled, contact us at
-      <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a>.</p>
+      <p>Roster Board is the operator of the Roster Board Service.</p>
+      <p>If you have any questions about this Privacy Policy, your personal
+      information, or how your information is handled, you can contact us
+      at: <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a></p>
 
       <h3>2. Information we collect</h3>
-      <p>We collect the following categories of information:</p>
+      <p>The information we collect depends on how you use the Service and
+      the features you choose to use.</p>
+
+      <p><strong>Account information</strong></p>
+      <p>If you create a Roster Board account, we may collect:</p>
       <div class="policy-card">
         <ul>
-          <li><strong>Account information</strong> — if you choose to create an account, the email address and password you register with. Passwords are hashed using industry-standard methods and are never stored or accessible in plain text.</li>
-          <li><strong>Roster and schedule data</strong> — shift types, dates and times, hours worked, overtime, excess hours, leave records, shift swaps and related notes that you enter into the Service.</li>
-          <li><strong>Personal calendar entries</strong> — appointments, reminders, or other personal notes you choose to add.</li>
-          <li><strong>Connection information</strong> — if you connect your account with another user to share rosters, the details of that connection (such as the other user's email and the status of the invitation).</li>
-          <li><strong>Technical and usage information</strong> — information automatically collected when you use the Service, such as device type, browser type, operating system, general log data and diagnostic information, which we use to operate, secure and improve the Service.</li>
-          <li><strong>Local device storage</strong> — if you use the Service without an account, your roster data is stored only in your device's local browser storage and is never transmitted to us.</li>
+          <li>your email address;</li>
+          <li>authentication information associated with your account; and</li>
+          <li>information necessary to maintain the security of your account.</li>
         </ul>
       </div>
+      <p>Passwords are not stored in plain text. Authentication is handled
+      using the security mechanisms provided by our authentication
+      infrastructure.</p>
 
-      <h3>3. How we use your information</h3>
-      <p>We use the information we collect for the following purposes:</p>
+      <p><strong>Roster and work information</strong></p>
+      <p>When you use Roster Board, you may enter information such as:</p>
       <div class="policy-card">
         <ul>
-          <li>To provide, operate and maintain the Service, including displaying your calendar and calculating your reports and statistics.</li>
-          <li>To create and manage your account, and to authenticate you when you sign in.</li>
-          <li>To synchronise your data across your own devices when you are signed in.</li>
-          <li>To enable optional features you choose to use, such as sharing a roster with another user.</li>
-          <li>To respond to support requests, feedback and other communications you send us.</li>
-          <li>To detect, investigate and prevent fraud, abuse, security incidents and technical issues.</li>
-          <li>To comply with our legal obligations and enforce our terms.</li>
+          <li>shift types;</li>
+          <li>shift dates and times;</li>
+          <li>hours worked;</li>
+          <li>overtime and excess hours;</li>
+          <li>leave records;</li>
+          <li>shift swaps;</li>
+          <li>roster notes; and</li>
+          <li>other information you choose to associate with your roster.</li>
         </ul>
       </div>
-      <p>We do not use your information for advertising or profiling, and we
-      do not sell or rent your personal information to third parties.</p>
+      <p>You control what information you enter into the Service.</p>
+      <p>Roster Board does not require you to provide your employer,
+      occupation, workplace, position or other employment information
+      unless a particular feature requires it or you choose to enter it.</p>
 
-      <h3>4. How we store and protect your information</h3>
-      <p>If you use the Service without creating an account, your data
-      remains solely in your device's local storage and is never sent to our
-      servers. If you create an account, your data is stored using
-      third-party infrastructure providers acting on our behalf, including
-      Supabase (database and authentication) and Render (application
-      hosting). These providers are contractually and technically restricted
-      from using your data for their own purposes, and they apply their own
-      industry-standard security controls.</p>
-      <p>All connections to the Service are encrypted in transit using
-      HTTPS/TLS. Access to stored data is restricted at the database level
-      so that, other than the limited shared-roster case described below,
-      only your own authenticated account can read or write your data. No
-      method of electronic storage or transmission is completely secure, and
-      while we work to protect your information we cannot guarantee absolute
-      security.</p>
+      <p><strong>Personal calendar information</strong></p>
+      <p>You may choose to enter personal information into calendar
+      entries, reminders or notes.</p>
+      <p>This information may include appointments, events or other
+      information you choose to record.</p>
+      <p>You should avoid entering information that you do not want stored
+      by the Service.</p>
+
+      <p><strong>Shared-roster information</strong></p>
+      <p>If you choose to connect your Roster Board account with another
+      user, we collect information necessary to establish and manage that
+      connection, including the relevant email address and invitation or
+      connection status.</p>
+
+      <p><strong>Technical and usage information</strong></p>
+      <p>We may automatically collect limited technical and diagnostic
+      information when you use the Service, including information such as:</p>
+      <div class="policy-card">
+        <ul>
+          <li>device type;</li>
+          <li>browser type and version;</li>
+          <li>operating system;</li>
+          <li>IP address or other connection information where technically necessary;</li>
+          <li>approximate technical information about your session;</li>
+          <li>error and diagnostic information; and</li>
+          <li>information necessary to maintain the security, reliability and performance of the Service.</li>
+        </ul>
+      </div>
+      <p>We use this information primarily to operate, secure, troubleshoot
+      and improve Roster Board.</p>
+
+      <p><strong>Information stored locally on your device</strong></p>
+      <p>Roster Board may allow you to use certain features without
+      creating an account.</p>
+      <p>When you use Roster Board without an account, your roster
+      information is stored locally in your browser or device and is not
+      transmitted to Roster Board's servers.</p>
+      <p>Because this information remains on your device, Roster Board
+      cannot recover it if you delete your browser storage, clear your
+      application data, lose access to the device, or otherwise remove the
+      locally stored information.</p>
+
+      <h3>3. How we collect information</h3>
+      <p>We generally collect personal information:</p>
+      <div class="policy-card">
+        <ul>
+          <li>directly from you when you create an account or enter information into the Service;</li>
+          <li>automatically when you use the Service;</li>
+          <li>when you choose to connect or share your roster with another Roster Board user; and</li>
+          <li>when you contact us for support or otherwise communicate with us.</li>
+        </ul>
+      </div>
+      <p>We do not purchase personal information from data brokers for the
+      purpose of operating Roster Board.</p>
+
+      <h3>4. How we use your information</h3>
+      <p>We use information we collect to:</p>
+      <div class="policy-card">
+        <ul>
+          <li>provide, operate and maintain Roster Board;</li>
+          <li>display your roster and calendar;</li>
+          <li>calculate hours, overtime, leave and other statistics or reports;</li>
+          <li>create and manage your account;</li>
+          <li>authenticate and secure your account;</li>
+          <li>synchronise your information between devices when you are signed in;</li>
+          <li>provide optional features such as roster sharing;</li>
+          <li>respond to support requests and other communications;</li>
+          <li>diagnose and resolve technical problems;</li>
+          <li>detect, investigate and prevent fraud, abuse and security incidents;</li>
+          <li>maintain and improve the reliability and functionality of the Service;</li>
+          <li>comply with legal obligations; and</li>
+          <li>protect our rights, property, users and the security of the Service.</li>
+        </ul>
+      </div>
+      <p>We do not sell or rent your personal information.</p>
+      <p>We do not use your roster or personal calendar information for
+      targeted advertising or advertising profiles.</p>
 
       <h3>5. Shared rosters</h3>
-      <p>If you choose to connect your account with another user (Account →
-      "Share your roster") and they accept the connection, each of you is
-      able to view the other's shift types, overtime, leave and shift swaps
-      only. Personal calendar entries and notes are never included in a
-      shared roster, under any circumstances — this restriction is enforced
-      at the server level, not merely hidden in the interface. Either party
-      may remove the connection at any time, which immediately ends the
-      sharing of data.</p>
+      <p>Roster sharing is an optional feature.</p>
+      <p>If you choose to connect your account with another Roster Board
+      user and that user accepts the connection, the connected users may
+      view the roster information permitted by the sharing feature.</p>
+      <p>At present, shared roster information may include:</p>
+      <div class="policy-card">
+        <ul>
+          <li>shift types;</li>
+          <li>rostered shifts;</li>
+          <li>overtime;</li>
+          <li>leave; and</li>
+          <li>shift swaps.</li>
+        </ul>
+      </div>
+      <p>Personal calendar entries and personal calendar notes are not
+      included in shared roster information.</p>
+      <p>These restrictions are enforced by the Service's server-side access
+      controls and are not intended to rely solely on information being
+      hidden from the user interface.</p>
+      <p>Either connected user may remove the connection. Once the
+      connection is removed, the Service will no longer provide ongoing
+      access to shared roster information through that connection.</p>
 
-      <h3>6. Data retention</h3>
-      <p>We retain account and roster data for as long as your account
-      remains active, or as needed to provide the Service to you. If you
-      delete your account, or request deletion under section 8 below, we
-      will delete or de-identify your personal information within a
-      reasonable period, except where retention is required to comply with
-      a legal obligation, resolve disputes, or enforce our agreements.</p>
+      <h3>6. Service providers</h3>
+      <p>We use third-party technology and infrastructure providers to
+      operate Roster Board.</p>
+      <p>These providers may process or store information on our behalf
+      where necessary to provide the Service.</p>
+      <p>Our infrastructure currently includes services such as:</p>
+      <div class="policy-card">
+        <ul>
+          <li><strong>Supabase</strong> — database and authentication infrastructure; and</li>
+          <li><strong>Render</strong> — application hosting and related infrastructure.</li>
+        </ul>
+      </div>
+      <p>We may use additional service providers in the future where
+      reasonably necessary to operate, secure or improve Roster Board.</p>
+      <p>We take reasonable steps to require service providers that process
+      personal information on our behalf to handle that information
+      appropriately and only for purposes connected with providing their
+      services to us.</p>
 
-      <h3>7. Disclosure of information</h3>
-      <p>We do not disclose your personal information to third parties
-      except: to the service providers described in section 4, who process
-      data solely to operate the Service on our behalf; where you direct us
-      to, such as through a shared roster connection; where required to
-      comply with applicable law, regulation, legal process or enforceable
-      governmental request; or to protect the rights, property or safety of
-      Roster Board, our users, or the public.</p>
+      <h3>7. International data transfers</h3>
+      <p>Depending on the infrastructure, service providers and
+      configuration used by Roster Board, personal information may be
+      stored or processed in Australia or another country.</p>
+      <p>Some of our technology providers operate infrastructure or use
+      subprocessors located outside Australia.</p>
+      <p>Where required by applicable privacy laws, we take reasonable
+      steps in relation to overseas disclosure of personal information.</p>
+      <p>Because the location of infrastructure and service providers may
+      change over time, users should contact us if they require information
+      about the current countries in which particular categories of
+      personal information may be processed.</p>
 
-      <h3>8. Your rights and choices</h3>
-      <p>Depending on your location, you may have rights to access, correct,
-      export or delete the personal information we hold about you, and to
-      object to or restrict certain processing. You can sign out of your
-      account at any time from the Account tab. To exercise any of these
-      rights, including requesting deletion of your account and associated
-      data, contact us at
+      <h3>8. How we protect your information</h3>
+      <p>We take reasonable technical and organisational measures to
+      protect personal information from misuse, interference, loss and
+      unauthorised access, modification or disclosure.</p>
+      <p>These measures may include:</p>
+      <div class="policy-card">
+        <ul>
+          <li>HTTPS/TLS encryption for information transmitted between your device and the Service;</li>
+          <li>authentication and access controls;</li>
+          <li>database-level access controls;</li>
+          <li>restricting access to personal information to authorised systems and persons where reasonably necessary;</li>
+          <li>security monitoring and diagnostic controls; and</li>
+          <li>measures provided by our infrastructure and authentication providers.</li>
+        </ul>
+      </div>
+      <p>We design the Service so that a user's account data is accessible
+      only through authorised access mechanisms, subject to the limited
+      sharing functionality described in this Privacy Policy.</p>
+      <p>However, no internet transmission, electronic storage system or
+      security measure can be guaranteed to be completely secure.</p>
+
+      <h3>9. Data retention</h3>
+      <p>We retain personal information for as long as reasonably necessary
+      to provide the Service, maintain your account, meet our legal
+      obligations, resolve disputes, enforce our agreements, and protect
+      the security and integrity of the Service.</p>
+      <p>If you delete your account, we will take reasonable steps to
+      delete or de-identify personal information associated with your
+      account within a reasonable period, subject to information that we
+      are required or permitted to retain.</p>
+      <p>Some information may remain temporarily in backups, security logs
+      or other technical systems before it is automatically deleted or
+      overwritten.</p>
+      <p>Information that is required to be retained by law may be retained
+      for the applicable legal period.</p>
+
+      <h3>10. Account deletion and data requests</h3>
+      <p>You may request deletion of your Roster Board account and
+      associated personal information by contacting:
+      <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a></p>
+      <p>Depending on the applicable law and circumstances, you may also
+      request access to, correction of, or a copy/export of personal
+      information we hold about you.</p>
+      <p>We may need to verify your identity before processing a request
+      involving your personal information.</p>
+      <p>We will respond to verified requests within a reasonable period
+      and in accordance with applicable law.</p>
+
+      <h3>11. Accuracy of your information</h3>
+      <p>Roster information is entered and controlled by you.</p>
+      <p>You are responsible for ensuring that information you enter into
+      Roster Board is accurate and up to date.</p>
+      <p>If you identify an error in personal information held by us, you
+      may contact us and request that it be corrected.</p>
+
+      <h3>12. Children's privacy</h3>
+      <p>Roster Board is not directed to children under 16 years of age.</p>
+      <p>We do not knowingly collect personal information from children
+      under 16.</p>
+      <p>If you believe that a child has provided personal information to
+      Roster Board, please contact us at
       <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a>.
-      We will respond to verified requests within a reasonable timeframe.</p>
+      We will take reasonable steps to investigate and, where appropriate,
+      delete the information.</p>
 
-      <h3>9. Children's privacy</h3>
-      <p>The Service is not directed to, and is not intended for use by,
-      anyone under the age of 16. We do not knowingly collect personal
-      information from children. If you believe a child has provided us
-      with personal information, please contact us and we will take steps
-      to delete it.</p>
+      <h3>13. Your privacy choices</h3>
+      <p>Where the Service provides a choice about whether information is
+      collected or shared, you can choose whether to use that feature.</p>
+      <p>For example, creating an account is not required for features that
+      Roster Board makes available through local device storage.</p>
+      <p>You may also choose not to use roster-sharing functionality.</p>
+      <p>Please note that disabling or declining certain information or
+      features may mean that some parts of the Service cannot operate.</p>
 
-      <h3>10. International users</h3>
-      <p>The Service may be accessed from countries other than the one in
-      which our infrastructure providers operate. By using the Service, you
-      understand that your information may be transferred to, stored and
-      processed in a country other than your own, which may have data
-      protection laws that differ from those of your jurisdiction.</p>
+      <h3>14. Complaints</h3>
+      <p>If you believe that Roster Board has handled your personal
+      information in a way that breaches applicable privacy law, please
+      contact us first at:
+      <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a></p>
+      <p>Please provide enough information for us to understand your
+      concern and, where possible, the relevant account or transaction
+      details.</p>
+      <p>We will investigate your complaint and respond within a reasonable
+      period.</p>
+      <p>If you are not satisfied with our response, or if you believe your
+      complaint has not been appropriately addressed, you may be able to
+      contact the Office of the Australian Information Commissioner (OAIC)
+      or another relevant privacy regulator, depending on your
+      circumstances.</p>
 
-      <h3>11. Changes to this policy</h3>
+      <h3>15. Changes to this Privacy Policy</h3>
       <p>We may update this Privacy Policy from time to time to reflect
-      changes to the Service or our practices. Where changes are material,
-      we will take reasonable steps to notify users. The "last updated" date
-      at the top of this page indicates when this policy was most recently
-      revised. Continued use of the Service after a change takes effect
-      constitutes acceptance of the revised policy.</p>
+      changes to Roster Board, our technology providers, our
+      information-handling practices or applicable legal requirements.</p>
+      <p>When we make material changes, we will take reasonable steps to
+      notify users where appropriate.</p>
+      <p>The "Last updated" date at the beginning of this Privacy Policy
+      indicates when it was most recently revised.</p>
 
-      <h3>12. Contact us</h3>
-      <p>If you have any questions, concerns or requests regarding this
-      Privacy Policy or our handling of your information, please contact us
-      at <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a>.</p>
+      <h3>16. Contact us</h3>
+      <p>For questions, privacy requests, complaints or other concerns
+      regarding Roster Board or this Privacy Policy, contact:</p>
+      <p>Roster Board<br>
+      Email: <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a></p>
     </div>
   </div>
 
@@ -737,9 +910,7 @@
       <div class="card" id="repYearInReview" style="display:none;"></div>
 
       <div class="export-row">
-        <button class="btn sm" id="exportCsv">CSV</button>
-        <button class="btn sm" id="exportPdf">PDF roster</button>
-        <button class="btn sm" id="exportJson">Full backup</button>
+        <button class="btn sm block" id="exportPdf">PDF roster</button>
       </div>
     </div>
 
@@ -899,6 +1070,7 @@
           </div>
 
           <button class="btn sm block" id="signOutBtn" style="margin-top:24px; margin-bottom:4px;">Sign out</button>
+          <button class="btn sm block" id="deleteAccountBtn" style="margin-top:10px; margin-bottom:4px; color:var(--danger); border-color:var(--danger);">Delete account</button>
         </div>
       </div>
     </div>
@@ -1016,6 +1188,17 @@
         <div class="form-row" id="typePersonalTime" style="display:none;">
           <label for="typeSingleTime">Time (optional)</label>
           <input type="time" id="typeSingleTime" value="12:00">
+          <div class="time-row" style="margin-top:10px;">
+            <div class="form-row" style="margin-top:0;">
+              <label for="typePersonalStartDate">Start date (optional)</label>
+              <input type="date" id="typePersonalStartDate">
+            </div>
+            <div class="form-row" style="margin-top:0;">
+              <label for="typePersonalEndDate">End date (optional)</label>
+              <input type="date" id="typePersonalEndDate">
+            </div>
+          </div>
+          <p class="section-sub" style="margin:8px 0 0;">Set both dates to add this to every day in that range as soon as you save.</p>
         </div>
         <div id="typeWorkFlags">
           <label class="checkbox-row">
@@ -1715,6 +1898,24 @@
   document.getElementById("signOutBtn").addEventListener("click", function(){
     if (sb) sb.auth.signOut();
   });
+  document.getElementById("deleteAccountBtn").addEventListener("click", function(){
+    openMiniModal({
+      title: "Delete account",
+      message: "This will request permanent deletion of your Roster Board account and data. Type DELETE to confirm — we'll email contact@rosterboard.net on your behalf to process the request.",
+      placeholder: "Type DELETE to confirm",
+      confirmLabel: "Delete account",
+      onConfirm: function(val){
+        if ((val || "").trim().toUpperCase() !== "DELETE"){
+          toast("Type DELETE to confirm");
+          return;
+        }
+        var email = currentUser ? (currentUser.email || "") : "";
+        var subject = encodeURIComponent("Account deletion request");
+        var body = encodeURIComponent("Please delete my Roster Board account and associated data.\n\nAccount email: " + email);
+        window.location.href = "mailto:contact@rosterboard.net?subject=" + subject + "&body=" + body;
+      }
+    });
+  });
 
   /* ---------------- account detail pane navigation ---------------- */
   document.getElementById("acctMenuRow").addEventListener("click", function(){
@@ -2086,7 +2287,9 @@
 
   /* ---------------- render: header ---------------- */
   function renderHeader(){
-    document.getElementById("monthTitle").textContent = MONTH_LABELS[state.calMonth.getMonth()] + " " + state.calMonth.getFullYear();
+    var titleEl = document.getElementById("monthTitle");
+    titleEl.textContent = MONTH_LABELS[state.calMonth.getMonth()] + " " + state.calMonth.getFullYear();
+    fitOneLineFixedWidth(titleEl, 27, 15); // keeps "Month YYYY" on one line even on narrower screens or larger system text sizes
     var totalH = 0, otH = 0, totalShifts = 0;
     var y = state.calMonth.getFullYear(), m = state.calMonth.getMonth();
     Object.keys(state.shifts).forEach(function(dateKey){
@@ -2280,6 +2483,35 @@
       size -= 0.5;
       el.style.fontSize = size + "px";
     }
+    return size;
+  }
+  // For elements whose box width is fixed by their layout (e.g. a flex:1 item) rather
+  // than hugging their own content: scrollWidth can never report less than clientWidth
+  // there, even once the text is much narrower than the box, so fitOneLine's shrink-loop
+  // can't detect "already fits" and would shrink all the way to the minimum. This measures
+  // the text's true, unconstrained width in a detached element instead, so it only shrinks
+  // as far as actually needed to fit the available space on one line.
+  var _measureEl = null;
+  function measureTextWidth(text, fontCss){
+    if (!_measureEl){
+      _measureEl = document.createElement("span");
+      _measureEl.style.cssText = "position:absolute; left:-9999px; top:-9999px; visibility:hidden; white-space:nowrap;";
+      document.body.appendChild(_measureEl);
+    }
+    _measureEl.style.font = fontCss;
+    _measureEl.textContent = text;
+    return _measureEl.offsetWidth;
+  }
+  function fitOneLineFixedWidth(el, maxPx, minPx){
+    var text = el.textContent;
+    var cs = getComputedStyle(el);
+    var avail = el.clientWidth - 4;
+    var size = maxPx;
+    while (size > minPx){
+      if (measureTextWidth(text, cs.fontStyle + " " + cs.fontWeight + " " + size + "px " + cs.fontFamily) <= avail) break;
+      size -= 0.5;
+    }
+    el.style.fontSize = size + "px";
     return size;
   }
   // Shrinks font just enough for text to fit within two wrapped lines (rather than
@@ -2796,16 +3028,38 @@
       singleTime = null;
     }
 
+    var rangeStart, rangeEnd, typeIdForRange;
+    if (isPersonal){
+      rangeStart = document.getElementById("typePersonalStartDate").value || null;
+      rangeEnd = document.getElementById("typePersonalEndDate").value || null;
+    }
+
     if (state.editingTypeId){
       var t = state.typesById[state.editingTypeId];
       if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.excessEligible=excessEligible; t.kind=kind; t.time=singleTime; }
+      typeIdForRange = state.editingTypeId;
       toast("Type updated");
     } else {
       var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, excessEligible:excessEligible, kind:kind, time:singleTime, order: state.types.length};
       state.types.push(nt);
       state.typesById[nt.id] = nt;
+      typeIdForRange = nt.id;
       toast("Type created");
     }
+
+    if (isPersonal && rangeStart && rangeEnd && rangeEnd >= rangeStart){
+      var d = new Date(rangeStart + "T00:00:00");
+      var last = new Date(rangeEnd + "T00:00:00");
+      var added = 0;
+      while (d <= last){
+        var key = ymd(d);
+        (state.shifts[key] = state.shifts[key] || []).push({id: mkId(), typeId: typeIdForRange});
+        added++;
+        d.setDate(d.getDate() + 1);
+      }
+      toast(added + " day" + (added === 1 ? "" : "s") + " added to your calendar");
+    }
+
     saveStore(); renderAll(); closeTypeSheet();
   }
   function deleteType(){
@@ -2824,6 +3078,8 @@
     document.getElementById("typeStart").value = (t && t.kind !== "personal") ? t.startTime : "07:00";
     document.getElementById("typeEnd").value = (t && t.kind !== "personal") ? t.endTime : "19:00";
     document.getElementById("typeSingleTime").value = (t && t.kind === "personal" && t.time) ? t.time : "12:00";
+    document.getElementById("typePersonalStartDate").value = "";
+    document.getElementById("typePersonalEndDate").value = "";
     document.getElementById("typeOvertimeEligible").checked = t ? (t.overtimeEligible !== false) : true;
     document.getElementById("typeExcessEligible").checked = t ? (t.excessEligible !== false) : true;
     var kind = t && t.kind === "personal" ? "personal" : "work";
@@ -3404,84 +3660,114 @@
   }
 
   /* ---------------- export ---------------- */
-  function downloadFile(filename, data, mime){
-    var blob = data instanceof Blob ? data : new Blob([data], {type: mime || "text/plain;charset=utf-8"});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-    toast("Saved " + filename);
+  function hexToRgb(hex){
+    var m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "");
+    return m ? [parseInt(m[1],16), parseInt(m[2],16), parseInt(m[3],16)] : [120,120,120];
   }
-  function exportCsv(){
-    var range = periodRange();
-    var rows = [["Date","Weekday","Shift type","Hours","Note"]];
-    Object.keys(state.shifts).sort().forEach(function(dateKey){
-      var d = parseYmd(dateKey);
-      if (d < range.start || d >= range.end) return;
-      state.shifts[dateKey].forEach(function(s){
-        var t = state.typesById[s.typeId];
-        if (!t) return;
-        rows.push([dateKey, WEEKDAY_FULL[d.getDay()], entryDisplayName(s), effectiveHours(s), s.tag || ""]);
-      });
+  function dayEntriesForPdf(key){
+    var out = [];
+    (state.shifts[key] || []).forEach(function(s){
+      var t = state.typesById[s.typeId];
+      if (!t) return;
+      var comboT = COMBO_TYPES[s.typeId];
+      var h = effectiveHours(s);
+      if (comboT){
+        var bt = state.typesById[s.baseTypeId];
+        var label = (bt ? bt.name : comboT.name) + " " + (comboT === EXCESS_TYPE ? "EX" : "OT") + (h ? " " + fmtHours(h) + "h" : "");
+        out.push({label: label, color: comboT.color});
+      } else if (t.kind === "personal"){
+        out.push({label: t.name, color: t.color});
+      } else {
+        out.push({label: t.name + (h ? " " + fmtHours(h) + "h" : ""), color: t.color});
+      }
     });
-    var csv = rows.map(function(r){ return r.map(function(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }).join(","); }).join("\n");
-    downloadFile("roster-" + (state.repMode==="month" ? ymd(range.start).slice(0,7) : range.start.getFullYear()) + ".csv", csv, "text/csv;charset=utf-8");
-  }
-  function exportJson(){
-    var payload = { exportedAt: new Date().toISOString(), types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps, roster: state.roster, settings: state.settings };
-    downloadFile("roster-board-backup.json", JSON.stringify(payload, null, 2), "application/json");
+    (state.leave[key] || []).forEach(function(l){
+      var def = LEAVE_COLORS[l.kind];
+      if (!def) return;
+      out.push({label: def.label, color: def.color});
+    });
+    return out;
   }
   function exportPdf(){
-    if (state.repMode !== "month"){ toast("Switch to Month view to export a PDF roster"); return; }
     if (!window.jspdf){ toast("PDF library didn't load"); return; }
-    var range = periodRange();
+    if (!state.types.length && !Object.keys(state.shifts).length){ toast("Nothing to export yet"); return; }
+    var monthDate = state.repMode === "year" ? periodRange().start : (state.calMonth || startOfMonth(new Date()));
+    var monthLabel = MONTH_LABELS[monthDate.getMonth()] + " " + monthDate.getFullYear();
+    var cells = buildMonthCells(monthDate);
+    var rows = cells.length / 7;
+
     var doc = new window.jspdf.jsPDF({unit:"pt", format:"a4"});
     var pageW = doc.internal.pageSize.getWidth();
-    var y = 56;
-    doc.setFont("helvetica","bold"); doc.setFontSize(18);
-    doc.text("Roster Board", 40, y); y += 22;
-    doc.setFontSize(12); doc.setFont("helvetica","normal");
-    doc.text(range.label, 40, y); y += 22;
-    doc.setDrawColor(210); doc.line(40, y, pageW-40, y); y += 18;
+    var pageH = doc.internal.pageSize.getHeight();
+    var margin = 32;
 
-    doc.setFontSize(9); doc.setFont("helvetica","bold");
-    doc.text("Date", 40, y); doc.text("Day", 130, y); doc.text("Shifts", 190, y); doc.text("Hours", pageW-90, y);
-    y += 6; doc.setDrawColor(230); doc.line(40, y, pageW-40, y); y += 12;
-    doc.setFont("helvetica","normal");
+    doc.setFont("helvetica","bold"); doc.setFontSize(20);
+    doc.text(monthLabel, margin, margin + 20);
+    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(150);
+    doc.text("Roster Board", pageW - margin, margin + 20, {align:"right"});
+    doc.setTextColor(0);
+    doc.setDrawColor(210);
+    doc.line(margin, margin + 32, pageW - margin, margin + 32);
 
-    var totalHours = 0;
-    var cur = new Date(range.start);
-    while (cur < range.end){
-      if (y > 780){ doc.addPage(); y = 56; }
-      var key = ymd(cur);
-      var entries = state.shifts[key] || [];
-      var lv = state.leave[key] || [];
-      var names = entries.map(function(s){
-        var t = state.typesById[s.typeId];
-        var h = effectiveHours(s);
-        totalHours += h;
-        return t ? entryDisplayName(s) + " (" + fmtHours(h) + "h)" : "";
-      }).concat(lv.map(function(l){ return LEAVE_COLORS[l.kind].label + (l.hours != null ? " (" + fmtHours(l.hours) + "h)" : ""); }));
-      if (names.length){
-        doc.text(pad2(cur.getDate())+"/"+pad2(cur.getMonth()+1), 40, y);
-        doc.text(WEEKDAY_FULL[cur.getDay()].slice(0,3), 130, y);
-        doc.text(names.join(", "), 190, y, {maxWidth: pageW-90-190});
-        var dayHours = entries.reduce(function(s,e){ return s+effectiveHours(e); }, 0);
-        doc.text(dayHours ? fmtHours(dayHours) : "—", pageW-90, y);
-        y += 16;
+    var weekdayLabels = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+    var colW = (pageW - margin*2) / 7;
+    var headY = margin + 50;
+    doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(140);
+    weekdayLabels.forEach(function(w, i){
+      doc.text(w.toUpperCase(), margin + i*colW + colW/2, headY, {align:"center"});
+    });
+    doc.setTextColor(0);
+
+    var footerH = 34;
+    var gridTop = headY + 12;
+    var gridBottom = pageH - margin - footerH;
+    var rowH = (gridBottom - gridTop) / rows;
+
+    cells.forEach(function(cell, idx){
+      var row = Math.floor(idx / 7), col = idx % 7;
+      var x = margin + col*colW, y = gridTop + row*rowH;
+      doc.setDrawColor(225);
+      if (!cell.inMonth) { doc.setFillColor(248,247,244); doc.rect(x, y, colW, rowH, "F"); }
+      doc.rect(x, y, colW, rowH);
+
+      doc.setFont("helvetica", cell.inMonth ? "bold" : "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(cell.inMonth ? 30 : 170);
+      doc.text(String(cell.date.getDate()), x + colW - 6, y + 13, {align:"right"});
+      doc.setTextColor(0);
+
+      var key = ymd(cell.date);
+      var entries = dayEntriesForPdf(key);
+      var maxEntries = Math.max(1, Math.floor((rowH - 18) / 10));
+      var shown = entries.slice(0, maxEntries);
+      var ey = y + 22;
+      doc.setFont("helvetica","normal"); doc.setFontSize(6.3);
+      shown.forEach(function(e){
+        var rgb = hexToRgb(e.color);
+        doc.setFillColor(rgb[0], rgb[1], rgb[2]);
+        doc.circle(x + 7, ey - 2.3, 2, "F");
+        var maxW = colW - 16;
+        var lines = doc.splitTextToSize(e.label, maxW);
+        doc.text(lines[0] + (lines.length > 1 ? "…" : ""), x + 12, ey);
+        ey += 9.5;
+      });
+      if (entries.length > shown.length){
+        doc.setTextColor(150);
+        doc.text("+" + (entries.length - shown.length) + " more", x + 12, ey);
+        doc.setTextColor(0);
       }
-      cur = addDays(cur, 1);
-    }
-    y += 8; doc.setDrawColor(210); doc.line(40, y, pageW-40, y); y += 16;
-    doc.setFont("helvetica","bold");
-    doc.text("Total hours: " + fmtHours(totalHours), 40, y);
-    doc.save("roster-" + ymd(range.start).slice(0,7) + ".pdf");
+    });
+
+    doc.setDrawColor(210);
+    doc.line(margin, gridBottom + 12, pageW - margin, gridBottom + 12);
+    doc.setFontSize(7.5); doc.setTextColor(150);
+    doc.text("Generated by Roster Board · " + new Date().toLocaleDateString(), margin, gridBottom + 26);
+    doc.setTextColor(0);
+
+    doc.save("roster-" + monthDate.getFullYear() + "-" + pad2(monthDate.getMonth()+1) + ".pdf");
     toast("PDF saved");
   }
 
-  document.getElementById("exportCsv").addEventListener("click", exportCsv);
-  document.getElementById("exportJson").addEventListener("click", exportJson);
   document.getElementById("exportPdf").addEventListener("click", exportPdf);
 
   /* ---------------- events ---------------- */
