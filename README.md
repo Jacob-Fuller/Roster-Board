@@ -8,6 +8,17 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Personal entries now use a single, optional time** instead of a
+  start/end range — since a reminder like "call the kids" isn't a block of
+  hours from X to Y. Shift types still use start/end time as before.
+- **Percentages in Reports**: the "By shift type" and "Weekday vs weekend"
+  bars now show each one's share of the period alongside the hours and
+  count (e.g. "96h · 80% · 8x").
+- **Swipe between tabs**: swipe left/right anywhere in the main screen to
+  move between Calendar, Shifts, Reports, Roster and Account, in that
+  order — no need to tap the bottom bar every time. Small or mostly-
+  vertical touches are ignored so it doesn't interfere with scrolling or
+  tapping, and it's disabled while mass-select (bulk edit) is active.
 - **Help now replays the intro slides** — tapping "Help" on Account opens
   the same slideshow as the intro, instead of a wall of text (the separate
   "Replay intro" button has been folded into this).
