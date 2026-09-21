@@ -8,6 +8,9 @@ step, no server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Fixed the "All day" checkbox not visibly ticking** when tapped, and
+  tidied the personal shift type sheet — removed the helper line under
+  the date range and the example text in the Notes field.
 - **All day option** for personal shift types and for personal events —
   toggle it on and the time field (and reminder, for events) is hidden,
   since it isn't tied to a specific time.

@@ -337,10 +337,11 @@
 
   .form-row{margin-top:14px;}
   .form-row label{display:block; font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px;}
-  .form-row input, .form-row select, .form-row textarea{
+  .form-row input:not([type=checkbox]):not([type=radio]), .form-row select, .form-row textarea{
     width:100%; max-width:100%; min-width:0; box-sizing:border-box; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:10px 12px; font-size:16px; color:var(--text); -webkit-appearance:none; appearance:none;
   }
   .form-row textarea{font-family:inherit;}
+  .form-row input[type=checkbox]{width:18px; height:18px; flex:none; accent-color:var(--accent);}
   .form-row{overflow:hidden;}
   .time-row{display:flex; gap:10px; align-items:flex-end;}
   .time-row .form-row{flex:1; margin-top:0;}
@@ -1209,10 +1210,9 @@
               <input type="date" id="typePersonalEndDate">
             </div>
           </div>
-          <p class="section-sub" style="margin:8px 0 0;">Set both dates to add this to every day in that range as soon as you save.</p>
           <div class="form-row">
             <label for="typePersonalNotes">Notes (optional)</label>
-            <textarea id="typePersonalNotes" rows="2" placeholder="e.g. Pick up from school, remember the gift..." style="resize:vertical;"></textarea>
+            <textarea id="typePersonalNotes" rows="2" style="resize:vertical;"></textarea>
           </div>
         </div>
         <div id="typeWorkFlags">
