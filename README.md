@@ -8,6 +8,17 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Tidier day sheet shift picker**: instead of separate "Dayshift",
+  "Overtime – Dayshift" and "Excess Hours – Dayshift" buttons cluttering
+  the list, there's now just one button per shift type. Tap it and, if
+  that type allows overtime or excess hours, a small popup lets you pick
+  Normal / Overtime / Excess Hours before asking for the hours.
+- **Swipe now changes months, not tabs**: swiping between tabs has been
+  removed — instead, swipe left/right anywhere on the Calendar grid to
+  move to the next/previous month.
+- **Personal entry time defaults to 12:00** so the field reads clearly as
+  a time box rather than looking empty/unclear — change or clear it as
+  needed.
 - **Personal entries now use a single, optional time** instead of a
   start/end range — since a reminder like "call the kids" isn't a block of
   hours from X to Y. Shift types still use start/end time as before.

@@ -287,6 +287,12 @@
   .type-picker{display:flex; flex-wrap:wrap; gap:7px;}
   .type-pick-btn{border:none; border-radius:10px; padding:8px 12px; font-size:.8rem; font-weight:600;}
   .type-pick-btn.ot-combo{padding:0; overflow:hidden; display:flex; flex-direction:column; min-width:64px;}
+  .kind-options{display:flex; flex-direction:column; gap:8px;}
+  .kind-option-btn{
+    border:none; border-radius:12px; padding:13px 16px; font-size:.92rem; font-weight:600;
+    display:flex; align-items:center; justify-content:space-between; text-align:left;
+  }
+  .kind-option-btn .kind-option-tag{font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; opacity:.85;}
   .ot-combo .ot-strip{display:block; background:#F0679E; color:#fff; font-size:.5rem; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:2px 12px;}
   .ot-combo .ot-base{display:block; font-size:.86rem; font-weight:600; padding:9px 12px;}
   .add-note-row{display:flex; gap:8px; margin-top:6px;}
@@ -1009,7 +1015,7 @@
         </div>
         <div class="form-row" id="typePersonalTime" style="display:none;">
           <label for="typeSingleTime">Time (optional)</label>
-          <input type="time" id="typeSingleTime">
+          <input type="time" id="typeSingleTime" value="12:00">
         </div>
         <div id="typeWorkFlags">
           <label class="checkbox-row">
@@ -1045,6 +1051,19 @@
           <button class="btn block" id="miniModalCancel">Cancel</button>
           <button class="btn primary block" id="miniModalConfirm">Save</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- choose plain / overtime / excess hours for a shift type -->
+  <div class="overlay center" id="kindChooserOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3 id="kindChooserTitle">Dayshift</h3>
+        <button class="close" id="kindChooserClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="kind-options" id="kindChooserOptions"></div>
       </div>
     </div>
   </div>
@@ -2376,44 +2395,11 @@
       b.style.background = t.color;
       b.style.color = t.ink;
       b.textContent = "+ " + t.name;
-      b.addEventListener("click", function(){ addShift(key, t.id); });
+      b.addEventListener("click", function(){
+        if (t.overtimeEligible !== false || t.excessEligible !== false) openShiftKindChooser(key, t);
+        else addShift(key, t.id);
+      });
       picker.appendChild(b);
-    });
-    state.types.filter(function(t){ return t.overtimeEligible !== false; }).forEach(function(t){
-      var otBtn = document.createElement("button");
-      otBtn.className = "type-pick-btn ot-combo";
-      var strip = document.createElement("span");
-      strip.className = "ot-strip";
-      strip.style.background = OVERTIME_TYPE.color;
-      strip.style.color = OVERTIME_TYPE.ink;
-      strip.textContent = "Overtime";
-      otBtn.appendChild(strip);
-      var base = document.createElement("span");
-      base.className = "ot-base";
-      base.style.background = t.color;
-      base.style.color = t.ink;
-      base.textContent = t.name;
-      otBtn.appendChild(base);
-      otBtn.addEventListener("click", function(){ openOvertimeHoursPrompt(key, t.id); });
-      picker.appendChild(otBtn);
-    });
-    state.types.filter(function(t){ return t.excessEligible !== false; }).forEach(function(t){
-      var exBtn = document.createElement("button");
-      exBtn.className = "type-pick-btn ot-combo";
-      var strip = document.createElement("span");
-      strip.className = "ot-strip";
-      strip.style.background = EXCESS_TYPE.color;
-      strip.style.color = EXCESS_TYPE.ink;
-      strip.textContent = "Excess Hours";
-      exBtn.appendChild(strip);
-      var base = document.createElement("span");
-      base.className = "ot-base";
-      base.style.background = t.color;
-      base.style.color = t.ink;
-      base.textContent = t.name;
-      exBtn.appendChild(base);
-      exBtn.addEventListener("click", function(){ openExcessHoursPrompt(key, t.id); });
-      picker.appendChild(exBtn);
     });
 
     var leaveWrap = document.getElementById("sheetLeave");
@@ -2612,6 +2598,43 @@
     saveStore(); renderAll(); toast("Shift swapped" + (partner ? " with " + partner : ""));
   }
 
+  /* ---------------- shift kind chooser (normal / overtime / excess) ---------------- */
+  function openShiftKindChooser(dateKey, t){
+    document.getElementById("kindChooserTitle").textContent = t.name;
+    var wrap = document.getElementById("kindChooserOptions");
+    wrap.innerHTML = "";
+    function addOption(label, tagText, bg, ink, onPick){
+      var btn = document.createElement("button");
+      btn.className = "kind-option-btn";
+      btn.style.background = bg;
+      btn.style.color = ink;
+      var lbl = document.createElement("span");
+      lbl.textContent = label;
+      btn.appendChild(lbl);
+      if (tagText){
+        var tag = document.createElement("span");
+        tag.className = "kind-option-tag";
+        tag.textContent = tagText;
+        btn.appendChild(tag);
+      }
+      btn.addEventListener("click", function(){ closeShiftKindChooser(); onPick(); });
+      wrap.appendChild(btn);
+    }
+    addOption(t.name, "", t.color, t.ink, function(){ addShift(dateKey, t.id); });
+    if (t.overtimeEligible !== false){
+      addOption(t.name, "Overtime", OVERTIME_TYPE.color, OVERTIME_TYPE.ink, function(){ openOvertimeHoursPrompt(dateKey, t.id); });
+    }
+    if (t.excessEligible !== false){
+      addOption(t.name, "Excess Hours", EXCESS_TYPE.color, EXCESS_TYPE.ink, function(){ openExcessHoursPrompt(dateKey, t.id); });
+    }
+    document.getElementById("kindChooserOverlay").classList.add("show");
+  }
+  function closeShiftKindChooser(){
+    document.getElementById("kindChooserOverlay").classList.remove("show");
+  }
+  document.getElementById("kindChooserClose").addEventListener("click", closeShiftKindChooser);
+  document.getElementById("kindChooserOverlay").addEventListener("click", function(e){ if (e.target === this) closeShiftKindChooser(); });
+
   /* ---------------- overtime ---------------- */
   function openOvertimeHoursPrompt(dateKey, baseTypeId){
     var bt = state.typesById[baseTypeId];
@@ -2800,7 +2823,7 @@
     document.getElementById("typeName").value = t ? t.name : "";
     document.getElementById("typeStart").value = (t && t.kind !== "personal") ? t.startTime : "07:00";
     document.getElementById("typeEnd").value = (t && t.kind !== "personal") ? t.endTime : "19:00";
-    document.getElementById("typeSingleTime").value = (t && t.kind === "personal" && t.time) ? t.time : "";
+    document.getElementById("typeSingleTime").value = (t && t.kind === "personal" && t.time) ? t.time : "12:00";
     document.getElementById("typeOvertimeEligible").checked = t ? (t.overtimeEligible !== false) : true;
     document.getElementById("typeExcessEligible").checked = t ? (t.excessEligible !== false) : true;
     var kind = t && t.kind === "personal" ? "personal" : "work";
@@ -3470,28 +3493,25 @@
     btn.addEventListener("click", function(){ setView(btn.getAttribute("data-view")); });
   });
 
-  /* ---------------- swipe between tabs ---------------- */
+  /* ---------------- swipe between months on the Calendar tab ---------------- */
   (function(){
-    var TAB_ORDER = ["calendar", "types", "reports", "roster", "shared"];
-    var mainEl = document.querySelector("main");
+    var calGrid = document.getElementById("calGrid");
     var touchStartX = 0, touchStartY = 0, touching = false;
-    mainEl.addEventListener("touchstart", function(e){
+    calGrid.addEventListener("touchstart", function(e){
       if (e.touches.length !== 1) return;
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
       touching = true;
     }, { passive: true });
-    mainEl.addEventListener("touchend", function(e){
+    calGrid.addEventListener("touchend", function(e){
       if (!touching) return;
       touching = false;
       if (state.bulkMode) return; // don't hijack swipes while mass-selecting
       var dx = e.changedTouches[0].clientX - touchStartX;
       var dy = e.changedTouches[0].clientY - touchStartY;
       if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return; // require a deliberate, mostly-horizontal swipe
-      var idx = TAB_ORDER.indexOf(state.view);
-      if (idx === -1) return;
-      if (dx < 0 && idx < TAB_ORDER.length - 1) setView(TAB_ORDER[idx + 1]);
-      else if (dx > 0 && idx > 0) setView(TAB_ORDER[idx - 1]);
+      state.calMonth = addMonths(state.calMonth, dx < 0 ? 1 : -1);
+      renderCalendar();
     }, { passive: true });
   })();
 
