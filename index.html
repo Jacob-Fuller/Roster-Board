@@ -220,9 +220,18 @@
   }
   .onboarding-screen.show{display:flex;}
   .onboarding-skip{
-    position:absolute; top:calc(env(safe-area-inset-top, 0px) + 14px); right:16px; z-index:1;
-    background:none; border:none; color:var(--text-dim); font-size:.85rem; font-weight:600; padding:8px;
+    position:absolute; top:calc(env(safe-area-inset-top, 0px) + 14px); right:16px; z-index:2;
+    background:var(--surface-2); border:none; color:var(--text-dim); font-size:1rem; font-weight:700; line-height:1;
+    width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:0;
   }
+  .onboarding-arrow{
+    position:absolute; top:50%; transform:translateY(-50%); z-index:1;
+    width:38px; height:38px; border-radius:50%; border:none; background:var(--surface-2); color:var(--text);
+    font-size:1.3rem; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .onboarding-arrow.prev{left:12px;}
+  .onboarding-arrow.next{right:12px;}
+  .onboarding-arrow[disabled]{opacity:0; pointer-events:none;}
   .onboarding-slides{
     flex:1; display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch;
   }
@@ -453,37 +462,34 @@
   </div>
 
   <div class="onboarding-screen" id="onboardingOverlay">
-    <button class="onboarding-skip" id="onboardingSkipBtn">Skip</button>
+    <button class="onboarding-skip" id="onboardingSkipBtn">&#10005;</button>
+    <button class="onboarding-arrow prev" id="onboardingPrevBtn" aria-label="Back">&#8249;</button>
+    <button class="onboarding-arrow next" id="onboardingArrowNextBtn" aria-label="Next">&#8250;</button>
     <div class="onboarding-slides" id="onboardingSlides">
       <div class="onboarding-slide">
-        <div class="onboarding-icon">&#128197;</div>
-        <h2>Welcome to Roster Board</h2>
-        <p>A quick look at how it works — swipe through to get started.</p>
-      </div>
-      <div class="onboarding-slide">
-        <div class="onboarding-icon">&#128198;</div>
-        <h2>Calendar</h2>
-        <p>Tap any day to add shifts, leave or personal events, and see your hours and shift count for the month at a glance.</p>
-      </div>
-      <div class="onboarding-slide">
         <div class="onboarding-icon">&#128257;</div>
-        <h2>Roster</h2>
-        <p>Build a repeating shift pattern once, then stamp it onto the calendar as a starting template.</p>
+        <h2>Set up your roster</h2>
+        <p>Start on the Roster tab and build your repeating shift pattern — set how many weeks it runs for, then stamp it onto the calendar as your starting template.</p>
       </div>
       <div class="onboarding-slide">
         <div class="onboarding-icon">&#9200;</div>
-        <h2>Shifts</h2>
-        <p>Set up your own shift types with times and colors, alongside built-in ones like Overtime, Annual Leave, Sick Leave and Excess Hours.</p>
+        <h2>Create your shifts</h2>
+        <p>Head to Shifts and add your own shift types — name, colour and start/end time — and the hours are worked out for you automatically.</p>
       </div>
       <div class="onboarding-slide">
         <div class="onboarding-icon">&#128202;</div>
-        <h2>Reports</h2>
-        <p>See totals for the month and export your hours whenever you need them.</p>
+        <h2>Built-in shift types</h2>
+        <p>Overtime, Excess Hours, Annual Leave and Sick Leave are already set up for you. Choose which of your shift types allow overtime or excess hours from each shift type's settings.</p>
       </div>
       <div class="onboarding-slide">
-        <div class="onboarding-icon">&#128101;</div>
-        <h2>Account is optional</h2>
-        <p>Roster Board works fully on this device without an account. Sign in only if you want to sync across devices or share your roster with someone.</p>
+        <div class="onboarding-icon">&#128200;</div>
+        <h2>Reports</h2>
+        <p>See totals for the month — hours worked, overtime, excess hours and leave — and export whenever you need them.</p>
+      </div>
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#128198;</div>
+        <h2>Personal entries too</h2>
+        <p>Not everything is a shift. Mark a new type as "Personal" — like a reminder to call the kids — and it'll show on your calendar without counting toward your hours or reports.</p>
       </div>
     </div>
     <div class="onboarding-footer">
@@ -668,7 +674,6 @@
 
     <div class="view" id="view-types">
       <div class="section-head"><h2>Shifts</h2><button class="btn sm primary" id="newTypeBtn">+ New</button></div>
-      <div class="section-sub">Set a start and end time and the duration is worked out for you. Overtime and leave are built in below.</div>
       <div class="card" id="builtinTypesList"></div>
       <div class="section-head" style="margin-top:20px;"><h2>Your types</h2></div>
       <div class="card" id="typesList"></div>
@@ -915,6 +920,13 @@
           <input type="text" id="typeName" maxlength="18" placeholder="e.g. Dayshift">
         </div>
         <div class="form-row">
+          <label>Is this a shift or a personal entry?</label>
+          <div class="seg" id="typeKindSeg">
+            <button type="button" data-kind="work" class="active">Shift</button>
+            <button type="button" data-kind="personal">Personal</button>
+          </div>
+        </div>
+        <div class="form-row">
           <label>Color</label>
           <div class="color-grid" id="colorGrid"></div>
         </div>
@@ -929,10 +941,16 @@
           </div>
         </div>
         <div class="duration-preview" id="durationPreview">= 12 hours</div>
-        <label class="checkbox-row">
-          <input type="checkbox" id="typeOvertimeEligible" checked>
-          <span>Allow overtime for this shift type</span>
-        </label>
+        <div id="typeWorkFlags">
+          <label class="checkbox-row">
+            <input type="checkbox" id="typeOvertimeEligible" checked>
+            <span>Allow overtime for this shift type</span>
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="typeExcessEligible" checked>
+            <span>Allow excess hours for this shift type</span>
+          </label>
+        </div>
         <div class="sheet-footer">
           <button class="btn danger" id="deleteTypeBtn" style="display:none;">Delete</button>
           <button class="btn primary block" id="saveTypeBtn">Save</button>
@@ -1288,6 +1306,15 @@
     onboardingDotEls.forEach(function(d,i){ d.classList.toggle("active", i===idx); });
     var isLast = idx === onboardingSlideEls.length - 1;
     document.getElementById("onboardingNextBtn").textContent = isLast ? "Get started" : "Next";
+    document.getElementById("onboardingPrevBtn").disabled = idx === 0;
+    document.getElementById("onboardingArrowNextBtn").disabled = isLast;
+  }
+  function onboardingGoTo(idx){
+    if (!onboardingSlideEls) onboardingSetup();
+    idx = Math.max(0, Math.min(onboardingSlideEls.length - 1, idx));
+    var slides = document.getElementById("onboardingSlides");
+    var w = slides.clientWidth || 1;
+    slides.scrollTo({ left: idx * w, behavior: "smooth" });
   }
   function showOnboarding(){
     if (!onboardingSlideEls) onboardingSetup();
@@ -1308,6 +1335,8 @@
     if (idx !== onboardingIdx) onboardingUpdateActive(idx);
   });
   document.getElementById("onboardingSkipBtn").addEventListener("click", hideOnboarding);
+  document.getElementById("onboardingPrevBtn").addEventListener("click", function(){ onboardingGoTo(onboardingIdx - 1); });
+  document.getElementById("onboardingArrowNextBtn").addEventListener("click", function(){ onboardingGoTo(onboardingIdx + 1); });
 
   /* ---------------- privacy policy popup ---------------- */
   function showPrivacyPolicy(){
@@ -1982,6 +2011,8 @@
       var d = parseYmd(dateKey);
       if (d.getFullYear()===y && d.getMonth()===m){
         state.shifts[dateKey].forEach(function(s){
+          var t = state.typesById[s.typeId];
+          if (t && t.kind === "personal") return;
           totalShifts++;
           var h = effectiveHours(s);
           totalH += h;
@@ -2287,7 +2318,7 @@
       otBtn.addEventListener("click", function(){ openOvertimeHoursPrompt(key, t.id); });
       picker.appendChild(otBtn);
     });
-    state.types.filter(function(t){ return t.overtimeEligible !== false; }).forEach(function(t){
+    state.types.filter(function(t){ return t.excessEligible !== false; }).forEach(function(t){
       var exBtn = document.createElement("button");
       exBtn.className = "type-pick-btn ot-combo";
       var strip = document.createElement("span");
@@ -2649,14 +2680,18 @@
     var sel = document.querySelector(".color-swatch.sel");
     var color = sel ? sel.getAttribute("data-hex") : PALETTE[0].hex;
     var ink = sel ? sel.getAttribute("data-ink") : PALETTE[0].ink;
-    var overtimeEligible = document.getElementById("typeOvertimeEligible").checked;
+    var kindBtn = document.querySelector("#typeKindSeg button.active");
+    var kind = kindBtn ? kindBtn.getAttribute("data-kind") : "work";
+    var isPersonal = kind === "personal";
+    var overtimeEligible = isPersonal ? false : document.getElementById("typeOvertimeEligible").checked;
+    var excessEligible = isPersonal ? false : document.getElementById("typeExcessEligible").checked;
 
     if (state.editingTypeId){
       var t = state.typesById[state.editingTypeId];
-      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; }
+      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.excessEligible=excessEligible; t.kind=kind; }
       toast("Type updated");
     } else {
-      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, order: state.types.length};
+      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, excessEligible:excessEligible, kind:kind, order: state.types.length};
       state.types.push(nt);
       state.typesById[nt.id] = nt;
       toast("Type created");
@@ -2679,6 +2714,12 @@
     document.getElementById("typeStart").value = t ? t.startTime : "07:00";
     document.getElementById("typeEnd").value = t ? t.endTime : "19:00";
     document.getElementById("typeOvertimeEligible").checked = t ? (t.overtimeEligible !== false) : true;
+    document.getElementById("typeExcessEligible").checked = t ? (t.excessEligible !== false) : true;
+    var kind = t && t.kind === "personal" ? "personal" : "work";
+    document.querySelectorAll("#typeKindSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-kind") === kind);
+    });
+    updateTypeKindVisibility();
     document.getElementById("deleteTypeBtn").style.display = t ? "block" : "none";
     updateDurationPreview();
 
@@ -2711,6 +2752,18 @@
   }
   document.getElementById("typeStart").addEventListener("input", updateDurationPreview);
   document.getElementById("typeEnd").addEventListener("input", updateDurationPreview);
+  function updateTypeKindVisibility(){
+    var active = document.querySelector("#typeKindSeg button.active");
+    var isPersonal = active && active.getAttribute("data-kind") === "personal";
+    document.getElementById("typeWorkFlags").style.display = isPersonal ? "none" : "block";
+  }
+  document.querySelectorAll("#typeKindSeg button").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("#typeKindSeg button").forEach(function(x){ x.classList.remove("active"); });
+      b.classList.add("active");
+      updateTypeKindVisibility();
+    });
+  });
 
   /* ---------------- render: types view ---------------- */
   function renderTypes(){
@@ -2748,7 +2801,16 @@
       var name = document.createElement("div"); name.className="name"; name.textContent=t.name;
       meta.appendChild(name);
       var hrs = document.createElement("div"); hrs.className="hrs num";
-      hrs.textContent = (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + (t.overtimeEligible === false ? "  ·  no overtime" : "");
+      var flagSuffix = "";
+      if (t.kind !== "personal"){
+        var flagBits = [];
+        if (t.overtimeEligible === false) flagBits.push("no overtime");
+        if (t.excessEligible === false) flagBits.push("no excess hours");
+        if (flagBits.length) flagSuffix = "  ·  " + flagBits.join(", ");
+      } else {
+        flagSuffix = "  ·  personal";
+      }
+      hrs.textContent = (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + flagSuffix;
       meta.appendChild(hrs);
       row.appendChild(meta);
       var actions = document.createElement("div"); actions.className="actions";
@@ -2952,6 +3014,7 @@
       state.shifts[dateKey].forEach(function(s){
         var t = state.typesById[s.typeId];
         if (!t) return;
+        if (t.kind === "personal") return;
         var h = effectiveHours(s);
         var groupKey = COMBO_TYPES[s.typeId] && s.baseTypeId ? (s.typeId + ":" + s.baseTypeId) : s.typeId;
         var groupColor = entryColor(s);

@@ -8,6 +8,24 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Shift or Personal toggle on shift types**: when you create or edit a
+  shift type, you're now asked whether it's a "Shift" or a "Personal"
+  entry (e.g. "Call the kids"). Personal entries skip the overtime/excess
+  hours settings entirely and no longer count toward your hours, shift
+  counts, or the "By shift type" breakdown in Reports.
+- **Independent "Allow excess hours" toggle**: each shift type now has its
+  own "Allow overtime for this shift type" and "Allow excess hours for
+  this shift type" checkboxes, so a type can support one without the
+  other — not every shift needs both.
+- **Cleaner Shifts and Reports labels**: removed the explanatory blurb
+  under the Shifts heading, and personal shift types no longer show a
+  confusing "no overtime" note in the list (it only applies to real
+  shifts).
+- **Better help/intro slides**: replaying the intro (Account → Replay
+  intro) now has back/forward arrows and a close (✕) button, and walks
+  through setting up your roster, creating your shifts, the built-in
+  types (Overtime, Excess Hours, leave), Reports, and personal entries —
+  in that order.
 - **Excess Hours reworked to match Overtime**: Excess Hours is no longer a
   leave category — it's now logged against a shift, exactly like Overtime.
   In a day's shift picker you'll see "Excess Hours – Dayshift", "Excess
