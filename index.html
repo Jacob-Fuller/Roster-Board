@@ -337,9 +337,10 @@
 
   .form-row{margin-top:14px;}
   .form-row label{display:block; font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px;}
-  .form-row input, .form-row select{
+  .form-row input, .form-row select, .form-row textarea{
     width:100%; max-width:100%; min-width:0; box-sizing:border-box; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:10px 12px; font-size:16px; color:var(--text); -webkit-appearance:none; appearance:none;
   }
+  .form-row textarea{font-family:inherit;}
   .form-row{overflow:hidden;}
   .time-row{display:flex; gap:10px; align-items:flex-end;}
   .time-row .form-row{flex:1; margin-top:0;}
@@ -1135,12 +1136,16 @@
           <div class="label-row"><span>Personal events</span></div>
           <div id="sheetNotes"></div>
           <div class="event-cat-row" id="eventCatRow"></div>
+          <label class="remind-row" style="margin-top:0; margin-bottom:8px;">
+            <input type="checkbox" id="noteAllDayToggle">
+            <span>All day</span>
+          </label>
           <div class="add-note-row">
             <input type="time" id="noteTime">
             <input type="text" id="noteInput" placeholder="e.g. Dentist, Birthday dinner...">
             <button class="btn sm primary" id="addNoteBtn">Add</button>
           </div>
-          <label class="remind-row">
+          <label class="remind-row" id="noteRemindRow">
             <input type="checkbox" id="noteRemindToggle">
             <span>Remind me at this time</span>
           </label>
@@ -1186,8 +1191,14 @@
           <div class="duration-preview" id="durationPreview">= 12 hours</div>
         </div>
         <div class="form-row" id="typePersonalTime" style="display:none;">
-          <label for="typeSingleTime">Time (optional)</label>
-          <input type="time" id="typeSingleTime" value="12:00">
+          <label class="checkbox-row" style="margin:0 0 8px;">
+            <input type="checkbox" id="typeAllDay">
+            <span>All day</span>
+          </label>
+          <div id="typePersonalTimeWrap">
+            <label for="typeSingleTime">Time (optional)</label>
+            <input type="time" id="typeSingleTime" value="12:00">
+          </div>
           <div class="time-row" style="margin-top:10px;">
             <div class="form-row" style="margin-top:0;">
               <label for="typePersonalStartDate">Start date (optional)</label>
@@ -1199,6 +1210,10 @@
             </div>
           </div>
           <p class="section-sub" style="margin:8px 0 0;">Set both dates to add this to every day in that range as soon as you save.</p>
+          <div class="form-row">
+            <label for="typePersonalNotes">Notes (optional)</label>
+            <textarea id="typePersonalNotes" rows="2" placeholder="e.g. Pick up from school, remember the gift..." style="resize:vertical;"></textarea>
+          </div>
         </div>
         <div id="typeWorkFlags">
           <label class="checkbox-row">
@@ -2536,6 +2551,8 @@
     document.getElementById("sheetDate").textContent = WEEKDAY_FULL[d.getDay()] + ", " + d.getDate() + " " + MONTH_LABELS[d.getMonth()];
     renderDaySheetBody();
     document.getElementById("noteTime").value = "00:00";
+    document.getElementById("noteAllDayToggle").checked = false;
+    updateNoteAllDayVisibility();
     document.getElementById("daySheetOverlay").classList.add("show");
   }
   function closeDaySheet(){ document.getElementById("daySheetOverlay").classList.remove("show"); }
@@ -2629,7 +2646,7 @@
       b.textContent = "+ " + t.name;
       b.addEventListener("click", function(){
         if (t.overtimeEligible !== false || t.excessEligible !== false) openShiftKindChooser(key, t);
-        else addShift(key, t.id);
+        else addShift(key, t.id, null, null, t.kind === "personal" ? t.notes : null);
       });
       picker.appendChild(b);
     });
@@ -2660,7 +2677,7 @@
     var notesWrap = document.getElementById("sheetNotes");
     notesWrap.innerHTML = "";
     var notes = (state.notes[key] || []).slice().sort(function(a,b){
-      return (a.time||"99:99").localeCompare(b.time||"99:99");
+      return (a.allDay ? "" : (a.time||"99:99")).localeCompare(b.allDay ? "" : (b.time||"99:99"));
     });
     if (!notes.length){
       notesWrap.appendChild(hintEl("No personal events for this day."));
@@ -2673,7 +2690,12 @@
         dot.className = "dot";
         dot.style.background = cat.color;
         row.appendChild(dot);
-        if (n.time){
+        if (n.allDay){
+          var t = document.createElement("span");
+          t.className = "etime";
+          t.textContent = "All day";
+          row.appendChild(t);
+        } else if (n.time){
           var t = document.createElement("span");
           t.className = "etime";
           t.textContent = n.time + (n.remind ? " 🔔" : "");
@@ -2926,10 +2948,11 @@
   }
 
   /* ---------------- data mutations ---------------- */
-  function addShift(dateKey, typeId, hours, baseTypeId){
+  function addShift(dateKey, typeId, hours, baseTypeId, tag){
     var entry = {id: mkId(), typeId: typeId};
     if (hours != null) entry.hours = hours;
     if (baseTypeId) entry.baseTypeId = baseTypeId;
+    if (tag) entry.tag = tag;
     (state.shifts[dateKey] = state.shifts[dateKey] || []).push(entry);
     saveStore(); renderAll(); toast("Shift added");
   }
@@ -2970,12 +2993,13 @@
     tomb(id);
     saveStore(); renderAll();
   }
-  function addNote(dateKey, text, time, category, remind){
+  function addNote(dateKey, text, time, category, remind, allDay){
     text = text.trim();
     if (!text) return;
     var entry = {id: mkId(), text: text, category: category || "other"};
-    if (time) entry.time = time;
-    if (remind && time){ entry.remind = true; entry.notified = false; }
+    if (allDay){ entry.allDay = true; }
+    else if (time) entry.time = time;
+    if (remind && time && !allDay){ entry.remind = true; entry.notified = false; }
     (state.notes[dateKey] = state.notes[dateKey] || []).push(entry);
     saveStore(); renderAll(); toast("Event added");
   }
@@ -3017,30 +3041,33 @@
     var overtimeEligible = isPersonal ? false : document.getElementById("typeOvertimeEligible").checked;
     var excessEligible = isPersonal ? false : document.getElementById("typeExcessEligible").checked;
 
-    var start, end, hours, singleTime;
+    var start, end, hours, singleTime, allDay;
     if (isPersonal){
-      singleTime = document.getElementById("typeSingleTime").value || null;
+      allDay = document.getElementById("typeAllDay").checked;
+      singleTime = allDay ? null : (document.getElementById("typeSingleTime").value || null);
       start = singleTime; end = null; hours = 0;
     } else {
       start = document.getElementById("typeStart").value || "07:00";
       end = document.getElementById("typeEnd").value || "19:00";
       hours = calcDuration(start, end);
       singleTime = null;
+      allDay = false;
     }
 
-    var rangeStart, rangeEnd, typeIdForRange;
+    var rangeStart, rangeEnd, typeIdForRange, notes;
     if (isPersonal){
       rangeStart = document.getElementById("typePersonalStartDate").value || null;
       rangeEnd = document.getElementById("typePersonalEndDate").value || null;
+      notes = document.getElementById("typePersonalNotes").value.trim() || null;
     }
 
     if (state.editingTypeId){
       var t = state.typesById[state.editingTypeId];
-      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.excessEligible=excessEligible; t.kind=kind; t.time=singleTime; }
+      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.excessEligible=excessEligible; t.kind=kind; t.time=singleTime; t.allDay=allDay; t.notes=notes; }
       typeIdForRange = state.editingTypeId;
       toast("Type updated");
     } else {
-      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, excessEligible:excessEligible, kind:kind, time:singleTime, order: state.types.length};
+      var nt = {id: mkId(), name:name, color:color, ink:ink, startTime:start, endTime:end, hours:hours, overtimeEligible:overtimeEligible, excessEligible:excessEligible, kind:kind, time:singleTime, allDay:allDay, notes:notes, order: state.types.length};
       state.types.push(nt);
       state.typesById[nt.id] = nt;
       typeIdForRange = nt.id;
@@ -3053,7 +3080,9 @@
       var added = 0;
       while (d <= last){
         var key = ymd(d);
-        (state.shifts[key] = state.shifts[key] || []).push({id: mkId(), typeId: typeIdForRange});
+        var entry = {id: mkId(), typeId: typeIdForRange};
+        if (notes) entry.tag = notes;
+        (state.shifts[key] = state.shifts[key] || []).push(entry);
         added++;
         d.setDate(d.getDate() + 1);
       }
@@ -3078,8 +3107,11 @@
     document.getElementById("typeStart").value = (t && t.kind !== "personal") ? t.startTime : "07:00";
     document.getElementById("typeEnd").value = (t && t.kind !== "personal") ? t.endTime : "19:00";
     document.getElementById("typeSingleTime").value = (t && t.kind === "personal" && t.time) ? t.time : "12:00";
-    document.getElementById("typePersonalStartDate").value = "";
-    document.getElementById("typePersonalEndDate").value = "";
+    var todayKey = ymd(new Date());
+    document.getElementById("typePersonalStartDate").value = todayKey;
+    document.getElementById("typePersonalEndDate").value = todayKey;
+    document.getElementById("typeAllDay").checked = !!(t && t.kind === "personal" && t.allDay);
+    document.getElementById("typePersonalNotes").value = (t && t.kind === "personal" && t.notes) ? t.notes : "";
     document.getElementById("typeOvertimeEligible").checked = t ? (t.overtimeEligible !== false) : true;
     document.getElementById("typeExcessEligible").checked = t ? (t.excessEligible !== false) : true;
     var kind = t && t.kind === "personal" ? "personal" : "work";
@@ -3087,6 +3119,7 @@
       b.classList.toggle("active", b.getAttribute("data-kind") === kind);
     });
     updateTypeKindVisibility();
+    updatePersonalAllDayVisibility();
     document.getElementById("deleteTypeBtn").style.display = t ? "block" : "none";
     updateDurationPreview();
 
@@ -3133,6 +3166,11 @@
       updateTypeKindVisibility();
     });
   });
+  function updatePersonalAllDayVisibility(){
+    var allDay = document.getElementById("typeAllDay").checked;
+    document.getElementById("typePersonalTimeWrap").style.display = allDay ? "none" : "block";
+  }
+  document.getElementById("typeAllDay").addEventListener("change", updatePersonalAllDayVisibility);
 
   /* ---------------- render: types view ---------------- */
   function renderTypes(){
@@ -3177,7 +3215,8 @@
         var flagSuffix = flagBits.length ? "  ·  " + flagBits.join(", ") : "";
         hrs.textContent = (t.startTime||"") + "–" + (t.endTime||"") + "  ·  " + fmtHours(t.hours||0) + " h" + flagSuffix;
       } else {
-        hrs.textContent = (t.time ? t.time + "  ·  " : "") + "personal";
+        var personalBits = [t.allDay ? "All day" : (t.time || null), "personal"].filter(Boolean);
+        hrs.textContent = personalBits.join("  ·  ");
       }
       meta.appendChild(hrs);
       row.appendChild(meta);
@@ -3807,16 +3846,25 @@
     var input = document.getElementById("noteInput");
     var timeInput = document.getElementById("noteTime");
     var remindToggle = document.getElementById("noteRemindToggle");
+    var allDayToggle = document.getElementById("noteAllDayToggle");
     if (remindToggle.checked && window.Notification && Notification.permission === "default"){
       Notification.requestPermission();
     }
-    addNote(state.selectedDate, input.value, timeInput.value, state.noteCategory, remindToggle.checked);
+    addNote(state.selectedDate, input.value, timeInput.value, state.noteCategory, remindToggle.checked, allDayToggle.checked);
     input.value = "";
     timeInput.value = "00:00";
     remindToggle.checked = false;
+    allDayToggle.checked = false;
+    updateNoteAllDayVisibility();
     state.noteCategory = "other";
   });
   document.getElementById("noteInput").addEventListener("keydown", function(e){ if (e.key === "Enter") document.getElementById("addNoteBtn").click(); });
+  function updateNoteAllDayVisibility(){
+    var allDay = document.getElementById("noteAllDayToggle").checked;
+    document.getElementById("noteTime").style.display = allDay ? "none" : "block";
+    document.getElementById("noteRemindRow").style.display = allDay ? "none" : "flex";
+  }
+  document.getElementById("noteAllDayToggle").addEventListener("change", updateNoteAllDayVisibility);
   document.getElementById("addAnnualLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "annual"); });
   document.getElementById("addSickLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "sick"); });
 

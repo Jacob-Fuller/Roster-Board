@@ -8,6 +8,14 @@ step, no server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **All day option** for personal shift types and for personal events —
+  toggle it on and the time field (and reminder, for events) is hidden,
+  since it isn't tied to a specific time.
+- **Notes on personal shift types**: add an optional note (e.g. "Ask about
+  homework") when creating or editing a personal type, and it's carried
+  onto every entry made from it automatically.
+- **Personal shift date range now defaults to today** in both the start
+  and end boxes, so you only need to change what you want to change.
 - **Account deletion**: added a "Delete account" option under Account,
   underneath Sign out — confirm by typing DELETE and it emails
   contact@rosterboard.net to process the request.

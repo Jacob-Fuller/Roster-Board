@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Roster Board</title>
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F2EA; --surface:#FFFFFF; --border:#DED7C6; --text:#1C1B18; --text-dim:#6B6558;
+    --accent:#B97A1E;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0C1016; --surface:#141A22; --border:#2B3542; --text:#EEF1F5; --text-dim:#95A1AF; --accent:#F0A947; }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:640px; margin:0 auto; padding:32px 22px 80px;}
+  .brand{display:flex; align-items:center; gap:10px; margin-bottom:28px;}
+  .brand img{width:34px; height:34px; border-radius:9px;}
+  .brand span{font-family:'Fraunces', Georgia, serif; font-weight:700; font-size:1.15rem;}
+  h1{font-family:'Fraunces', Georgia, serif; font-size:1.7rem; margin:0 0 4px;}
+  .updated{color:var(--text-dim); font-size:.85rem; margin:0 0 28px;}
+  h2{font-family:'Fraunces', Georgia, serif; font-size:1.1rem; margin:32px 0 8px;}
+  p, li{color:var(--text); font-size:.92rem;}
+  ul{padding-left:20px;}
+  a{color:var(--accent); font-weight:600; text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-top:12px;}
+  .back{display:inline-block; margin-top:36px; font-size:.85rem;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><img src="icon-192.png" alt=""><span>Roster Board</span></div>
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated 19 September 2026</p>
+
+  <p>Roster Board is a shift calendar and roster app. This page explains what
+  information the app collects, how it's used, and what control you have
+  over it.</p>
+
+  <h2>Who this is</h2>
+  <p>Roster Board is operated by Jacob Fuller. If you have questions about
+  this policy or your data, contact
+  <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a>.</p>
+
+  <h2>What we collect</h2>
+  <div class="card">
+    <ul>
+      <li><strong>Account details</strong> — the email address and password you sign up with, if you choose to create one. Your password is hashed and never stored or seen in plain text.</li>
+      <li><strong>Roster data you enter</strong> — shift types, dates, hours, overtime, leave, and shift swaps.</li>
+      <li><strong>Personal events</strong> — any appointments, reminders, or notes you choose to add to your calendar.</li>
+    </ul>
+  </div>
+
+  <h2>Account is optional</h2>
+  <p>You can use Roster Board fully on one device without creating an
+  account — your data then stays only in that device's local storage. An
+  account is only needed to sync your data across devices or to share your
+  roster with someone else.</p>
+
+  <h2>How it's used</h2>
+  <p>Your data is used only to run the app for you: showing your calendar,
+  calculating your reports, and syncing your data between your own devices
+  when you're signed in. We don't use your data for advertising, and we
+  don't sell it to anyone.</p>
+
+  <h2>Where it's stored</h2>
+  <p>If you're signed in, your data is stored with Supabase, a third-party
+  database and authentication provider, and the app itself is hosted with
+  Render. Both are standard infrastructure providers used to run the app —
+  they process data on our behalf and don't use it for their own purposes.
+  If you're not signed in, your data never leaves your device.</p>
+
+  <h2>Shared rosters</h2>
+  <p>If you choose to connect your account with someone else (Account →
+  "Share your roster"), and they accept, each of you can see the other's
+  shift types, overtime, leave, and shift swaps only. Your personal
+  events/notes are never included in this, no matter what — this is
+  enforced on the server, not just hidden in the app. You can remove a
+  connection at any time, which stops the sharing immediately.</p>
+
+  <h2>Security</h2>
+  <p>Connections to the app are encrypted (HTTPS). Access to your data is
+  restricted at the database level so that only your own account can read or
+  write it, other than the limited shared-roster case above.</p>
+
+  <h2>Your choices</h2>
+  <p>You can sign out at any time from the Account tab. To have your
+  account and data deleted, email
+  <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a>
+  and it will be removed.</p>
+
+  <h2>Children's privacy</h2>
+  <p>Roster Board isn't directed at children and isn't intended for use by
+  anyone under 16.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>This policy may be updated from time to time as the app changes. The
+  "last updated" date at the top will reflect the most recent version.</p>
+
+  <a class="back" href="index.html?view=calendar">&#8249; Back to Roster Board</a>
+</div>
+</body>
+</html>
