@@ -8,6 +8,18 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Fixed banner text getting cut off**: the two-line Overtime/Excess Hours
+  calendar banner now wraps the shift name and hours onto two lines
+  instead of truncating them — so "Dayshift 12h" (or any longer
+  combination) always shows in full, and this can't happen again as new
+  shift types and combos are added.
+- **Removed swap on Overtime, Excess Hours, Sick Leave and Annual Leave**:
+  those were never actually swappable, so the swap (⇄) button no longer
+  appears on them — it still works normally on your regular shifts.
+- **Slightly bolder banners**: shift and personal-entry banners on the
+  calendar now have a touch more padding so they read with the same
+  visual weight.
+- **Updated About Us text.**
 - **Shift or Personal toggle on shift types**: when you create or edit a
   shift type, you're now asked whether it's a "Shift" or a "Personal"
   entry (e.g. "Call the kids"). Personal entries skip the overtime/excess
