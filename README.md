@@ -8,6 +8,17 @@ server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Help now replays the intro slides** — tapping "Help" on Account opens
+  the same slideshow as the intro, instead of a wall of text (the separate
+  "Replay intro" button has been folded into this).
+- **Calmer calendar** — Overtime and Excess Hours banners on the calendar
+  no longer show the hour count (still shown once you tap into the day).
+- **Privacy Policy rewritten** — far more detailed and written in a
+  professional, standard privacy-policy structure (numbered sections
+  covering what's collected, how it's used, retention, disclosure, your
+  rights, international use, etc.), with your name removed and the
+  "Account is optional" aside dropped.
+- **About Us trimmed** — removed the "family of apps" line.
 - **Fixed banner text getting cut off**: the two-line Overtime/Excess Hours
   calendar banner now wraps the shift name and hours onto two lines
   instead of truncating them — so "Dayshift 12h" (or any longer
