@@ -8,6 +8,12 @@ step, no server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **App-store prep**: fixed the icon so it survives circular/adaptive
+  cropping (Android and others clip anything too close to the edge — the
+  artwork now sits safely inside that zone), added an `id` and
+  `categories` to the manifest, and added real screenshots
+  (Calendar, Reports, Shifts) so store listings and the install prompt
+  have something to show.
 - **Birthdays now tucks into its own page** instead of listing everyone
   right there in Account — tap into it like Account itself, and it shows
   how many you've added rather than growing into a long list.
