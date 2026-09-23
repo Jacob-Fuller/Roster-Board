@@ -8,6 +8,9 @@ step, no server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Birthdays now tucks into its own page** instead of listing everyone
+  right there in Account — tap into it like Account itself, and it shows
+  how many you've added rather than growing into a long list.
 - **Birthdays**: added a "Birthdays" section under Account, above
   Appearance — add a name, day and month (year optional), and it shows on
   the calendar every year, plus in the day sheet for that date. Day and

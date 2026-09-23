@@ -938,9 +938,14 @@
         </div>
 
         <div class="section-head" style="margin-top:20px;"><h2>Birthdays</h2></div>
-        <div class="card" id="birthdaysCard">
-          <div id="birthdaysList"></div>
-          <button class="btn sm block" id="addBirthdayBtn" style="margin-top:8px;">+ Add birthday</button>
+        <div class="card" style="padding:2px 14px;">
+          <button class="menu-row" id="birthdaysMenuRow" type="button">
+            <span style="display:flex; flex-direction:column; gap:2px; align-items:flex-start;">
+              <span style="font-weight:600;">Birthdays</span>
+              <span class="sub" id="birthdaysMenuSub">None added</span>
+            </span>
+            <span class="chev">&#8250;</span>
+          </button>
         </div>
 
         <div class="section-head" style="margin-top:20px;"><h2>Appearance</h2></div>
@@ -1079,6 +1084,18 @@
 
           <button class="btn sm block" id="signOutBtn" style="margin-top:24px; margin-bottom:4px;">Sign out</button>
           <button class="btn sm block" id="deleteAccountBtn" style="margin-top:10px; margin-bottom:4px; color:var(--danger); border-color:var(--danger);">Delete account</button>
+        </div>
+      </div>
+
+      <div id="birthdaysDetailPane" style="display:none;">
+        <div class="section-head">
+          <button class="icon-btn" id="birthdaysDetailBackBtn" aria-label="Back">&#8249;</button>
+          <h2 style="font-size:1rem;">Birthdays</h2>
+          <span></span>
+        </div>
+        <div class="card" style="margin-top:12px;" id="birthdaysCard">
+          <div id="birthdaysList"></div>
+          <button class="btn sm block" id="addBirthdayBtn" style="margin-top:8px;">+ Add birthday</button>
         </div>
       </div>
     </div>
@@ -1996,6 +2013,14 @@
   });
   document.getElementById("acctDetailBackBtn").addEventListener("click", function(){
     document.getElementById("accountDetailPane").style.display = "none";
+    document.getElementById("sharedListPane").style.display = "block";
+  });
+  document.getElementById("birthdaysMenuRow").addEventListener("click", function(){
+    document.getElementById("sharedListPane").style.display = "none";
+    document.getElementById("birthdaysDetailPane").style.display = "block";
+  });
+  document.getElementById("birthdaysDetailBackBtn").addEventListener("click", function(){
+    document.getElementById("birthdaysDetailPane").style.display = "none";
     document.getElementById("sharedListPane").style.display = "block";
   });
   document.getElementById("acctSignInBtn").addEventListener("click", function(){
@@ -3332,6 +3357,8 @@
     var sorted = state.birthdays.slice().sort(function(a,b){
       return (a.month - b.month) || (a.day - b.day);
     });
+    var sub = document.getElementById("birthdaysMenuSub");
+    if (sub) sub.textContent = sorted.length ? (sorted.length + " birthday" + (sorted.length===1?"":"s") + " added") : "None added";
     sorted.forEach(function(b, i){
       if (i>0){ var d=document.createElement("div"); d.className="row-divider"; list.appendChild(d); }
       var row = document.createElement("div"); row.className="type-row";
