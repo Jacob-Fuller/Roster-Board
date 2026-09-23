@@ -314,6 +314,7 @@
   .event-item button{background:none; border:none; color:var(--text-faint); font-size:.85rem;}
   .day-cell .event-line{font-size:.54rem; font-weight:600; color:var(--text-dim); white-space:normal; overflow-wrap:break-word; line-height:1.3; display:flex; align-items:flex-start; gap:3px;}
   .day-cell .event-line .edot{width:4px; height:4px; border-radius:50%; flex:none; margin-top:4px;}
+  .day-cell .event-line .bday-icon{width:auto; height:auto; border-radius:0; background:none !important; font-size:.6rem; line-height:1; margin-top:0;}
   .day-cell .event-line > span:not(.edot){min-width:0; flex:1; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;}
   .leave-btns{display:flex; flex-wrap:wrap; gap:8px;}
   .leave-btns .leave-btn{flex:1 1 45%; min-width:96px;}
@@ -936,6 +937,12 @@
           </button>
         </div>
 
+        <div class="section-head" style="margin-top:20px;"><h2>Birthdays</h2></div>
+        <div class="card" id="birthdaysCard">
+          <div id="birthdaysList"></div>
+          <button class="btn sm block" id="addBirthdayBtn" style="margin-top:8px;">+ Add birthday</button>
+        </div>
+
         <div class="section-head" style="margin-top:20px;"><h2>Appearance</h2></div>
         <div class="card">
           <div class="seg" id="themeSeg">
@@ -987,7 +994,6 @@
 
         <div class="section-head" style="margin-top:24px;"><h2>About</h2></div>
         <div class="card">
-          <button class="btn sm block" id="aboutUsBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">About us</button>
           <button class="btn sm block" id="helpBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Help</button>
           <button class="btn sm block" id="feedbackBtn" style="text-align:left; justify-content:flex-start; margin-bottom:8px;">Send feedback</button>
           <a class="btn sm block" href="mailto:contact@rosterboard.net" style="text-align:left; justify-content:flex-start; margin-bottom:8px; text-decoration:none; display:flex; align-items:center;">Contact us</a>
@@ -1133,6 +1139,10 @@
             <button class="leave-btn" id="addSickLeave">+ Sick leave</button>
           </div>
         </div>
+        <div class="sheet-section" id="sheetBirthdaysSection" style="display:none;">
+          <div class="label-row"><span>Birthdays</span></div>
+          <div id="sheetBirthdays"></div>
+        </div>
         <div class="sheet-section">
           <div class="label-row"><span>Personal events</span></div>
           <div id="sheetNotes"></div>
@@ -1228,6 +1238,40 @@
         <div class="sheet-footer">
           <button class="btn danger" id="deleteTypeBtn" style="display:none;">Delete</button>
           <button class="btn primary block" id="saveTypeBtn">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="birthdaySheetOverlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-head">
+        <h3 id="birthdaySheetTitle">Add birthday</h3>
+        <button class="close" id="birthdaySheetClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="form-row">
+          <label for="birthdayName">Name</label>
+          <input type="text" id="birthdayName" maxlength="30">
+        </div>
+        <div class="time-row">
+          <div class="form-row" style="margin-top:0;">
+            <label for="birthdayDay">Day</label>
+            <input type="number" id="birthdayDay" min="1" max="31" step="1" inputmode="numeric">
+          </div>
+          <div class="form-row" style="margin-top:0;">
+            <label for="birthdayMonth">Month</label>
+            <select id="birthdayMonth"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="birthdayYear">Year (optional)</label>
+          <input type="number" id="birthdayYear" min="1900" max="2100" step="1" inputmode="numeric">
+        </div>
+        <div class="sheet-footer">
+          <button class="btn danger" id="deleteBirthdayBtn" style="display:none;">Delete</button>
+          <button class="btn primary block" id="saveBirthdayBtn">Save</button>
         </div>
       </div>
     </div>
@@ -1330,11 +1374,11 @@
   var OVERTIME_ID = "overtime";
   var OVERTIME_TYPE = {id:OVERTIME_ID, name:"Overtime", color:"#F0679E", ink:"#FFFFFF", isBuiltin:true};
   var EXCESS_ID = "excess_hours";
-  var EXCESS_TYPE = {id:EXCESS_ID, name:"Excess Hours", color:"#C98A2B", ink:"#FFFFFF", isBuiltin:true};
+  var EXCESS_TYPE = {id:EXCESS_ID, name:"Excess Hours", color:"#F0679E", ink:"#FFFFFF", isBuiltin:true};
   var COMBO_TYPES = {}; COMBO_TYPES[OVERTIME_ID] = OVERTIME_TYPE; COMBO_TYPES[EXCESS_ID] = EXCESS_TYPE;
   // "excess" leave kind kept here only so any shift types created before this change keep rendering; new
   // Excess Hours entries are logged against a shift (like Overtime) rather than as leave — see EXCESS_ID above.
-  var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual Leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick Leave"}, excess:{color:"#C98A2B", ink:"#FFFFFF", label:"Excess Hours"} };
+  var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual Leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick Leave"}, excess:{color:"#F0679E", ink:"#FFFFFF", label:"Excess Hours"} };
   var EVENT_CATS = {
     appointment: {color:"#3FC5C0", label:"Appointment"},
     family: {color:"#F0679E", label:"Social"},
@@ -1356,6 +1400,8 @@
     shifts: {},   // date -> [{id,typeId,hours?,tag?}]
     leave: {},    // date -> [{id,kind}]
     notes: {},    // date -> [{id,text}]
+    birthdays: [], // [{id,name,day,month,year?}]
+    editingBirthdayId: null,
     swaps: {},    // date -> [{id,kind:'off'|'on',partner,note,linkedDate,linkedSwapId,typeId,hours,shiftEntryId?}]
     swapPending: null, // {date, shiftId, typeId, hours, baseTypeId}
     noteCategory: "other",
@@ -1385,6 +1431,14 @@
   function parseYmd(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
   function fmtHours(h){ return (Math.round(h*10)/10).toString(); }
   function isWeekendDate(d){ var wd = d.getDay(); return wd===0 || wd===6; }
+  function birthdaysOnDate(list, date){
+    if (!list || !list.length) return [];
+    var day = date.getDate(), month = date.getMonth()+1, year = date.getFullYear();
+    return list.filter(function(b){ return b.day === day && b.month === month; }).map(function(b){
+      var age = b.year ? (year - b.year) : null;
+      return {id:b.id, name:b.name, age: (age != null && age >= 0) ? age : null};
+    });
+  }
   function mkId(){
     if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
     return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
@@ -1484,7 +1538,7 @@
   function saveStore(){
     var snapshot = {
       types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps,
-      roster: state.roster, settings: state.settings, tombstones: state.tombstones
+      birthdays: state.birthdays, roster: state.roster, settings: state.settings, tombstones: state.tombstones
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
@@ -1503,6 +1557,7 @@
     state.notes = data.notes || {};
     state.leave = data.leave || {};
     state.swaps = data.swaps || {};
+    state.birthdays = data.birthdays || [];
     state.roster = data.roster && data.roster.pattern ? data.roster : { weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 };
     if (state.roster.updatedAt == null) state.roster.updatedAt = 0;
     state.settings = data.settings || { hourlyRate:0 };
@@ -1727,6 +1782,7 @@
       notes: mergeBucketed(local.notes, remote && remote.notes, tombstones),
       leave: mergeBucketed(local.leave, remote && remote.leave, tombstones),
       swaps: mergeBucketed(local.swaps, remote && remote.swaps, tombstones),
+      birthdays: mergeArrayById(local.birthdays, remote && remote.birthdays, tombstones),
       roster: mergeRoster(local.roster, remote && remote.roster),
       settings: local.settings || (remote && remote.settings) || {hourlyRate:0},
       tombstones: tombstones
@@ -1735,7 +1791,7 @@
   function localSnapshot(){
     return {
       types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps,
-      roster: state.roster, settings: state.settings, tombstones: state.tombstones
+      birthdays: state.birthdays, roster: state.roster, settings: state.settings, tombstones: state.tombstones
     };
   }
   function applyMergedLocally(merged){
@@ -1748,6 +1804,7 @@
     state.notes = merged.notes;
     state.leave = merged.leave;
     state.swaps = merged.swaps;
+    state.birthdays = merged.birthdays || [];
     state.roster = merged.roster;
     state.tombstones = merged.tombstones;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch(e){}
@@ -2035,13 +2092,6 @@
   });
 
   /* ---------------- about / help ---------------- */
-  document.getElementById("aboutUsBtn").addEventListener("click", function(){
-    openMiniModal({
-      title: "About Roster Board",
-      message: "Made by a shift worker, for shift workers.\n\nRoster Board is a shift calendar for managing your work schedule, overtime, leave and personal life all in one.",
-      showInput: false, confirmLabel: "Close"
-    });
-  });
   document.getElementById("helpBtn").addEventListener("click", function(){
     showOnboarding();
   });
@@ -2328,7 +2378,7 @@
   /* ---------------- render: calendar ---------------- */
   function renderCalendar(){
     renderCalendarGrid("calGrid", state.calMonth, {
-      shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById
+      shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById, birthdays: state.birthdays
     }, { onDayClick: handleCalendarDayClick, bulkSelectedDates: state.bulkMode ? state.bulkSelectedDates : null });
     renderHeader();
   }
@@ -2460,6 +2510,27 @@
         moreE.className = "more";
         moreE.textContent = "+" + (dayEvents.length - maxEvents) + " more";
         btn.appendChild(moreE);
+      }
+
+      var dayBirthdays = birthdaysOnDate(dataSrc.birthdays, cell.date);
+      var maxBdays = 2;
+      dayBirthdays.slice(0, maxBdays).forEach(function(b){
+        var bline = document.createElement("div");
+        bline.className = "event-line bday-line";
+        var bicon = document.createElement("span");
+        bicon.className = "edot bday-icon";
+        bicon.textContent = "🎂";
+        bline.appendChild(bicon);
+        var btext = document.createElement("span");
+        btext.textContent = b.name + (b.age != null ? " (" + b.age + ")" : "");
+        bline.appendChild(btext);
+        btn.appendChild(bline);
+      });
+      if (dayBirthdays.length > maxBdays){
+        var moreB = document.createElement("div");
+        moreB.className = "more";
+        moreB.textContent = "+" + (dayBirthdays.length - maxBdays) + " more";
+        btn.appendChild(moreB);
       }
 
       if (opts.onDayClick){
@@ -2672,6 +2743,29 @@
         row.appendChild(rm);
         leaveWrap.appendChild(row);
       });
+    }
+
+    var dayBirthdaysSheet = birthdaysOnDate(state.birthdays, parseYmd(key));
+    var bdaySection = document.getElementById("sheetBirthdaysSection");
+    var bdayWrap = document.getElementById("sheetBirthdays");
+    bdayWrap.innerHTML = "";
+    if (dayBirthdaysSheet.length){
+      bdaySection.style.display = "block";
+      dayBirthdaysSheet.forEach(function(b){
+        var row = document.createElement("div");
+        row.className = "event-item";
+        var dot = document.createElement("span");
+        dot.textContent = "🎂";
+        dot.style.fontSize = ".85rem";
+        row.appendChild(dot);
+        var span = document.createElement("span");
+        span.className = "etext";
+        span.textContent = b.name + (b.age != null ? " turns " + b.age : "");
+        row.appendChild(span);
+        bdayWrap.appendChild(row);
+      });
+    } else {
+      bdaySection.style.display = "none";
     }
 
     var notesWrap = document.getElementById("sheetNotes");
@@ -3230,6 +3324,92 @@
     if (!sorted.length) list.appendChild(hintEl("No shift types yet — add one to get started."));
   }
 
+  /* ---------------- birthdays ---------------- */
+  function renderBirthdaysList(){
+    var list = document.getElementById("birthdaysList");
+    if (!list) return;
+    list.innerHTML = "";
+    var sorted = state.birthdays.slice().sort(function(a,b){
+      return (a.month - b.month) || (a.day - b.day);
+    });
+    sorted.forEach(function(b, i){
+      if (i>0){ var d=document.createElement("div"); d.className="row-divider"; list.appendChild(d); }
+      var row = document.createElement("div"); row.className="type-row";
+      var meta = document.createElement("div"); meta.className="meta";
+      var name = document.createElement("div"); name.className="name"; name.textContent = b.name;
+      meta.appendChild(name);
+      var hrs = document.createElement("div"); hrs.className="hrs num";
+      hrs.textContent = pad2(b.day) + " " + MONTH_LABELS[b.month-1] + (b.year ? " " + b.year : "");
+      meta.appendChild(hrs);
+      row.appendChild(meta);
+      var actions = document.createElement("div"); actions.className="actions";
+      var editBtn = document.createElement("button"); editBtn.className="ghost-btn"; editBtn.textContent="Edit";
+      editBtn.addEventListener("click", function(){ openBirthdaySheet(b.id); });
+      actions.appendChild(editBtn);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+    if (!sorted.length) list.appendChild(hintEl("No birthdays added yet."));
+  }
+  function openBirthdaySheet(id){
+    state.editingBirthdayId = id || null;
+    var b = id ? state.birthdays.find(function(x){ return x.id===id; }) : null;
+    document.getElementById("birthdaySheetTitle").textContent = b ? "Edit birthday" : "Add birthday";
+    document.getElementById("birthdayName").value = b ? b.name : "";
+    document.getElementById("birthdayDay").value = b ? b.day : "";
+    document.getElementById("birthdayMonth").value = b ? b.month : (new Date().getMonth()+1);
+    document.getElementById("birthdayYear").value = (b && b.year) ? b.year : "";
+    document.getElementById("deleteBirthdayBtn").style.display = b ? "block" : "none";
+    document.getElementById("birthdaySheetOverlay").classList.add("show");
+  }
+  function closeBirthdaySheet(){
+    document.getElementById("birthdaySheetOverlay").classList.remove("show");
+    state.editingBirthdayId = null;
+  }
+  function saveBirthday(){
+    var name = document.getElementById("birthdayName").value.trim();
+    if (!name){ toast("Give it a name"); return; }
+    var day = parseInt(document.getElementById("birthdayDay").value, 10);
+    var month = parseInt(document.getElementById("birthdayMonth").value, 10);
+    if (!day || day < 1 || day > 31){ toast("Enter a valid day"); return; }
+    if (!month || month < 1 || month > 12){ toast("Choose a month"); return; }
+    var daysInMonth = new Date(2024, month, 0).getDate(); // 2024 is a leap year, so Feb 29 is always allowed
+    if (day > daysInMonth){ toast(MONTH_LABELS[month-1] + " only has " + daysInMonth + " days"); return; }
+    var yearVal = document.getElementById("birthdayYear").value;
+    var year = yearVal ? parseInt(yearVal, 10) : null;
+    if (year && (year < 1900 || year > new Date().getFullYear())){ toast("Enter a valid year"); return; }
+
+    if (state.editingBirthdayId){
+      var b = state.birthdays.find(function(x){ return x.id===state.editingBirthdayId; });
+      if (b){ b.name=name; b.day=day; b.month=month; b.year=year; }
+      toast("Birthday updated");
+    } else {
+      state.birthdays.push({id: mkId(), name:name, day:day, month:month, year:year});
+      toast("Birthday added");
+    }
+    saveStore(); renderAll(); closeBirthdaySheet();
+  }
+  function deleteBirthday(){
+    if (!state.editingBirthdayId) return;
+    state.birthdays = state.birthdays.filter(function(b){ return b.id!==state.editingBirthdayId; });
+    tomb(state.editingBirthdayId);
+    saveStore(); renderAll(); toast("Birthday deleted"); closeBirthdaySheet();
+  }
+  (function(){
+    var sel = document.getElementById("birthdayMonth");
+    MONTH_LABELS.forEach(function(label, i){
+      var opt = document.createElement("option");
+      opt.value = i+1;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+  })();
+  document.getElementById("addBirthdayBtn").addEventListener("click", function(){ openBirthdaySheet(null); });
+  document.getElementById("birthdaySheetClose").addEventListener("click", closeBirthdaySheet);
+  document.getElementById("birthdaySheetOverlay").addEventListener("click", function(e){ if (e.target === this) closeBirthdaySheet(); });
+  document.getElementById("saveBirthdayBtn").addEventListener("click", saveBirthday);
+  document.getElementById("deleteBirthdayBtn").addEventListener("click", deleteBirthday);
+
   /* ---------------- roster tab ---------------- */
   function ensurePatternShape(){
     var weeks = state.roster.weeks || 1;
@@ -3577,6 +3757,7 @@
     renderTypes();
     renderReports();
     renderRoster();
+    renderBirthdaysList();
     if (document.getElementById("daySheetOverlay").classList.contains("show")) renderDaySheetBody();
     renderModeBanner();
   }

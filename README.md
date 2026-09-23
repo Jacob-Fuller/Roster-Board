@@ -8,6 +8,13 @@ step, no server-side code, nothing to install beyond a static file server.
 
 ## What's new in this version
 
+- **Birthdays**: added a "Birthdays" section under Account, above
+  Appearance — add a name, day and month (year optional), and it shows on
+  the calendar every year, plus in the day sheet for that date. Day and
+  month are required; leave out the year if you'd rather not show an age.
+- **Removed "About us"** from the About section.
+- **Excess Hours now matches Overtime's colour** on the calendar banner,
+  instead of its own colour.
 - **Fixed the "All day" checkbox not visibly ticking** when tapped, and
   tidied the personal shift type sheet — removed the helper line under
   the date range and the example text in the Notes field.
