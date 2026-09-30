@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Roster Board">
@@ -312,6 +312,16 @@
   .event-item .etime{font-size:.72rem; color:var(--text-faint); font-variant-numeric:tabular-nums; flex:none;}
   .event-item span.etext{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .event-item button{background:none; border:none; color:var(--text-faint); font-size:.85rem;}
+  .event-item{border-radius:10px; transition:background .15s;}
+  .event-item span.etext{cursor:pointer;}
+  .event-item.editing{background:var(--accent-soft); padding-left:8px; padding-right:4px;}
+  .edit-event-bar{display:none; align-items:center; justify-content:space-between; gap:8px; margin:4px 0 8px; padding:8px 10px; border-radius:10px;
+    background:var(--accent-soft); font-size:.78rem; font-weight:600; color:var(--text);}
+  .edit-event-bar.show{display:flex;}
+  .edit-event-bar button{background:none; border:none; color:var(--text-dim); font-size:.78rem; font-weight:600; text-decoration:underline;}
+  .edit-date-row{display:none; align-items:center; gap:8px; margin:0 0 8px; font-size:.78rem; color:var(--text-dim);}
+  .edit-date-row.show{display:flex;}
+  .edit-date-row input{flex:1; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:8px 10px; font-size:16px; color:var(--text);}
   .day-cell .event-line{font-size:.54rem; font-weight:600; color:var(--text-dim); white-space:normal; overflow-wrap:break-word; line-height:1.3; display:flex; align-items:flex-start; gap:3px;}
   .day-cell .event-line .edot{width:4px; height:4px; border-radius:50%; flex:none; margin-top:4px;}
   .day-cell .event-line .bday-icon{width:auto; height:auto; border-radius:0; background:none !important; font-size:.6rem; line-height:1; margin-top:0;}
@@ -417,16 +427,54 @@
   }
   .roster-cell.bulk-selected{box-shadow:inset 0 0 0 2px var(--accent);}
 
+  /* ---------- overtime + excess split ---------- */
+  .split-kicker{font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#F0679E; margin-bottom:2px;}
+  .split-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .split-grid .form-row{margin-top:8px;}
+  .split-bar{--ot:50%; position:relative; height:8px; border-radius:6px; margin-top:14px; overflow:hidden;
+    background:linear-gradient(90deg, #F0679E 0 var(--ot), #F7B3CE var(--ot) 100%);}
+  .split-total{font-size:.78rem; color:var(--text-dim); margin-top:8px; font-weight:600;}
+  .split-total.ok{color:#2E9E6A;}
+
+  /* ---------- launch splash ---------- */
+  .splash-screen{
+    position:fixed; inset:0; z-index:500; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    background:
+      radial-gradient(90% 60% at 50% 36%, rgba(111,147,204,.35), transparent 65%),
+      linear-gradient(165deg, #1B3560 0%, #0F2244 45%, #060E1E 100%);
+    transition:opacity .45s ease, visibility .45s;
+  }
+  .splash-screen.hide{opacity:0; visibility:hidden; pointer-events:none;}
+  .splash-logo{width:108px; height:108px; border-radius:28px; box-shadow:0 18px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(233,200,114,.28);
+    animation:splash-pop .6s cubic-bezier(.2,.9,.3,1.3) both, splash-float 3s ease-in-out .6s infinite;}
+  .splash-name{font-family:'Fraunces', Georgia, serif; font-size:1.9rem; font-weight:600; color:#FBF6EC; letter-spacing:-.01em; margin-top:8px;
+    animation:splash-rise .6s ease-out .15s both;}
+  .splash-tag{font-size:.8rem; color:rgba(251,246,236,.55); letter-spacing:.14em; text-transform:uppercase; animation:splash-rise .6s ease-out .28s both;}
+  .splash-bar{width:120px; height:3px; border-radius:3px; background:rgba(251,246,236,.12); overflow:hidden; margin-top:18px; animation:splash-rise .6s ease-out .4s both;}
+  .splash-bar::after{content:""; display:block; width:40%; height:100%; border-radius:3px; background:linear-gradient(90deg,#8C6420,#FFF0B8,#C99A3B); animation:splash-load 1.1s ease-in-out infinite;}
+  @keyframes splash-pop{from{transform:scale(.6); opacity:0;} to{transform:scale(1); opacity:1;}}
+  @keyframes splash-float{0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);}}
+  @keyframes splash-rise{from{transform:translateY(10px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  @keyframes splash-load{0%{transform:translateX(-110%);} 100%{transform:translateX(260%);}}
+  @media (prefers-reduced-motion: reduce){ .splash-logo,.splash-name,.splash-tag,.splash-bar,.splash-bar::after{animation:none;} }
+
   ::-webkit-scrollbar{width:0; height:0;}
 </style>
 </head>
 <body>
 
+<div class="splash-screen" id="splashScreen" aria-label="Loading Roster Board" role="status">
+  <img src="icon-512.png" alt="" class="splash-logo">
+  <div class="splash-name">Roster Board</div>
+  <div class="splash-tag">Shifts · Rosters · Pay</div>
+  <div class="splash-bar"></div>
+</div>
+
 <div id="app">
-  <div class="auth-screen show" id="authOverlay">
+  <div class="auth-screen" id="authOverlay">
     <div class="auth-wrap">
       <div class="auth-brand">
-        <img src="icon-192.png" alt="" class="auth-logo">
+        <img src="icon-512.png" alt="" class="auth-logo">
         <div class="auth-appname">Roster Board</div>
         <div class="auth-tagline">Shifts, rosters and pay — all in one place</div>
       </div>
@@ -1163,7 +1211,15 @@
         <div class="sheet-section">
           <div class="label-row"><span>Personal events</span></div>
           <div id="sheetNotes"></div>
+          <div class="edit-event-bar" id="editEventBar">
+            <span id="editEventLabel">Editing event</span>
+            <button type="button" id="cancelEditEventBtn">Cancel</button>
+          </div>
           <div class="event-cat-row" id="eventCatRow"></div>
+          <div class="edit-date-row" id="editEventDateRow">
+            <span>Date</span>
+            <input type="date" id="noteDate">
+          </div>
           <label class="remind-row" style="margin-top:0; margin-bottom:8px;">
             <input type="checkbox" id="noteAllDayToggle">
             <span>All day</span>
@@ -1323,6 +1379,38 @@
       </div>
       <div class="sheet-body">
         <div class="kind-options" id="kindChooserOptions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- overtime + excess split for a single shift -->
+  <div class="overlay center" id="splitOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <div>
+          <div class="split-kicker">Overtime + Excess</div>
+          <h3 id="splitTitle">Dayshift</h3>
+        </div>
+        <button class="close" id="splitClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <p class="section-sub" id="splitIntro" style="margin:0 0 6px;"></p>
+        <div class="split-grid">
+          <div class="form-row">
+            <label for="splitOT">Overtime hours</label>
+            <input type="number" id="splitOT" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 8">
+          </div>
+          <div class="form-row">
+            <label for="splitEX">Excess hours</label>
+            <input type="number" id="splitEX" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 4">
+          </div>
+        </div>
+        <div class="split-bar" id="splitBar"><span></span></div>
+        <div class="split-total num" id="splitTotal">Total 0h</div>
+        <div class="sheet-footer">
+          <button class="btn block" id="splitCancel">Cancel</button>
+          <button class="btn primary block" id="splitConfirm">Save</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1758,21 +1846,28 @@
     return out;
   }
   function mergeBucketed(localBuckets, remoteBuckets, tombstones){
-    var result = {};
-    var seen = {};
-    function addFrom(buckets){
+    // Union by id. If the same record exists on both sides (e.g. it was edited or
+    // moved to another day on one device), keep whichever copy was edited most
+    // recently (updatedAt), falling back to this device's copy.
+    var picked = {}, order = [];
+    function addFrom(buckets, isLocal){
       Object.keys(buckets||{}).forEach(function(dateKey){
         (buckets[dateKey]||[]).forEach(function(item){
           if (!item || !item.id) return;
           if (tombstones[item.id]) return;
-          if (seen[item.id]) return;
-          seen[item.id] = true;
-          (result[dateKey] = result[dateKey] || []).push(item);
+          var cur = picked[item.id];
+          if (!cur){ picked[item.id] = {dateKey:dateKey, item:item}; order.push(item.id); return; }
+          if (!isLocal && (item.updatedAt||0) > (cur.item.updatedAt||0)) picked[item.id] = {dateKey:dateKey, item:item};
         });
       });
     }
-    addFrom(localBuckets);
-    addFrom(remoteBuckets);
+    addFrom(localBuckets, true);
+    addFrom(remoteBuckets, false);
+    var result = {};
+    order.forEach(function(id){
+      var p = picked[id];
+      (result[p.dateKey] = result[p.dateKey] || []).push(p.item);
+    });
     return result;
   }
   function mergeArrayById(localArr, remoteArr, tombstones){
@@ -1890,12 +1985,30 @@
   });
   window.addEventListener("pagehide", flushCloudSync);
 
+  // Launch splash: stays up until we know whether there's a saved session, so the
+  // sign-in screen never flashes up for people who are already logged in.
+  var splashShownAt = Date.now();
+  var splashDone = false;
+  function hideSplash(){
+    if (splashDone) return;
+    splashDone = true;
+    var wait = Math.max(0, 900 - (Date.now() - splashShownAt));
+    setTimeout(function(){
+      var el = document.getElementById("splashScreen");
+      if (!el) return;
+      el.classList.add("hide");
+      setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 500);
+    }, wait);
+  }
   function initAuth(){
-    if (!sb){ hideAuthOverlay(); return; }
+    if (!sb){ hideAuthOverlay(); hideSplash(); return; }
+    // Safety net: never leave people staring at the splash if the network is slow.
+    setTimeout(function(){ if (!splashDone){ if (!currentUser) showAuthOverlay(); hideSplash(); } }, 6000);
     sb.auth.getSession().then(function(res){
       var session = res.data && res.data.session;
       if (session && session.user) onSignedIn(session.user); else showAuthOverlay();
-    });
+      hideSplash();
+    }).catch(function(){ showAuthOverlay(); hideSplash(); });
     sb.auth.onAuthStateChange(function(event, session){
       if (event === "PASSWORD_RECOVERY"){
         // A reset-password link was just opened — require a new password before
@@ -2349,7 +2462,17 @@
     sharedRoster.month = addMonths(sharedRoster.month, 1); renderSharedRoster();
   });
 
+  // A shift can carry a split: Overtime hours (entry.hours) plus Excess Hours
+  // (entry.excessHours) on the SAME shift, e.g. a 12h day = 8h OT + 4h excess.
+  function isSplitEntry(entry){ return entry && entry.typeId === OVERTIME_ID && entry.excessHours > 0; }
+  function entryOTHours(entry){ return entry.typeId === OVERTIME_ID ? (entry.hours || 0) : 0; }
+  function entryExcessHours(entry){
+    if (entry.typeId === EXCESS_ID) return entry.hours || 0;
+    if (entry.typeId === OVERTIME_ID) return entry.excessHours || 0;
+    return 0;
+  }
   function effectiveHours(entry){
+    if (entry.typeId === OVERTIME_ID && entry.excessHours > 0) return (entry.hours || 0) + entry.excessHours;
     if (entry.hours != null) return entry.hours;
     var t = state.typesById[entry.typeId];
     return t ? (t.hours || 0) : 0;
@@ -2359,11 +2482,12 @@
     var t = typesById[entry.typeId];
     if (!t) return "";
     var comboT = COMBO_TYPES[entry.typeId];
+    var comboName = isSplitEntry(entry) ? "Overtime + Excess" : (comboT ? comboT.name : "");
     if (comboT && entry.baseTypeId){
       var bt = typesById[entry.baseTypeId];
-      if (bt) return comboT.name + " – " + bt.name;
+      if (bt) return comboName + " – " + bt.name;
     }
-    return t.name;
+    return comboT ? comboName : t.name;
   }
   function entryColor(entry, typesById){
     typesById = typesById || state.typesById;
@@ -2391,7 +2515,7 @@
           totalShifts++;
           var h = effectiveHours(s);
           totalH += h;
-          if (s.typeId === OVERTIME_ID) otH += h;
+          otH += entryOTHours(s);
         });
       }
     });
@@ -2477,7 +2601,7 @@
           strip.className = "ot-chip-strip";
           strip.style.background = comboT.color;
           strip.style.color = comboT.ink;
-          strip.textContent = comboT.name;
+          strip.textContent = isSplitEntry(s) ? "OT + Excess" : comboT.name;
           chip.appendChild(strip);
           var baseLine = document.createElement("span");
           baseLine.className = "ot-chip-base";
@@ -2643,6 +2767,8 @@
   /* ---------------- day sheet ---------------- */
   function openDaySheet(dateKey){
     state.selectedDate = dateKey;
+    state.editingNote = null;
+    resetNoteForm(true);
     var d = parseYmd(dateKey);
     document.getElementById("sheetDate").textContent = WEEKDAY_FULL[d.getDay()] + ", " + d.getDate() + " " + MONTH_LABELS[d.getMonth()];
     renderDaySheetBody();
@@ -2673,7 +2799,9 @@
         tag.style.color = col.ink;
         if (comboT) tag.style.borderTopColor = comboT.color;
         var label = document.createElement("span");
-        label.textContent = entryDisplayName(s) + (comboT && s.hours!=null ? " · " + fmtHours(s.hours) + "h" : "");
+        label.textContent = entryDisplayName(s) + (isSplitEntry(s)
+          ? " · " + fmtHours(entryOTHours(s)) + "h OT + " + fmtHours(entryExcessHours(s)) + "h EX"
+          : (comboT && s.hours!=null ? " · " + fmtHours(s.hours) + "h" : ""));
         tag.appendChild(label);
         if (s.tag){
           var note = document.createElement("span");
@@ -2684,19 +2812,13 @@
         if (comboT){
           var hoursBtn = document.createElement("button");
           hoursBtn.textContent = "⏱";
-          hoursBtn.title = "Edit " + comboT.name.toLowerCase() + " hours";
+          hoursBtn.title = "Edit overtime / excess hours";
           hoursBtn.addEventListener("click", function(){
-            openMiniModal({
-              title: comboT.name + " hours",
-              message: entryDisplayName(s) + " on this day",
-              inputType: "number", placeholder: "e.g. 4", min: 0.5, step: 0.5,
-              value: s.hours != null ? s.hours : "",
+            openSplitHours({
+              baseTypeId: s.baseTypeId,
+              ot: entryOTHours(s), ex: entryExcessHours(s),
               confirmLabel: "Save",
-              onConfirm: function(val){
-                var h = parseFloat(val);
-                if (!h || h <= 0){ toast("Enter a number of hours"); return; }
-                setShiftHours(key, s.id, h);
-              }
+              onConfirm: function(ot, ex){ setShiftSplit(key, s.id, ot, ex); }
             });
           });
           tag.appendChild(hoursBtn);
@@ -2823,10 +2945,18 @@
         var span = document.createElement("span");
         span.className = "etext";
         span.textContent = n.text;
+        span.title = "Tap to edit";
+        span.addEventListener("click", function(){ startEditNote(key, n); });
         row.appendChild(span);
+        if (state.editingNote && state.editingNote.id === n.id) row.classList.add("editing");
+        var ed = document.createElement("button");
+        ed.textContent = "✎";
+        ed.title = "Edit this event";
+        ed.addEventListener("click", function(){ startEditNote(key, n); });
+        row.appendChild(ed);
         var rm = document.createElement("button");
         rm.textContent = "✕";
-        rm.addEventListener("click", function(){ removeNote(key, n.id); });
+        rm.addEventListener("click", function(){ if (state.editingNote && state.editingNote.id === n.id) resetNoteForm(); removeNote(key, n.id); });
         row.appendChild(rm);
         notesWrap.appendChild(row);
       });
@@ -3000,6 +3130,14 @@
     if (t.excessEligible !== false){
       addOption(t.name, "Excess Hours", EXCESS_TYPE.color, EXCESS_TYPE.ink, function(){ openExcessHoursPrompt(dateKey, t.id); });
     }
+    if (t.overtimeEligible !== false && t.excessEligible !== false){
+      addOption(t.name, "Overtime + Excess", OVERTIME_TYPE.color, OVERTIME_TYPE.ink, function(){
+        openSplitHours({
+          baseTypeId: t.id, ot: "", ex: "", confirmLabel: "Add shift",
+          onConfirm: function(ot, ex){ addSplitShift(dateKey, t.id, ot, ex); }
+        });
+      });
+    }
     document.getElementById("kindChooserOverlay").classList.add("show");
   }
   function closeShiftKindChooser(){
@@ -3086,6 +3224,93 @@
     if (s){ if (text) s.tag = text; else delete s.tag; }
     saveStore(); renderAll(); toast(text ? "Note saved" : "Note removed");
   }
+  function applySplitToEntry(entry, ot, ex){
+    if (ot > 0){
+      entry.typeId = OVERTIME_ID;
+      entry.hours = ot;
+      if (ex > 0) entry.excessHours = ex; else delete entry.excessHours;
+    } else {
+      entry.typeId = EXCESS_ID;
+      entry.hours = ex;
+      delete entry.excessHours;
+    }
+    entry.updatedAt = Date.now();
+  }
+  function addSplitShift(dateKey, baseTypeId, ot, ex){
+    var entry = {id: mkId(), baseTypeId: baseTypeId};
+    applySplitToEntry(entry, ot, ex);
+    (state.shifts[dateKey] = state.shifts[dateKey] || []).push(entry);
+    saveStore(); renderAll(); toast("Shift added");
+  }
+  function setShiftSplit(dateKey, id, ot, ex){
+    var s = (state.shifts[dateKey] || []).find(function(x){ return x.id===id; });
+    if (!s) return;
+    applySplitToEntry(s, ot, ex);
+    saveStore(); renderAll(); toast("Hours updated");
+  }
+
+  /* ---------------- overtime + excess split editor ---------------- */
+  var splitOpts = null;
+  function openSplitHours(opts){
+    splitOpts = opts;
+    var bt = state.typesById[opts.baseTypeId];
+    document.getElementById("splitTitle").textContent = bt ? bt.name : "Shift hours";
+    document.getElementById("splitOT").value = opts.ot ? opts.ot : "";
+    document.getElementById("splitEX").value = opts.ex ? opts.ex : "";
+    document.getElementById("splitConfirm").textContent = opts.confirmLabel || "Save";
+    var shiftLen = bt && bt.hours ? bt.hours : 0;
+    document.getElementById("splitIntro").textContent = shiftLen
+      ? "Split this " + fmtHours(shiftLen) + "h shift between overtime and excess hours. Leave one at 0 if it doesn't apply."
+      : "Split this shift between overtime and excess hours. Leave one at 0 if it doesn't apply.";
+    updateSplitTotal();
+    document.getElementById("splitOverlay").classList.add("show");
+    setTimeout(function(){ try { document.getElementById(opts.ot || !opts.ex ? "splitOT" : "splitEX").focus(); } catch(e){} }, 60);
+  }
+  function closeSplitHours(){ document.getElementById("splitOverlay").classList.remove("show"); splitOpts = null; }
+  function readSplit(){
+    var ot = parseFloat(document.getElementById("splitOT").value) || 0;
+    var ex = parseFloat(document.getElementById("splitEX").value) || 0;
+    return {ot: Math.max(0, ot), ex: Math.max(0, ex)};
+  }
+  function updateSplitTotal(){
+    var v = readSplit();
+    var bt = splitOpts && state.typesById[splitOpts.baseTypeId];
+    var total = v.ot + v.ex;
+    var el = document.getElementById("splitTotal");
+    var txt = "Total " + fmtHours(total) + "h";
+    if (bt && bt.hours){
+      var diff = total - bt.hours;
+      txt += Math.abs(diff) < 0.01 ? " · matches shift ✓" : " · shift is " + fmtHours(bt.hours) + "h";
+      el.classList.toggle("ok", Math.abs(diff) < 0.01);
+    } else el.classList.remove("ok");
+    el.textContent = txt;
+    var bar = document.getElementById("splitBar");
+    var otPct = total > 0 ? (v.ot / total * 100) : 50;
+    bar.style.setProperty("--ot", otPct + "%");
+  }
+  function fillSplitRemainder(field){
+    var bt = splitOpts && state.typesById[splitOpts.baseTypeId];
+    if (!bt || !bt.hours) return;
+    var v = readSplit();
+    if (field === "ot" && v.ot > 0 && v.ot < bt.hours && !document.getElementById("splitEX").value) document.getElementById("splitEX").value = +(bt.hours - v.ot).toFixed(2);
+    if (field === "ex" && v.ex > 0 && v.ex < bt.hours && !document.getElementById("splitOT").value) document.getElementById("splitOT").value = +(bt.hours - v.ex).toFixed(2);
+    updateSplitTotal();
+  }
+  document.getElementById("splitOT").addEventListener("input", updateSplitTotal);
+  document.getElementById("splitEX").addEventListener("input", updateSplitTotal);
+  document.getElementById("splitOT").addEventListener("change", function(){ fillSplitRemainder("ot"); });
+  document.getElementById("splitEX").addEventListener("change", function(){ fillSplitRemainder("ex"); });
+  document.getElementById("splitClose").addEventListener("click", closeSplitHours);
+  document.getElementById("splitCancel").addEventListener("click", closeSplitHours);
+  document.getElementById("splitOverlay").addEventListener("click", function(e){ if (e.target === this) closeSplitHours(); });
+  document.getElementById("splitConfirm").addEventListener("click", function(){
+    var v = readSplit();
+    if (v.ot + v.ex <= 0){ toast("Enter overtime and/or excess hours"); return; }
+    var cb = splitOpts && splitOpts.onConfirm;
+    closeSplitHours();
+    if (cb) cb(v.ot, v.ex);
+  });
+
   function setShiftHours(dateKey, id, hours){
     var list = state.shifts[dateKey] || [];
     var s = list.find(function(x){ return x.id===id; });
@@ -3121,6 +3346,34 @@
     if (remind && time && !allDay){ entry.remind = true; entry.notified = false; }
     (state.notes[dateKey] = state.notes[dateKey] || []).push(entry);
     saveStore(); renderAll(); toast("Event added");
+  }
+  function updateNote(fromKey, id, toKey, text, time, category, remind, allDay){
+    text = (text || "").trim();
+    if (!text){ toast("Give the event a name"); return false; }
+    var list = state.notes[fromKey] || [];
+    var idx = list.findIndex(function(n){ return n.id === id; });
+    if (idx === -1){ toast("Couldn't find that event"); return false; }
+    var n = list[idx];
+    var prevTime = n.time, prevRemind = n.remind, prevNotified = !!n.notified;
+    n.text = text;
+    n.category = category || n.category || "other";
+    delete n.time; delete n.allDay; delete n.remind; delete n.notified;
+    if (allDay) n.allDay = true;
+    else if (time) n.time = time;
+    if (remind && time && !allDay){
+      n.remind = true;
+      // re-arm the reminder only if something about when it fires changed
+      n.notified = (prevRemind && prevTime === time && fromKey === toKey) ? prevNotified : false;
+    }
+    n.updatedAt = Date.now();
+    if (toKey && toKey !== fromKey){
+      list.splice(idx, 1);
+      if (!list.length) delete state.notes[fromKey];
+      (state.notes[toKey] = state.notes[toKey] || []).push(n);
+    }
+    saveStore(); renderAll();
+    toast(toKey && toKey !== fromKey ? "Event moved" : "Event updated");
+    return true;
   }
   function removeNote(dateKey, id){
     if (state.notes[dateKey]) state.notes[dateKey] = state.notes[dateKey].filter(function(n){ return n.id!==id; });
@@ -3630,14 +3883,14 @@
         if (!t) return;
         if (t.kind === "personal") return;
         var h = effectiveHours(s);
-        var groupKey = COMBO_TYPES[s.typeId] && s.baseTypeId ? (s.typeId + ":" + s.baseTypeId) : s.typeId;
+        var groupKey = COMBO_TYPES[s.typeId] && s.baseTypeId ? ((isSplitEntry(s) ? "split" : s.typeId) + ":" + s.baseTypeId) : s.typeId;
         var groupColor = entryColor(s);
         byType[groupKey] = byType[groupKey] || {count:0, hours:0, t:t, name: entryDisplayName(s), color: groupColor.bg};
         byType[groupKey].count++;
         byType[groupKey].hours += h;
         totalHours += h;
-        if (s.typeId === OVERTIME_ID) otHours += h;
-        if (s.typeId === EXCESS_ID) excessHours += h;
+        otHours += entryOTHours(s);
+        excessHours += entryExcessHours(s);
         daysWorked[dateKey] = true;
         if (isWeekendDate(d)){ weekendHours += h; weekendCount++; } else { weekdayHours += h; weekdayCount++; }
         var mk = d.getFullYear()+"-"+pad2(d.getMonth()+1);
@@ -3719,6 +3972,7 @@
       var rows2 = [
         ["Total hours worked", fmtHours(stats.totalHours) + " h"],
         ["Total overtime", fmtHours(stats.otHours) + " h"],
+        ["Total excess hours", fmtHours(stats.excessHours) + " h"],
         ["Busiest month", busiestLabel + (busiestKey ? " (" + fmtHours(busiestVal) + " h)" : "")],
         ["Leave days taken", stats.leaveDays]
       ];
@@ -3920,7 +4174,9 @@
       var h = effectiveHours(s);
       if (comboT){
         var bt = state.typesById[s.baseTypeId];
-        var label = (bt ? bt.name : comboT.name) + " " + (comboT === EXCESS_TYPE ? "EX" : "OT") + (h ? " " + fmtHours(h) + "h" : "");
+        var label = isSplitEntry(s)
+          ? (bt ? bt.name : "Shift") + " OT " + fmtHours(entryOTHours(s)) + "h + EX " + fmtHours(entryExcessHours(s)) + "h"
+          : (bt ? bt.name : comboT.name) + " " + (comboT === EXCESS_TYPE ? "EX" : "OT") + (h ? " " + fmtHours(h) + "h" : "");
         out.push({label: label, color: comboT.color});
       } else if (t.kind === "personal"){
         out.push({label: t.name, color: t.color});
@@ -4050,6 +4306,39 @@
 
   document.getElementById("sheetClose").addEventListener("click", closeDaySheet);
   document.getElementById("daySheetOverlay").addEventListener("click", function(e){ if (e.target === this) closeDaySheet(); });
+  function resetNoteForm(silent){
+    state.editingNote = null;
+    document.getElementById("noteInput").value = "";
+    document.getElementById("noteTime").value = "00:00";
+    document.getElementById("noteRemindToggle").checked = false;
+    document.getElementById("noteAllDayToggle").checked = false;
+    document.getElementById("addNoteBtn").textContent = "Add";
+    document.getElementById("editEventBar").classList.remove("show");
+    document.getElementById("editEventDateRow").classList.remove("show");
+    state.noteCategory = "other";
+    updateNoteAllDayVisibility();
+    if (!silent && state.selectedDate){ renderDaySheetBody(); }
+  }
+  function startEditNote(dateKey, n){
+    state.editingNote = { id: n.id, date: dateKey };
+    document.getElementById("noteInput").value = n.text || "";
+    document.getElementById("noteAllDayToggle").checked = !!n.allDay;
+    document.getElementById("noteTime").value = n.time || "00:00";
+    document.getElementById("noteRemindToggle").checked = !!n.remind;
+    document.getElementById("noteDate").value = dateKey;
+    state.noteCategory = EVENT_CATS[n.category] ? n.category : "other";
+    document.getElementById("addNoteBtn").textContent = "Save";
+    var cat = EVENT_CATS[state.noteCategory];
+    document.getElementById("editEventLabel").textContent = "Editing " + (cat ? cat.label.toLowerCase() : "event") + ": " + n.text;
+    document.getElementById("editEventBar").classList.add("show");
+    document.getElementById("editEventDateRow").classList.add("show");
+    updateNoteAllDayVisibility();
+    renderDaySheetBody();
+    var bar = document.getElementById("editEventBar");
+    if (bar.scrollIntoView) bar.scrollIntoView({block:"center", behavior:"smooth"});
+    setTimeout(function(){ try { document.getElementById("noteInput").focus({preventScroll:true}); } catch(e){} }, 250);
+  }
+  document.getElementById("cancelEditEventBtn").addEventListener("click", function(){ resetNoteForm(); });
   document.getElementById("addNoteBtn").addEventListener("click", function(){
     var input = document.getElementById("noteInput");
     var timeInput = document.getElementById("noteTime");
@@ -4058,13 +4347,15 @@
     if (remindToggle.checked && window.Notification && Notification.permission === "default"){
       Notification.requestPermission();
     }
+    if (state.editingNote){
+      var toKey = document.getElementById("noteDate").value || state.editingNote.date;
+      var ok = updateNote(state.editingNote.date, state.editingNote.id, toKey, input.value, timeInput.value, state.noteCategory, remindToggle.checked, allDayToggle.checked);
+      if (!ok) return;
+      resetNoteForm();
+      return;
+    }
     addNote(state.selectedDate, input.value, timeInput.value, state.noteCategory, remindToggle.checked, allDayToggle.checked);
-    input.value = "";
-    timeInput.value = "00:00";
-    remindToggle.checked = false;
-    allDayToggle.checked = false;
-    updateNoteAllDayVisibility();
-    state.noteCategory = "other";
+    resetNoteForm(true);
   });
   document.getElementById("noteInput").addEventListener("keydown", function(e){ if (e.key === "Enter") document.getElementById("addNoteBtn").click(); });
   function updateNoteAllDayVisibility(){
