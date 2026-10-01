@@ -427,6 +427,20 @@
   }
   .roster-cell.bulk-selected{box-shadow:inset 0 0 0 2px var(--accent);}
 
+  /* ---------- backup / sync status ---------- */
+  .sync-banner{display:none; width:calc(100% - 20px); margin:10px 10px 0; text-align:left; border:none; border-radius:12px; padding:10px 12px;
+    font-size:.78rem; font-weight:600; line-height:1.35; background:var(--accent-soft); color:var(--text);}
+  .sync-banner.show{display:block;}
+  .sync-banner.bad{background:#F9DADA; color:#7A1F1F;}
+  .sync-status{font-size:.76rem; color:var(--text-dim); margin-top:6px;}
+  .sync-status.ok{color:#2E9E6A;}
+  .sync-status.bad{color:var(--danger);}
+  .sync-status.warn{color:var(--accent);}
+
+  .history-row{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text); border-radius:12px; padding:10px 12px; margin-bottom:8px; font-size:.82rem;}
+  .history-row span{font-size:.74rem; color:var(--text-dim);}
+
   /* ---------- overtime + excess split ---------- */
   .split-kicker{font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#F0679E; margin-bottom:2px;}
   .split-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
@@ -889,6 +903,7 @@
   </header>
 
   <main>
+    <button type="button" class="sync-banner" id="syncBanner"></button>
     <div class="view active" id="view-calendar">
       <div class="cal-grid" id="calGrid"></div>
       <div id="modeBanner"></div>
@@ -1094,6 +1109,9 @@
               <span>Signed in as</span>
               <span id="accountEmail" style="font-weight:600;"></span>
             </div>
+            <div class="sync-status" id="acctSyncStatus"></div>
+            <button class="btn sm block" id="acctSyncNowBtn" style="margin-top:10px;">Back up now</button>
+            <button class="btn sm block" id="acctHistoryBtn" style="margin-top:8px;">Recover from an earlier backup</button>
           </div>
 
           <div class="section-head" style="margin-top:20px;"><h2>Change name</h2></div>
@@ -1379,6 +1397,20 @@
       </div>
       <div class="sheet-body">
         <div class="kind-options" id="kindChooserOptions"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- earlier cloud backups -->
+  <div class="overlay center" id="historyOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3>Earlier backups</h3>
+        <button class="close" id="historyClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <p class="section-sub" style="margin:0 0 10px;">Pick a backup to bring back anything that's gone missing. Your current data is kept.</p>
+        <div id="historyList"></div>
       </div>
     </div>
   </div>
@@ -1808,6 +1840,7 @@
   });
   function updateAccountCard(){
     document.getElementById("accountEmail").textContent = currentUser ? (currentUser.email || "") : "";
+    updateSyncStatusUI();
     var name = currentUser && currentUser.user_metadata && currentUser.user_metadata.full_name;
     document.getElementById("acctMenuSub").textContent = currentUser ? (name || currentUser.email || "Signed in") : "Not signed in — tap to sign in";
     document.getElementById("changeNameInput").value = name || "";
@@ -1826,6 +1859,7 @@
   }
   function onSignedOut(){
     currentUser = null;
+    syncAuthLost = false;
     updateAccountCard();
     showAuthOverlay();
   }
@@ -1923,67 +1957,228 @@
     renderAll();
   }
 
-  function pullCloudData(){
-    if (!sb || !currentUser) return;
-    sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle().then(function(res){
-      if (res.error){ toast("Couldn't reach the cloud — using data on this device"); return; }
-      var remote = (res.data && res.data.data) || null;
-      var merged = mergeSnapshots(localSnapshot(), remote);
-      applyMergedLocally(merged);
-      sb.from("app_data").upsert({
-        user_id: currentUser.id, data: merged, updated_at: new Date().toISOString()
-      }).then(function(res2){ if (res2.error) toast("Couldn't sync to the cloud"); });
-      toast("Synced");
-    });
+  // ---- cloud sync --------------------------------------------------------
+  // Rules (hardened after data was lost when an iPhone home-screen app that
+  // had silently stopped syncing was removed):
+  //  * never upload unless we've just successfully read the cloud copy and
+  //    merged with it, so a device with old data can't overwrite newer data;
+  //  * make sure the login session is fresh before every sync (iOS suspends
+  //    home-screen apps, so the automatic token refresh often never runs);
+  //  * remember "there are changes not backed up yet" across app restarts and
+  //    keep retrying; and
+  //  * show clearly when this device isn't backed up, instead of a toast.
+  var SYNC_DIRTY_KEY = "rosterBoard.unsynced";
+  var SYNC_LAST_KEY = "rosterBoard.lastSync";
+  var syncInFlight = false, syncRetryTimer = null, syncFailures = 0, syncAuthLost = false;
+  function markDirty(){ try { localStorage.setItem(SYNC_DIRTY_KEY, String(Date.now())); } catch(e){} updateSyncStatusUI(); }
+  function dirtySince(){ try { return +localStorage.getItem(SYNC_DIRTY_KEY) || 0; } catch(e){ return 0; } }
+  function lastSyncedAt(){ try { return +localStorage.getItem(SYNC_LAST_KEY) || 0; } catch(e){ return 0; } }
+  function markSynced(startedAt){
+    try {
+      // only clear "dirty" if nothing new was saved while this sync was running
+      if (dirtySince() <= startedAt) localStorage.removeItem(SYNC_DIRTY_KEY);
+      localStorage.setItem(SYNC_LAST_KEY, String(Date.now()));
+    } catch(e){}
+    syncFailures = 0; syncAuthLost = false;
+    updateSyncStatusUI();
   }
-
-  var pendingSyncSnapshot = null;
-  function queueCloudSync(snapshot, immediate){
-    if (!sb || !currentUser || applyingCloudData) return;
-    clearTimeout(cloudSyncTimer);
-    pendingSyncSnapshot = snapshot;
-    if (immediate) runCloudSync(); else cloudSyncTimer = setTimeout(runCloudSync, 1200);
-  }
-  // Pull the cloud's current copy, merge it with what's pending on this
-  // device (by record id, respecting tombstones), apply the merged result
-  // back locally, then push it — so a change made on another device since
-  // this device's last sync is picked up instead of getting clobbered.
-  function runCloudSync(){
-    if (!sb || !currentUser || !pendingSyncSnapshot) return;
-    var toSend = pendingSyncSnapshot;
-    pendingSyncSnapshot = null;
-    sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle().then(function(res){
-      var remote = (res && res.data && res.data.data) || null;
-      var merged = mergeSnapshots(toSend, remote);
-      applyMergedLocally(merged);
-      sb.from("app_data").upsert({
-        user_id: currentUser.id, data: merged, updated_at: new Date().toISOString()
-      }).then(function(res2){ if (res2.error) toast("Couldn't sync to the cloud"); });
-    }).catch(function(){
-      // Couldn't reach the cloud to merge first — push what we have rather than lose it entirely.
-      sb.from("app_data").upsert({
-        user_id: currentUser.id, data: toSend, updated_at: new Date().toISOString()
+  function ensureFreshSession(){
+    return sb.auth.getSession().then(function(res){
+      var session = res && res.data && res.data.session;
+      var expSoon = !session || !session.expires_at || (session.expires_at * 1000 - Date.now() < 120000);
+      if (!expSoon) return session;
+      return sb.auth.refreshSession().then(function(r){
+        var s2 = r && r.data && r.data.session;
+        if (!s2) throw {authLost: true};
+        return s2;
       });
     });
   }
-  // If a sync is still pending when the app is backgrounded/closed (e.g. right after
-  // adding a note), push it immediately instead of losing it to the 1.2s debounce.
-  // There's no time for a merge round-trip here, so this is a best-effort direct
-  // push — the next normal sync (on this or another device) merges it in properly.
-  function flushCloudSync(){
-    if (!pendingSyncSnapshot) return;
-    clearTimeout(cloudSyncTimer);
-    var toSend = pendingSyncSnapshot;
-    pendingSyncSnapshot = null;
-    if (!sb || !currentUser) return;
-    sb.from("app_data").upsert({
-      user_id: currentUser.id, data: toSend, updated_at: new Date().toISOString()
+  function scheduleSyncRetry(){
+    clearTimeout(syncRetryTimer);
+    var delay = Math.min(5 * 60000, 15000 * Math.pow(2, Math.min(syncFailures, 4)));
+    syncRetryTimer = setTimeout(function(){ syncNow(); }, delay);
+  }
+  function syncNow(opts){
+    opts = opts || {};
+    if (!sb || !currentUser) { updateSyncStatusUI(); return; }
+    if (syncInFlight){ scheduleSyncRetry(); return; }
+    syncInFlight = true;
+    var startedAt = Date.now();
+    updateSyncStatusUI("syncing");
+    ensureFreshSession().then(function(){
+      return sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle();
+    }).then(function(res){
+      if (res.error) throw res.error;
+      var remote = (res.data && res.data.data) || null;
+      var merged = mergeSnapshots(localSnapshot(), remote);
+      applyMergedLocally(merged);
+      var toUpload = {};
+      Object.keys(merged).forEach(function(k){ toUpload[k] = merged[k]; });
+      toUpload.history = buildHistory(remote);
+      return sb.from("app_data").upsert({ user_id: currentUser.id, data: toUpload, updated_at: new Date().toISOString() })
+        .then(function(res2){ if (res2.error) throw res2.error; });
+    }).then(function(){
+      syncInFlight = false;
+      markSynced(startedAt);
+      if (opts.toast) toast("Synced");
+    }).catch(function(err){
+      syncInFlight = false;
+      syncFailures++;
+      var msg = (err && (err.message || err.code || "")) + "";
+      if ((err && err.authLost) || /jwt|token|auth|401|403/i.test(msg)) syncAuthLost = true;
+      updateSyncStatusUI();
+      scheduleSyncRetry();
     });
   }
+  function pullCloudData(){ syncNow({toast: true}); }
+
+  // ---- backup history (undo for the cloud) --------------------------------
+  // Each upload keeps up to 10 earlier copies of the cloud data (at most one
+  // every 6 hours) inside the same record, so lost entries can be recovered
+  // from Account → "Recover from an earlier backup".
+  var HISTORY_MAX = 10, HISTORY_GAP = 6 * 3600000;
+  function stripHistory(d){
+    var out = {};
+    Object.keys(d || {}).forEach(function(k){ if (k !== "history") out[k] = d[k]; });
+    return out;
+  }
+  function snapshotHasData(d){
+    return !!d && (Object.keys(d.shifts || {}).length || Object.keys(d.notes || {}).length || (d.types || []).length);
+  }
+  function buildHistory(remote){
+    var h = ((remote && remote.history) || []).slice(0, HISTORY_MAX);
+    if (snapshotHasData(remote) && (!h.length || Date.now() - (h[0].at || 0) > HISTORY_GAP)){
+      h.unshift({ at: Date.now(), data: stripHistory(remote) });
+    }
+    return h.slice(0, HISTORY_MAX);
+  }
+  function countEntries(d){
+    var n = 0;
+    Object.keys(d.shifts || {}).forEach(function(k){ n += (d.shifts[k] || []).length; });
+    Object.keys(d.notes || {}).forEach(function(k){ n += (d.notes[k] || []).length; });
+    return n;
+  }
+  function latestDate(d){
+    var keys = Object.keys(d.shifts || {}).concat(Object.keys(d.notes || {})).filter(function(k){ return ((d.shifts||{})[k]||[]).length || ((d.notes||{})[k]||[]).length; }).sort();
+    return keys.length ? keys[keys.length - 1] : null;
+  }
+  function openBackupHistory(){
+    if (!sb || !currentUser){ toast("Sign in to see your backups"); return; }
+    var list = document.getElementById("historyList");
+    list.innerHTML = "";
+    list.appendChild(hintEl("Loading backups…"));
+    document.getElementById("historyOverlay").classList.add("show");
+    ensureFreshSession().then(function(){
+      return sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle();
+    }).then(function(res){
+      if (res.error) throw res.error;
+      var h = (res.data && res.data.data && res.data.data.history) || [];
+      list.innerHTML = "";
+      if (!h.length){ list.appendChild(hintEl("No earlier backups yet — they start building up from now on.")); return; }
+      h.forEach(function(entry){
+        var d = new Date(entry.at);
+        var btn = document.createElement("button");
+        btn.className = "history-row";
+        var last = latestDate(entry.data);
+        btn.innerHTML = "<b>" + d.getDate() + " " + MONTH_LABELS[d.getMonth()].slice(0,3) + " " + d.getFullYear() + ", " +
+          String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0") + "</b>" +
+          "<span>" + countEntries(entry.data) + (countEntries(entry.data) === 1 ? " entry" : " entries") + (last ? " · latest " + last : "") + "</span>";
+        btn.addEventListener("click", function(){
+          openMiniModal({
+            title: "Recover from this backup?",
+            message: "Anything in this backup that's missing now will be added back. Nothing you have now is removed or changed.",
+            showInput: false, confirmLabel: "Recover",
+            onConfirm: function(){
+              var merged = mergeSnapshots(localSnapshot(), stripHistory(entry.data));
+              applyMergedLocally(merged);
+              closeBackupHistory();
+              queueCloudSync(localSnapshot(), true);
+              toast("Recovered from backup");
+            }
+          });
+        });
+        list.appendChild(btn);
+      });
+    }).catch(function(){
+      list.innerHTML = "";
+      list.appendChild(hintEl("Couldn't reach your backups. Check your connection and try again."));
+    });
+  }
+  function closeBackupHistory(){ document.getElementById("historyOverlay").classList.remove("show"); }
+  document.getElementById("historyClose").addEventListener("click", closeBackupHistory);
+  document.getElementById("historyOverlay").addEventListener("click", function(e){ if (e.target === this) closeBackupHistory(); });
+  function queueCloudSync(snapshot, immediate){
+    markDirty();
+    if (!sb || !currentUser || applyingCloudData) return;
+    clearTimeout(cloudSyncTimer);
+    if (immediate) syncNow(); else cloudSyncTimer = setTimeout(syncNow, 1200);
+  }
+  // Closing/backgrounding the app: there's no time for a safe merge, so we don't
+  // blindly upload (that could overwrite newer data from another device). The
+  // change is already saved on this device and flagged as not backed up; it's
+  // synced the moment the app is opened or brought back.
+  function flushCloudSync(){ clearTimeout(cloudSyncTimer); }
   document.addEventListener("visibilitychange", function(){
     if (document.visibilityState === "hidden") flushCloudSync();
+    else if (currentUser) syncNow();
   });
   window.addEventListener("pagehide", flushCloudSync);
+  window.addEventListener("online", function(){ if (currentUser) syncNow(); });
+  setInterval(function(){ if (currentUser && dirtySince()) syncNow(); updateSyncStatusUI(); }, 60000);
+
+  function timeAgo(ts){
+    var m = Math.round((Date.now() - ts) / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return m + " min ago";
+    var h = Math.round(m / 60);
+    if (h < 24) return h + " h ago";
+    var d = Math.round(h / 24);
+    return d + (d === 1 ? " day ago" : " days ago");
+  }
+  function updateSyncStatusUI(phase){
+    var bar = document.getElementById("syncBanner");
+    var line = document.getElementById("acctSyncStatus");
+    var dirty = dirtySince();
+    var last = lastSyncedAt();
+    var text = "", tone = "", showBar = false;
+    if (!currentUser){
+      var hasData = Object.keys(state.shifts || {}).length || Object.keys(state.notes || {}).length;
+      text = "Not signed in — your data is only saved on this device.";
+      tone = "warn";
+      showBar = !!hasData && !hasSkippedBackupWarning();
+    } else if (phase === "syncing"){
+      text = "Backing up…"; tone = "";
+    } else if (syncAuthLost){
+      text = "You've been signed out of backup. Sign in again so your changes are saved to your account.";
+      tone = "bad"; showBar = true;
+    } else if (syncFailures > 0 || (dirty && Date.now() - dirty > 3 * 60000)){
+      text = "Latest changes aren't backed up yet" + (last ? " · last backup " + timeAgo(last) : "") + ". Tap to retry.";
+      tone = "bad"; showBar = true;
+    } else if (dirty || !last){
+      text = "Backing up…"; tone = "";
+    } else {
+      text = last ? "All changes backed up · " + timeAgo(last) : "Backed up to your account";
+      tone = "ok";
+    }
+    if (line){ line.textContent = text; line.className = "sync-status " + tone; }
+    if (bar){
+      bar.textContent = text;
+      bar.className = "sync-banner " + tone + (showBar ? " show" : "");
+    }
+  }
+  function hasSkippedBackupWarning(){
+    try { return Date.now() - (+localStorage.getItem("rosterBoard.localOnlyAck") || 0) < 14 * 86400000; } catch(e){ return false; }
+  }
+  document.getElementById("syncBanner").addEventListener("click", function(){
+    if (!currentUser || syncAuthLost){ showAuthOverlay(true); return; }
+    syncNow({toast: true});
+  });
+  document.getElementById("acctHistoryBtn").addEventListener("click", openBackupHistory);
+  document.getElementById("acctSyncNowBtn").addEventListener("click", function(){
+    if (syncAuthLost){ showAuthOverlay(true); return; }
+    syncNow({toast: true});
+  });
 
   // Launch splash: stays up until we know whether there's a saved session, so the
   // sign-in screen never flashes up for people who are already logged in.
@@ -2030,7 +2225,9 @@
   document.getElementById("authSkipLink").addEventListener("click", function(e){
     e.preventDefault();
     setSkippedAuth();
+    try { localStorage.setItem("rosterBoard.localOnlyAck", String(Date.now())); } catch(e){}
     hideAuthOverlay();
+    updateSyncStatusUI();
     updateAccountCard();
   });
   document.getElementById("authForgotLink").addEventListener("click", function(e){
@@ -4381,6 +4578,7 @@
   loadIntoState();
   applyTheme(state.settings.theme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
   renderAll();
+  updateSyncStatusUI();
   // Coming back from privacy.html's "Back to Roster Board" link — land on Calendar
   // specifically, regardless of whatever tab was open before, then clean the URL.
   if (window.location.search.indexOf("view=calendar") !== -1){
