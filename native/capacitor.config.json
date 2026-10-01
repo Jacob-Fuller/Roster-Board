@@ -1,0 +1,24 @@
+{
+  "appId": "net.rosterboard.app",
+  "appName": "Roster Board",
+  "webDir": "www",
+  "backgroundColor": "#0F2244",
+  "ios": {
+    "contentInset": "never",
+    "scheme": "Roster Board",
+    "backgroundColor": "#0F2244",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0,
+      "launchAutoHide": true,
+      "backgroundColor": "#0F2244",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DEFAULT"
+    }
+  }
+}

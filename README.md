@@ -6,7 +6,27 @@ calendar, month/year analytics with comparisons, pay estimates, per-shift
 notes, and a calendar-grid PDF roster export. Plain HTML/CSS/JS — no build
 step, no server-side code, nothing to install beyond a static file server.
 
-## What's new in this version
+## What's new (v55 – v59)
+
+- **v59:** Full-bleed navy/gold icon, plus a separate padded "maskable" icon for
+  Android. Combined shifts now read **Excess + Overtime**, with excess first.
+  Reports has an Excess hours tile and an estimated pay card; rates are set
+  under Reports → Pay rates (hourly rate, excess ×, overtime ×, paid leave).
+  Pay settings sync between devices. Navy sign-in screen and theme colour.
+  Real in-app account deletion: run `native/supabase/delete_my_account.sql`
+  once in Supabase, otherwise it falls back to an emailed request. Refreshed
+  store screenshots. Added the `native/` folder (Capacitor iPhone app; see
+  `native/IOS-SETUP.md`).
+- **v58:** Backup history. The cloud keeps up to 10 earlier copies, and
+  Account → Recover from an earlier backup brings back anything missing.
+- **v57:** Hardened cloud sync. The login is renewed before every sync. Nothing is
+  uploaded without first reading and merging the cloud copy. Unsynced changes are
+  remembered and retried. A red banner shows when backup fails, and the Account tab
+  shows when the last backup happened.
+- **v55–v56:** New icon and launch screen. Personal events can be edited and moved
+  to another day. Excess and overtime can be logged together on one shift.
+
+## Earlier changes
 
 - **App-store prep**: fixed the icon so it survives circular/adaptive
   cropping (Android and others clip anything too close to the edge — the

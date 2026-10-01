@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roster Board</title>
 <meta name="description" content="A shift calendar app with rosters, overtime, leave tracking, pay estimates and analytics.">
-<meta name="theme-color" content="#B97A1E" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F2244" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
@@ -207,15 +207,15 @@
   .auth-screen{
     position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center;
     padding:28px 22px; background:
-      radial-gradient(120% 90% at 50% -10%, rgba(240,169,71,.22), transparent 60%),
-      linear-gradient(165deg, #14110B 0%, #221A0E 45%, #3A2A10 78%, #5C3E12 100%);
+      radial-gradient(120% 90% at 50% -10%, rgba(111,147,204,.35), transparent 60%),
+      linear-gradient(165deg, #1B3560 0%, #0F2244 45%, #060E1E 100%);
   }
   .auth-screen.show{display:flex;}
   .auth-wrap{width:100%; max-width:360px;}
   .auth-brand{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:22px; text-align:center;}
   .auth-logo{width:56px; height:56px; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.35);}
   .auth-appname{font-family:'Fraunces', Georgia, serif; font-size:1.5rem; font-weight:600; color:#FBF6EC;}
-  .auth-tagline{font-size:.82rem; color:rgba(251,246,236,.6); margin-top:-6px;}
+  .auth-tagline{font-size:.82rem; color:rgba(233,200,114,.75); margin-top:-6px;}
   .auth-card{
     background:var(--surface); border-radius:20px; padding:26px 22px 22px; box-shadow:0 20px 60px rgba(0,0,0,.35);
     animation:pop-in .18s ease-out;
@@ -437,6 +437,7 @@
   .sync-status.bad{color:var(--danger);}
   .sync-status.warn{color:var(--accent);}
 
+  .pay-total{font-family:'Fraunces', Georgia, serif; font-size:1.9rem; font-weight:600; letter-spacing:-.01em;}
   .history-row{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; border:1px solid var(--border);
     background:var(--surface-2); color:var(--text); border-radius:12px; padding:10px 12px; margin-bottom:8px; font-size:.82rem;}
   .history-row span{font-size:.74rem; color:var(--text-dim);}
@@ -446,7 +447,7 @@
   .split-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   .split-grid .form-row{margin-top:8px;}
   .split-bar{--ot:50%; position:relative; height:8px; border-radius:6px; margin-top:14px; overflow:hidden;
-    background:linear-gradient(90deg, #F0679E 0 var(--ot), #F7B3CE var(--ot) 100%);}
+    background:linear-gradient(90deg, #F7B3CE 0 var(--ot), #F0679E var(--ot) 100%);}
   .split-total{font-size:.78rem; color:var(--text-dim); margin-top:8px; font-weight:600;}
   .split-total.ok{color:#2E9E6A;}
 
@@ -813,8 +814,10 @@
       for the applicable legal period.</p>
 
       <h3>10. Account deletion and data requests</h3>
-      <p>You may request deletion of your Roster Board account and
-      associated personal information by contacting:
+      <p>You can delete your Roster Board account at any time from within
+      the app (Account → Delete account). This permanently removes your
+      account, your cloud backup and the data stored on that device. You can
+      also request deletion by contacting:
       <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a></p>
       <p>Depending on the applicable law and circumstances, you may also
       request access to, correction of, or a copy/export of personal
@@ -958,10 +961,15 @@
       </div>
       <div class="stat-row">
         <div class="stat-tile"><div class="label">Total hours</div><div class="value num" id="repTotalHours">0</div></div>
-        <div class="stat-tile"><div class="label">Overtime</div><div class="value num" id="repOTHours">0</div></div>
         <div class="stat-tile"><div class="label">Days worked</div><div class="value num" id="repDaysWorked">0</div></div>
+        <div class="stat-tile"><div class="label">Excess hours</div><div class="value num" id="repEXHours">0</div></div>
+        <div class="stat-tile"><div class="label">Overtime</div><div class="value num" id="repOTHours">0</div></div>
         <div class="stat-tile"><div class="label">Leave taken</div><div class="value num" id="repLeaveDays">0</div></div>
+        <div class="stat-tile"><div class="label">Est. pay</div><div class="value num" id="repPayTile">—</div></div>
       </div>
+
+      <div class="section-head"><h2>Estimated pay</h2><button class="btn sm" id="payRatesBtn">Pay rates</button></div>
+      <div class="card" id="repPay"></div>
 
       <div class="section-head"><h2>By shift type</h2></div>
       <div class="card" id="repBars"></div>
@@ -1401,6 +1409,40 @@
     </div>
   </div>
 
+  <!-- pay rates -->
+  <div class="overlay center" id="payOverlay">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3>Pay rates</h3>
+        <button class="close" id="payClose">&#10005;</button>
+      </div>
+      <div class="sheet-body">
+        <div class="form-row" style="margin-top:0;">
+          <label for="payRate">Hourly rate ($)</label>
+          <input type="number" id="payRate" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 42.50">
+        </div>
+        <div class="split-grid">
+          <div class="form-row">
+            <label for="payExMult">Excess rate ×</label>
+            <input type="number" id="payExMult" min="0" step="0.05" inputmode="decimal" placeholder="1">
+          </div>
+          <div class="form-row">
+            <label for="payOtMult">Overtime rate ×</label>
+            <input type="number" id="payOtMult" min="0" step="0.05" inputmode="decimal" placeholder="1.5">
+          </div>
+        </div>
+        <label class="remind-row" style="margin-top:12px;">
+          <input type="checkbox" id="payLeave" checked>
+          <span>Count annual and sick leave as paid hours</span>
+        </label>
+        <div class="sheet-footer">
+          <button class="btn block" id="payCancel">Cancel</button>
+          <button class="btn primary block" id="paySave">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- earlier cloud backups -->
   <div class="overlay center" id="historyOverlay">
     <div class="sheet">
@@ -1420,7 +1462,7 @@
     <div class="sheet">
       <div class="sheet-head">
         <div>
-          <div class="split-kicker">Overtime + Excess</div>
+          <div class="split-kicker">Excess + Overtime</div>
           <h3 id="splitTitle">Dayshift</h3>
         </div>
         <button class="close" id="splitClose">&#10005;</button>
@@ -1429,12 +1471,12 @@
         <p class="section-sub" id="splitIntro" style="margin:0 0 6px;"></p>
         <div class="split-grid">
           <div class="form-row">
-            <label for="splitOT">Overtime hours</label>
-            <input type="number" id="splitOT" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 8">
-          </div>
-          <div class="form-row">
             <label for="splitEX">Excess hours</label>
             <input type="number" id="splitEX" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 4">
+          </div>
+          <div class="form-row">
+            <label for="splitOT">Overtime hours</label>
+            <input type="number" id="splitOT" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 8">
           </div>
         </div>
         <div class="split-bar" id="splitBar"><span></span></div>
@@ -1502,6 +1544,9 @@
   "use strict";
 
   var STORAGE_KEY = "rosterBoard.v2";
+  // Running inside the native iOS app (Capacitor) rather than a browser.
+  var IS_NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+  var WEB_URL = "https://www.rosterboard.net/";
 
   var PALETTE = [
     {hex:"#E5484D", ink:"#FFFFFF"}, {hex:"#E8B339", ink:"#241900"}, {hex:"#4C8DFF", ink:"#FFFFFF"},
@@ -1930,7 +1975,7 @@
       swaps: mergeBucketed(local.swaps, remote && remote.swaps, tombstones),
       birthdays: mergeArrayById(local.birthdays, remote && remote.birthdays, tombstones),
       roster: mergeRoster(local.roster, remote && remote.roster),
-      settings: local.settings || (remote && remote.settings) || {hourlyRate:0},
+      settings: (remote && remote.settings && (remote.settings.updatedAt||0) > ((local.settings && local.settings.updatedAt)||0)) ? remote.settings : (local.settings || (remote && remote.settings) || {hourlyRate:0}),
       tombstones: tombstones
     };
   }
@@ -1953,6 +1998,7 @@
     state.birthdays = merged.birthdays || [];
     state.roster = merged.roster;
     state.tombstones = merged.tombstones;
+    if (merged.settings) state.settings = merged.settings;
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch(e){}
     renderAll();
   }
@@ -2244,7 +2290,7 @@
       onConfirm: function(email){
         email = (email || "").trim();
         if (!email) return;
-        sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }).then(function(res){
+        sb.auth.resetPasswordForEmail(email, { redirectTo: IS_NATIVE ? WEB_URL : window.location.origin + window.location.pathname }).then(function(res){
           if (res.error){ toast("Couldn't send reset link"); return; }
           toast("Check your email for a reset link");
         });
@@ -2300,21 +2346,46 @@
   document.getElementById("deleteAccountBtn").addEventListener("click", function(){
     openMiniModal({
       title: "Delete account",
-      message: "This will request permanent deletion of your Roster Board account and data. Type DELETE to confirm — we'll email contact@rosterboard.net on your behalf to process the request.",
+      message: "This permanently deletes your Roster Board account, your cloud backup and the data on this device. It can't be undone. Type DELETE to confirm.",
       placeholder: "Type DELETE to confirm",
       confirmLabel: "Delete account",
       onConfirm: function(val){
-        if ((val || "").trim().toUpperCase() !== "DELETE"){
-          toast("Type DELETE to confirm");
-          return;
-        }
-        var email = currentUser ? (currentUser.email || "") : "";
-        var subject = encodeURIComponent("Account deletion request");
-        var body = encodeURIComponent("Please delete my Roster Board account and associated data.\n\nAccount email: " + email);
-        window.location.href = "mailto:contact@rosterboard.net?subject=" + subject + "&body=" + body;
+        if ((val || "").trim().toUpperCase() !== "DELETE"){ toast("Type DELETE to confirm"); return; }
+        deleteAccountNow();
       }
     });
   });
+  function wipeLocalData(){
+    try {
+      [STORAGE_KEY, SYNC_DIRTY_KEY, SYNC_LAST_KEY, "rosterBoard.skipAuth", "rosterBoard.localOnlyAck"].forEach(function(k){ localStorage.removeItem(k); });
+    } catch(e){}
+  }
+  function deleteAccountNow(){
+    if (!sb || !currentUser){ toast("Sign in first"); return; }
+    var email = currentUser.email || "";
+    toast("Deleting account…");
+    ensureFreshSession().then(function(){
+      return sb.rpc("delete_my_account");
+    }).then(function(res){
+      if (res.error) throw res.error;
+      wipeLocalData();
+      return sb.auth.signOut().catch(function(){});
+    }).then(function(){
+      openMiniModal({
+        title: "Account deleted",
+        message: "Your account and data have been permanently deleted.",
+        showInput: false, confirmLabel: "OK",
+        onConfirm: function(){ window.location.reload(); }
+      });
+    }).catch(function(err){
+      // Server-side deletion isn't available (e.g. the database function hasn't
+      // been installed yet) — fall back to an emailed request so it's still handled.
+      console.error("delete_my_account failed:", err);
+      var subject = encodeURIComponent("Account deletion request");
+      var body = encodeURIComponent("Please delete my Roster Board account and associated data.\n\nAccount email: " + email);
+      window.location.href = "mailto:contact@rosterboard.net?subject=" + subject + "&body=" + body;
+    });
+  }
 
   /* ---------------- account detail pane navigation ---------------- */
   document.getElementById("acctMenuRow").addEventListener("click", function(){
@@ -2679,7 +2750,7 @@
     var t = typesById[entry.typeId];
     if (!t) return "";
     var comboT = COMBO_TYPES[entry.typeId];
-    var comboName = isSplitEntry(entry) ? "Overtime + Excess" : (comboT ? comboT.name : "");
+    var comboName = isSplitEntry(entry) ? "Excess + Overtime" : (comboT ? comboT.name : "");
     if (comboT && entry.baseTypeId){
       var bt = typesById[entry.baseTypeId];
       if (bt) return comboName + " – " + bt.name;
@@ -2798,7 +2869,7 @@
           strip.className = "ot-chip-strip";
           strip.style.background = comboT.color;
           strip.style.color = comboT.ink;
-          strip.textContent = isSplitEntry(s) ? "OT + Excess" : comboT.name;
+          strip.textContent = isSplitEntry(s) ? "Excess + OT" : comboT.name;
           chip.appendChild(strip);
           var baseLine = document.createElement("span");
           baseLine.className = "ot-chip-base";
@@ -2997,7 +3068,7 @@
         if (comboT) tag.style.borderTopColor = comboT.color;
         var label = document.createElement("span");
         label.textContent = entryDisplayName(s) + (isSplitEntry(s)
-          ? " · " + fmtHours(entryOTHours(s)) + "h OT + " + fmtHours(entryExcessHours(s)) + "h EX"
+          ? " · " + fmtHours(entryExcessHours(s)) + "h EX + " + fmtHours(entryOTHours(s)) + "h OT"
           : (comboT && s.hours!=null ? " · " + fmtHours(s.hours) + "h" : ""));
         tag.appendChild(label);
         if (s.tag){
@@ -3009,7 +3080,7 @@
         if (comboT){
           var hoursBtn = document.createElement("button");
           hoursBtn.textContent = "⏱";
-          hoursBtn.title = "Edit overtime / excess hours";
+          hoursBtn.title = "Edit excess / overtime hours";
           hoursBtn.addEventListener("click", function(){
             openSplitHours({
               baseTypeId: s.baseTypeId,
@@ -3328,7 +3399,7 @@
       addOption(t.name, "Excess Hours", EXCESS_TYPE.color, EXCESS_TYPE.ink, function(){ openExcessHoursPrompt(dateKey, t.id); });
     }
     if (t.overtimeEligible !== false && t.excessEligible !== false){
-      addOption(t.name, "Overtime + Excess", OVERTIME_TYPE.color, OVERTIME_TYPE.ink, function(){
+      addOption(t.name, "Excess + Overtime", OVERTIME_TYPE.color, OVERTIME_TYPE.ink, function(){
         openSplitHours({
           baseTypeId: t.id, ot: "", ex: "", confirmLabel: "Add shift",
           onConfirm: function(ot, ex){ addSplitShift(dateKey, t.id, ot, ex); }
@@ -3457,11 +3528,11 @@
     document.getElementById("splitConfirm").textContent = opts.confirmLabel || "Save";
     var shiftLen = bt && bt.hours ? bt.hours : 0;
     document.getElementById("splitIntro").textContent = shiftLen
-      ? "Split this " + fmtHours(shiftLen) + "h shift between overtime and excess hours. Leave one at 0 if it doesn't apply."
-      : "Split this shift between overtime and excess hours. Leave one at 0 if it doesn't apply.";
+      ? "Split this " + fmtHours(shiftLen) + "h shift into excess hours first, then overtime. Leave one at 0 if it doesn't apply."
+      : "Split this shift into excess hours first, then overtime. Leave one at 0 if it doesn't apply.";
     updateSplitTotal();
     document.getElementById("splitOverlay").classList.add("show");
-    setTimeout(function(){ try { document.getElementById(opts.ot || !opts.ex ? "splitOT" : "splitEX").focus(); } catch(e){} }, 60);
+    setTimeout(function(){ try { document.getElementById(opts.ex || !opts.ot ? "splitEX" : "splitOT").focus(); } catch(e){} }, 60);
   }
   function closeSplitHours(){ document.getElementById("splitOverlay").classList.remove("show"); splitOpts = null; }
   function readSplit(){
@@ -3482,8 +3553,8 @@
     } else el.classList.remove("ok");
     el.textContent = txt;
     var bar = document.getElementById("splitBar");
-    var otPct = total > 0 ? (v.ot / total * 100) : 50;
-    bar.style.setProperty("--ot", otPct + "%");
+    var exPct = total > 0 ? (v.ex / total * 100) : 50;
+    bar.style.setProperty("--ot", exPct + "%");
   }
   function fillSplitRemainder(field){
     var bt = splitOpts && state.typesById[splitOpts.baseTypeId];
@@ -4112,6 +4183,88 @@
       leaveDays:leaveDays, leaveHours:leaveHours, leaveHoursByKind:leaveHoursByKind, monthTotals:monthTotals };
   }
 
+  /* ---------------- pay estimate ---------------- */
+  function payRates(){
+    var st = state.settings || {};
+    return {
+      rate: +st.hourlyRate || 0,
+      otMult: st.otMultiplier != null ? +st.otMultiplier : 1.5,
+      exMult: st.excessMultiplier != null ? +st.excessMultiplier : 1,
+      leave: st.payLeave !== false
+    };
+  }
+  function fmtMoney(v){
+    return "$" + (Math.round(v * 100) / 100).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+  function renderPayCard(stats){
+    var card = document.getElementById("repPay");
+    card.innerHTML = "";
+    var r = payRates();
+    if (!r.rate){
+      document.getElementById("repPayTile").textContent = "—";
+      card.appendChild(hintEl("Add your hourly rate once and Roster Board works out your pay from your hours, excess hours and overtime."));
+      var b = document.createElement("button");
+      b.className = "btn sm primary block"; b.style.marginTop = "10px"; b.textContent = "Set my hourly rate";
+      b.addEventListener("click", openPayRates);
+      card.appendChild(b);
+      return;
+    }
+    var ordinary = Math.max(0, stats.totalHours - stats.otHours - stats.excessHours);
+    var paidLeave = r.leave ? (stats.leaveHoursByKind.annual + stats.leaveHoursByKind.sick) : 0;
+    var rows = [
+      ["Ordinary · " + fmtHours(ordinary) + "h × " + fmtMoney(r.rate), ordinary * r.rate],
+      ["Excess · " + fmtHours(stats.excessHours) + "h × " + fmtMoney(r.rate * r.exMult), stats.excessHours * r.rate * r.exMult],
+      ["Overtime · " + fmtHours(stats.otHours) + "h × " + fmtMoney(r.rate * r.otMult), stats.otHours * r.rate * r.otMult]
+    ];
+    if (r.leave) rows.push(["Paid leave · " + fmtHours(paidLeave) + "h × " + fmtMoney(r.rate), paidLeave * r.rate]);
+    var total = rows.reduce(function(a, x){ return a + x[1]; }, 0);
+    document.getElementById("repPayTile").textContent = total >= 10000 ? "$" + (total/1000).toFixed(1) + "k" : "$" + Math.round(total).toLocaleString();
+    var big = document.createElement("div");
+    big.className = "pay-total num";
+    big.textContent = fmtMoney(total);
+    card.appendChild(big);
+    var sub = document.createElement("div");
+    sub.className = "section-sub"; sub.style.margin = "0 0 8px";
+    sub.textContent = "Before tax · estimate only";
+    card.appendChild(sub);
+    rows.forEach(function(x, i){
+      if (i){ var d = document.createElement("div"); d.className = "row-divider"; card.appendChild(d); }
+      var row = document.createElement("div");
+      row.style.cssText = "display:flex; justify-content:space-between; gap:10px; padding:8px 2px; font-size:.82rem;";
+      var a = document.createElement("span"); a.style.color = "var(--text-dim)"; a.textContent = x[0];
+      var b2 = document.createElement("b"); b2.className = "num"; b2.textContent = fmtMoney(x[1]);
+      row.appendChild(a); row.appendChild(b2);
+      card.appendChild(row);
+    });
+  }
+  function openPayRates(){
+    var r = payRates();
+    document.getElementById("payRate").value = r.rate || "";
+    document.getElementById("payOtMult").value = r.otMult;
+    document.getElementById("payExMult").value = r.exMult;
+    document.getElementById("payLeave").checked = r.leave;
+    document.getElementById("payOverlay").classList.add("show");
+  }
+  function closePayRates(){ document.getElementById("payOverlay").classList.remove("show"); }
+  document.getElementById("payRatesBtn").addEventListener("click", openPayRates);
+  document.getElementById("payClose").addEventListener("click", closePayRates);
+  document.getElementById("payCancel").addEventListener("click", closePayRates);
+  document.getElementById("payOverlay").addEventListener("click", function(e){ if (e.target === this) closePayRates(); });
+  document.getElementById("paySave").addEventListener("click", function(){
+    var rate = parseFloat(document.getElementById("payRate").value);
+    var ot = parseFloat(document.getElementById("payOtMult").value);
+    var ex = parseFloat(document.getElementById("payExMult").value);
+    if (!(rate > 0)){ toast("Enter your hourly rate"); return; }
+    state.settings = state.settings || {};
+    state.settings.hourlyRate = rate;
+    state.settings.otMultiplier = ot > 0 ? ot : 1.5;
+    state.settings.excessMultiplier = ex > 0 ? ex : 1;
+    state.settings.payLeave = document.getElementById("payLeave").checked;
+    state.settings.updatedAt = Date.now();
+    closePayRates();
+    saveStore(); renderAll(); toast("Pay rates saved");
+  });
+
   function renderReports(){
     var range = periodRange();
     document.getElementById("repTitle").textContent = range.label;
@@ -4122,6 +4275,8 @@
     var stats = collectPeriodStats(range);
     document.getElementById("repTotalHours").textContent = fmtHours(stats.totalHours);
     document.getElementById("repOTHours").textContent = fmtHours(stats.otHours);
+    document.getElementById("repEXHours").textContent = fmtHours(stats.excessHours);
+    renderPayCard(stats);
     document.getElementById("repDaysWorked").textContent = stats.daysWorked;
     document.getElementById("repLeaveDays").textContent = stats.leaveDays;
 
@@ -4372,7 +4527,7 @@
       if (comboT){
         var bt = state.typesById[s.baseTypeId];
         var label = isSplitEntry(s)
-          ? (bt ? bt.name : "Shift") + " OT " + fmtHours(entryOTHours(s)) + "h + EX " + fmtHours(entryExcessHours(s)) + "h"
+          ? (bt ? bt.name : "Shift") + " EX " + fmtHours(entryExcessHours(s)) + "h + OT " + fmtHours(entryOTHours(s)) + "h"
           : (bt ? bt.name : comboT.name) + " " + (comboT === EXCESS_TYPE ? "EX" : "OT") + (h ? " " + fmtHours(h) + "h" : "");
         out.push({label: label, color: comboT.color});
       } else if (t.kind === "personal"){
@@ -4590,7 +4745,7 @@
   initAuth();
   checkReminders();
 
-  if ("serviceWorker" in navigator){
+  if ("serviceWorker" in navigator && !IS_NATIVE){
     window.addEventListener("load", function(){
       navigator.serviceWorker.register("sw.js").catch(function(){});
     });

@@ -1,0 +1,24 @@
+{
+  "name": "roster-board-native",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Native iOS app for Roster Board, built with Capacitor. The web app in the repo root is the source of truth; this folder wraps it.",
+  "scripts": {
+    "copy-web": "node scripts/copy-web.js",
+    "assets": "npx @capacitor/assets generate --ios --assetPath resources --iconBackgroundColor '#0F2244' --splashBackgroundColor '#0F2244' --splashBackgroundColorDark '#0F2244'",
+    "ios:add": "npm run copy-web && npx cap add ios && npm run assets",
+    "ios": "npm run copy-web && npx cap sync ios",
+    "ios:open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/assets": "^3.0.5"
+  }
+}
