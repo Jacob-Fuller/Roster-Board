@@ -1,5 +1,5 @@
 // Minimal offline cache for Roster Board.
-var CACHE = "roster-board-v59";
+var CACHE = "roster-board-v60";
 var ASSETS = ["./", "./index.html", "./privacy.html", "./manifest.json", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png", "./icon-maskable-192.png", "./icon-maskable-512.png"];
 
 self.addEventListener("install", function(event){
@@ -16,6 +16,10 @@ self.addEventListener("activate", function(event){
 });
 self.addEventListener("fetch", function(event){
   if (event.request.method !== "GET") return;
+  // Only ever cache this app's own files. Cloud requests (Supabase) must always
+  // go to the network: caching them made every device keep reading an old copy
+  // of the cloud data and then upload over newer entries from other devices.
+  if (new URL(event.request.url).origin !== self.location.origin) return;
   var isHtml = event.request.mode === "navigate" || (event.request.headers.get("accept")||"").indexOf("text/html") !== -1;
   if (isHtml){
     event.respondWith(

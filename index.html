@@ -2028,6 +2028,22 @@
     syncFailures = 0; syncAuthLost = false;
     updateSyncStatusUI();
   }
+  // Older versions of the service worker cached cloud reads. Until every
+  // device has the fixed one, delete any cached Supabase responses before
+  // reading so a sync always merges with the real, current cloud copy.
+  function purgeCloudCache(){
+    if (!window.caches || !caches.keys) return Promise.resolve();
+    return caches.keys().then(function(keys){
+      return Promise.all(keys.map(function(k){
+        return caches.open(k).then(function(c){
+          return c.keys().then(function(reqs){
+            return Promise.all(reqs.filter(function(r){ return r.url.indexOf(SUPABASE_URL) === 0; })
+              .map(function(r){ return c.delete(r); }));
+          });
+        });
+      }));
+    }).catch(function(){});
+  }
   function ensureFreshSession(){
     return sb.auth.getSession().then(function(res){
       var session = res && res.data && res.data.session;
@@ -2052,7 +2068,7 @@
     syncInFlight = true;
     var startedAt = Date.now();
     updateSyncStatusUI("syncing");
-    ensureFreshSession().then(function(){
+    ensureFreshSession().then(purgeCloudCache).then(function(){
       return sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle();
     }).then(function(res){
       if (res.error) throw res.error;
@@ -2115,7 +2131,7 @@
     list.innerHTML = "";
     list.appendChild(hintEl("Loading backups…"));
     document.getElementById("historyOverlay").classList.add("show");
-    ensureFreshSession().then(function(){
+    ensureFreshSession().then(purgeCloudCache).then(function(){
       return sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle();
     }).then(function(res){
       if (res.error) throw res.error;
