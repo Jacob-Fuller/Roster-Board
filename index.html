@@ -5541,8 +5541,8 @@
     var wwTotal = stats.weekdayHours + stats.weekendHours;
     var weekdayPct = wwTotal > 0 ? Math.round(stats.weekdayHours / wwTotal * 100) : 0;
     var weekendPct = wwTotal > 0 ? Math.round(stats.weekendHours / wwTotal * 100) : 0;
-    ww.appendChild(makeBarRow("Weekdays", "#4C8DFF", stats.weekdayHours, wwMax, fmtHours(stats.weekdayHours)+"h · "+weekdayPct+"% · "+stats.weekdayCount+"x"));
-    ww.appendChild(makeBarRow("Weekends", "#E8B339", stats.weekendHours, wwMax, fmtHours(stats.weekendHours)+"h · "+weekendPct+"% · "+stats.weekendCount+"x"));
+    ww.appendChild(makeBarRow("Weekdays", "var(--accent)", stats.weekdayHours, wwMax, fmtHours(stats.weekdayHours)+"h · "+weekdayPct+"% · "+stats.weekdayCount+"x"));
+    ww.appendChild(makeBarRow("Weekends", "var(--accent)", stats.weekendHours, wwMax, fmtHours(stats.weekendHours)+"h · "+weekendPct+"% · "+stats.weekendCount+"x"));
 
     var prevRange = prevPeriodRange();
     var prevStats = collectPeriodStats(prevRange);
