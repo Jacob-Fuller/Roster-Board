@@ -6,7 +6,7 @@
 <title>Roster Board</title>
 <meta name="description" content="A shift calendar app with rosters, overtime, leave tracking, pay estimates and reports.">
 <meta name="theme-color" content="#0F2244" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#141210" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -20,28 +20,28 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <style>
   :root{
-    --bg:#F5F2EA; --surface:#FFFFFF; --surface-2:#EEEAE0; --border:#DED7C6;
-    --text:#1C1B18; --text-dim:#6B6558; --text-faint:#787163;
-    --accent:#B97A1E; --accent-ink:#FFFFFF; --accent-soft:#F0DEBE;
-    --danger:#C24444; --shadow: 0 1px 2px rgba(30,25,15,.06), 0 6px 20px rgba(30,25,15,.06);
-    --radius-lg:20px; --radius-md:14px; --radius-sm:9px; --today-ring:#B97A1E;
-    --prev-bar:#C9C2AE;
+    --bg:#F4F3F0; --surface:#FFFFFF; --surface-2:#ECEBE7; --border:#DCD9D2;
+    --text:#14181F; --text-dim:#596070; --text-faint:#6B7180;
+    --accent:#1F3A5F; --accent-ink:#FFFFFF; --accent-soft:#E2E8F1;
+    --danger:#B42318; --shadow: 0 1px 2px rgba(20,24,31,.05), 0 6px 20px rgba(20,24,31,.05);
+    --radius-lg:20px; --radius-md:14px; --radius-sm:9px; --today-ring:#1F3A5F;
+    --prev-bar:#C6CAD2; --pp-alt:#EAE8E3;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#0C1016; --surface:#141A22; --surface-2:#1C232D; --border:#2B3542;
-      --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#7F8A98;
-      --accent:#F0A947; --accent-ink:#211400; --accent-soft:#3A2C14;
-      --danger:#E5696A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
-      --today-ring:#F0A947; --prev-bar:#3A4552;
+    --bg:#141210; --surface:#1D1A16; --surface-2:#24201B; --border:#353029;
+    --text:#F3EEE6; --text-dim:#A59D91; --text-faint:#8F887D;
+    --accent:#C08F5C; --accent-ink:#1A140D; --accent-soft:#3A2C1D;
+    --danger:#D98272; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    --today-ring:#C08F5C; --prev-bar:#3A342C; --pp-alt:#2A251F;
     }
   }
   :root[data-theme="dark"]{
-    --bg:#0C1016; --surface:#141A22; --surface-2:#1C232D; --border:#2B3542;
-    --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#7F8A98;
-    --accent:#F0A947; --accent-ink:#211400; --accent-soft:#3A2C14;
-    --danger:#E5696A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
-    --today-ring:#F0A947; --prev-bar:#3A4552;
+    --bg:#141210; --surface:#1D1A16; --surface-2:#24201B; --border:#353029;
+    --text:#F3EEE6; --text-dim:#A59D91; --text-faint:#8F887D;
+    --accent:#C08F5C; --accent-ink:#1A140D; --accent-soft:#3A2C1D;
+    --danger:#D98272; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    --today-ring:#C08F5C; --prev-bar:#3A342C; --pp-alt:#2A251F;
   }
 
   *{box-sizing:border-box;}
@@ -96,6 +96,7 @@
     height:86px; padding:5px 3px 4px; display:flex; flex-direction:column; gap:3px;
     text-align:left; color:var(--text); position:relative; overflow:hidden;
   }
+  .day-cell.pp-alt{background:var(--pp-alt);}
   .day-cell.out{opacity:.38;}
   .day-cell.today{border-color:var(--today-ring); box-shadow:inset 0 0 0 1.5px var(--today-ring);}
   .day-cell.leave{box-shadow:inset 0 0 0 1.5px var(--text-faint);}
@@ -432,8 +433,8 @@
     font-size:.78rem; font-weight:600; line-height:1.35; background:var(--accent-soft); color:var(--text);}
   .sync-banner.show{display:block;}
   .sync-banner.bad{background:#F9DADA; color:#7A1F1F;}
-  :root[data-theme="dark"] .sync-banner.bad{background:#3A1A1A; color:#F5B5B5;}
-  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .sync-banner.bad{background:#3A1A1A; color:#F5B5B5;} }
+  :root[data-theme="dark"] .sync-banner.bad{background:#3A1D1A; color:#F0B8AE;}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .sync-banner.bad{background:#3A1D1A; color:#F0B8AE;} }
   /* room under the last row for the floating edit button */
   #view-calendar, #view-roster{padding-bottom:84px;}
   .sync-status{font-size:.76rem; color:var(--text-dim); margin-top:6px;}
@@ -465,6 +466,13 @@
   .pay-summary-more{flex:none; font-size:.78rem; font-weight:700; color:var(--accent);}
   .ps-card{margin-top:12px;}
   .ps-card h3{font-size:1rem;}
+  .ps-card > summary{list-style:none; display:flex; align-items:center; gap:10px; cursor:pointer; margin:-2px 0;}
+  .ps-card > summary::-webkit-details-marker{display:none;}
+  .ps-card > summary h3{flex:none;}
+  .ps-sum{flex:1; min-width:0; text-align:right; font-size:.76rem; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .ps-card > summary::after{content:""; flex:none; width:7px; height:7px; border-right:2px solid var(--text-faint); border-bottom:2px solid var(--text-faint); transform:rotate(45deg); margin:-3px 4px 0 2px; transition:transform .15s;}
+  .ps-card[open] > summary::after{transform:rotate(-135deg); margin-top:3px;}
+  .ps-card[open] > summary{margin-bottom:4px;}
   .ps-help{font-size:.74rem; color:var(--text-dim); line-height:1.45; margin-top:8px;}
   .ps-inline{display:flex; gap:10px; align-items:flex-end;}
   .ps-inline .form-row{flex:1; min-width:0;}
@@ -541,7 +549,7 @@
         <div class="sheet-head" style="padding:0 0 10px;">
           <h3 id="authTitle">Log in</h3>
         </div>
-        <p class="section-sub" id="authIntro" style="margin:0 0 4px;">Sign in to sync your data across devices and share rosters with someone — or skip this and use Roster Board on this device only.</p>
+        <p class="section-sub" id="authIntro" style="margin:0 0 4px;">Sync across devices and share rosters.</p>
 
         <div id="authFieldsNormal">
           <div class="form-row">
@@ -652,7 +660,7 @@
       <div class="pay-note" id="payRateNote"></div>
       <div class="section-head"><h2 id="payByMonthTitle">By month</h2></div>
       <div class="card" id="payByMonth"></div>
-      <p class="pay-note">Estimates only, worked out from the shifts, leave and allowances on your calendar and your pay setup. Tax is a rough guide using 2026–27 Australian resident rates, the low income tax offset and the 2% Medicare levy; it doesn't know about HELP debts, other income or salary sacrifice. Your payslip may differ.</p>
+      <p class="pay-note">Estimates only. Tax uses 2026–27 Australian resident rates. Your payslip may differ.</p>
     </div>
   </div>
 
@@ -664,41 +672,30 @@
       <span></span>
     </div>
     <div class="fs-body">
-      <p class="section-sub" style="margin-top:14px;">Only your hourly rate is needed. Everything else is optional and starts with sensible defaults.</p>
 
-      <div class="card ps-card">
-        <h3>Base rate</h3>
-        <div class="form-row" style="margin-top:10px;">
+      <details class="card ps-card" open>
+        <summary><h3>Base rate</h3><span class="ps-sum" id="psSumRate"></span></summary>
+        <div class="form-row">
           <label for="psBaseRate">Hourly rate ($)</label>
           <input type="number" id="psBaseRate" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 42.50">
         </div>
-        <div class="ps-help">Got a pay rise? Add it with the date it starts, so earlier estimates stay as they were.</div>
-        <div id="psRises"></div>
-        <button class="btn sm" id="psAddRise" type="button" style="margin-top:10px;">+ Add pay rise</button>
-      </div>
+      </details>
 
-      <div class="card ps-card">
-        <h3>Pay cycle</h3>
+      <details class="card ps-card" open>
+        <summary><h3>Pay cycle</h3><span class="ps-sum" id="psSumCycle"></span></summary>
         <div class="seg" id="psCycleSeg" style="margin-top:10px;">
           <button type="button" data-cycle="weekly">Weekly</button>
           <button type="button" data-cycle="fortnightly">Fortnightly</button>
           <button type="button" data-cycle="monthly">Monthly</button>
         </div>
-        <div class="ps-inline">
-          <div class="form-row">
-            <label for="psPeriodStart">A period starts on</label>
-            <input type="date" id="psPeriodStart">
-          </div>
-          <div class="form-row">
-            <label for="psPayday">Payday (days after it ends)</label>
-            <input type="number" id="psPayday" min="0" max="31" step="1" inputmode="numeric" placeholder="0">
-          </div>
+        <div class="form-row">
+          <label for="psPeriodStart">Pay period start date</label>
+          <input type="date" id="psPeriodStart">
         </div>
-        <div class="ps-help">Pick any day a pay period started on (it's on your payslip), so the totals line up with what you're paid.</div>
-      </div>
+      </details>
 
-      <div class="card ps-card">
-        <h3>Overtime &amp; excess</h3>
+      <details class="card ps-card">
+        <summary><h3>Overtime &amp; excess</h3><span class="ps-sum" id="psSumOt"></span></summary>
         <div class="ps-inline">
           <div class="form-row">
             <label for="psOtMult">Overtime rate ×</label>
@@ -711,7 +708,7 @@
         </div>
         <label class="remind-row" style="margin-top:12px;">
           <input type="checkbox" id="psOtTiered">
-          <span>Overtime has tiers (e.g. first 3 hours at 1.5×, then 2×)</span>
+          <span>Tiered overtime</span>
         </label>
         <div class="ps-inline" id="psTierRow" style="display:none;">
           <div class="form-row">
@@ -723,12 +720,10 @@
             <input type="number" id="psOtMult2" min="0" step="0.05" inputmode="decimal" placeholder="2">
           </div>
         </div>
-        <div class="ps-help">Applies to the hours you enter on Overtime shifts, per day. Set to 0 if excess hours are taken as time in lieu.</div>
-      </div>
+      </details>
 
-      <div class="card ps-card">
-        <h3>Penalty rates</h3>
-        <div class="ps-help" style="margin-top:4px;">Extra % on top of the base rate for ordinary hours. Leave blank if you don't get one. If more than one applies, the highest is used.</div>
+      <details class="card ps-card">
+        <summary><h3>Penalty rates</h3><span class="ps-sum" id="psSumPen"></span></summary>
         <div class="ps-inline">
           <div class="form-row"><label for="psPenSat">Saturday %</label><input type="number" id="psPenSat" min="0" step="1" inputmode="decimal" placeholder="e.g. 50"></div>
           <div class="form-row"><label for="psPenSun">Sunday %</label><input type="number" id="psPenSun" min="0" step="1" inputmode="decimal" placeholder="e.g. 100"></div>
@@ -737,18 +732,15 @@
           <div class="form-row"><label for="psPenPh">Public holiday %</label><input type="number" id="psPenPh" min="0" step="1" inputmode="decimal" placeholder="e.g. 150"></div>
           <div class="form-row"><label for="psPenNight">Night shift %</label><input type="number" id="psPenNight" min="0" step="1" inputmode="decimal" placeholder="e.g. 15"></div>
         </div>
-        <div class="ps-help">Mark public holidays from the day on your calendar.</div>
-      </div>
+      </details>
 
-      <div class="card ps-card">
-        <h3>Your shift types</h3>
-        <div class="ps-help" style="margin-top:4px;">Choose which penalties each shift gets, and any shift allowance.</div>
+      <details class="card ps-card">
+        <summary><h3>Shift types</h3><span class="ps-sum" id="psSumTypes"></span></summary>
         <div id="psTypeRules"></div>
-      </div>
+      </details>
 
-      <div class="card ps-card">
-        <h3>Allowances</h3>
-        <div class="ps-help" style="margin-top:4px;">Extras you can tag onto any day from the calendar.</div>
+      <details class="card ps-card">
+        <summary><h3>Allowances</h3><span class="ps-sum" id="psSumAllow"></span></summary>
         <div id="psAllowances"></div>
         <div class="form-row">
           <label for="psAllowName">New allowance</label>
@@ -768,36 +760,35 @@
           </div>
         </div>
         <button class="btn sm" id="psAllowAdd" type="button" style="margin-top:10px;">+ Add allowance</button>
-      </div>
+      </details>
 
-      <div class="card ps-card">
-        <h3>Leave</h3>
+      <details class="card ps-card">
+        <summary><h3>Leave</h3><span class="ps-sum" id="psSumLeave"></span></summary>
         <label class="remind-row" style="margin-top:10px;">
           <input type="checkbox" id="psPayLeave" checked>
-          <span>Annual and sick leave are paid at the base rate</span>
+          <span>Paid leave at base rate</span>
         </label>
         <div class="form-row">
           <label for="psLeaveLoading">Annual leave loading %</label>
           <input type="number" id="psLeaveLoading" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 17.5">
         </div>
-      </div>
+      </details>
 
-      <div class="card ps-card">
-        <h3>Super &amp; tax</h3>
-        <div class="form-row" style="margin-top:10px;">
+      <details class="card ps-card">
+        <summary><h3>Super &amp; tax</h3><span class="ps-sum" id="psSumTax"></span></summary>
+        <div class="form-row">
           <label for="psSuper">Employer super %</label>
           <input type="number" id="psSuper" min="0" step="0.5" inputmode="decimal" placeholder="12">
         </div>
         <label class="remind-row" style="margin-top:12px;">
           <input type="checkbox" id="psShowTax" checked>
-          <span>Show an estimated tax and take-home figure</span>
+          <span>Show estimated tax and take-home</span>
         </label>
         <label class="remind-row">
           <input type="checkbox" id="psTaxFree" checked>
-          <span>I claim the tax-free threshold</span>
+          <span>Claim the tax-free threshold</span>
         </label>
-        <div class="ps-help">A rough guide only, using 2026–27 Australian resident tax rates.</div>
-      </div>
+      </details>
 
     </div>
     <div class="ps-footer">
@@ -1144,7 +1135,6 @@
 
     <div class="view" id="view-roster">
       <div class="section-head"><h2>Roster pattern</h2></div>
-      <div class="section-sub">Build a repeating shift pattern once, then stamp it onto the calendar as a starting template.</div>
       <div class="card">
         <div class="roster-controls">
           <div class="form-row">
@@ -1259,7 +1249,7 @@
 
         <div id="shareRosterSignedOut" style="display:none;">
           <div class="section-head" style="margin-top:24px;"><h2>Share your roster</h2></div>
-          <div class="section-sub">Connect with someone to swap views of each other's work schedule — shifts, overtime, leave and swaps only. Your personal events, notes and pay rate are never shared.</div>
+          <div class="section-sub">Personal events, notes and pay are never shared.</div>
           <div class="card">
             <div class="section-sub" style="margin:0 0 12px;">Sign in or create a free account to invite someone and share rosters.</div>
             <button class="btn primary block" id="shareSignInBtn">Sign in or create account</button>
@@ -1268,13 +1258,12 @@
 
         <div id="shareRosterSignedIn">
           <div class="section-head" style="margin-top:24px;"><h2>Invite a friend</h2></div>
-          <div class="section-sub">Not on Roster Board yet? Send them a quick invite to download it and set up their own account — then you can connect below.</div>
           <div class="card">
             <button class="btn primary block" id="inviteFriendBtn">Share invite</button>
           </div>
 
           <div class="section-head" style="margin-top:24px;"><h2>Share your roster</h2></div>
-          <div class="section-sub">Connect with someone to swap views of each other's work schedule — shifts, overtime, leave and swaps only. Your personal events, notes and pay rate are never shared.</div>
+          <div class="section-sub">Personal events, notes and pay are never shared.</div>
           <div class="card">
             <div class="form-row" style="margin-top:0;">
               <label for="inviteEmailInput">Invite by email</label>
@@ -1336,10 +1325,10 @@
 
         <div id="acctSignedOutSection" style="display:none;">
           <div class="card" style="margin-top:12px;">
-            <div class="section-sub" style="margin:0 0 12px;">You're using Roster Board on this device only. Sign in or create a free account to sync your data across devices and share rosters with someone.</div>
+            <div class="section-sub" style="margin:0 0 12px;">Sign in to sync across devices and share rosters.</div>
             <button class="btn primary block" id="acctSignInBtn">Sign in or create account</button>
           </div>
-          <button class="btn sm block" id="formatCalBtnLocal" style="margin-top:16px;">Format calendar</button>
+          <button class="btn sm block" id="formatCalBtnLocal" style="margin-top:16px; color:var(--danger); border-color:var(--danger);">Format calendar</button>
         </div>
 
         <div id="acctSignedInSection" style="display:none;">
@@ -1349,8 +1338,6 @@
               <span id="accountEmail" style="font-weight:600;"></span>
             </div>
             <div class="sync-status" id="acctSyncStatus"></div>
-            <button class="btn sm block" id="acctSyncNowBtn" style="margin-top:10px;">Back up now</button>
-            <button class="btn sm block" id="acctHistoryBtn" style="margin-top:8px;">Recover from an earlier backup</button>
           </div>
 
           <div class="section-head" style="margin-top:20px;"><h2>Change name</h2></div>
@@ -1388,7 +1375,7 @@
           </div>
 
           <button class="btn sm block" id="signOutBtn" style="margin-top:24px; margin-bottom:4px;">Sign out</button>
-          <button class="btn sm block" id="formatCalBtn" style="margin-top:10px; margin-bottom:4px;">Format calendar</button>
+          <button class="btn sm block" id="formatCalBtn" style="margin-top:10px; margin-bottom:4px; color:var(--danger); border-color:var(--danger);">Format calendar</button>
           <button class="btn sm block" id="deleteAccountBtn" style="margin-top:10px; margin-bottom:4px; color:var(--danger); border-color:var(--danger);">Delete account</button>
         </div>
       </div>
@@ -1702,7 +1689,6 @@
         <button aria-label="Close" class="close" id="patternSheetClose">&#10005;</button>
       </div>
       <div class="sheet-body">
-        <div class="section-sub" style="margin:0 0 10px;">Tap to include a shift type on this day of the pattern.</div>
         <div class="type-picker" id="patternTypePicker"></div>
       </div>
     </div>
@@ -2001,7 +1987,7 @@
       document.getElementById("authSubmitBtn").textContent = "Save new password";
     } else {
       document.getElementById("authTitle").textContent = authMode === "signup" ? "Sign up" : "Log in";
-      document.getElementById("authIntro").textContent = "Sign in to sync your data across devices and share rosters with someone — or skip this and use Roster Board on this device only.";
+      document.getElementById("authIntro").textContent = "Sync across devices and share rosters.";
       document.getElementById("authSubmitBtn").textContent = authMode === "signup" ? "Sign up" : "Log in";
       document.getElementById("authTogglePrompt").textContent = authMode === "signup" ? "Already have an account?" : "Don't have an account?";
       document.getElementById("authToggleMode").textContent = authMode === "signup" ? "Log in" : "Sign up";
@@ -2645,11 +2631,6 @@
     if (!currentUser || syncAuthLost){ showAuthOverlay(true); return; }
     syncNow({toast: true});
   });
-  document.getElementById("acctHistoryBtn").addEventListener("click", openBackupHistory);
-  document.getElementById("acctSyncNowBtn").addEventListener("click", function(){
-    if (syncAuthLost){ showAuthOverlay(true); return; }
-    syncNow({toast: true});
-  });
 
   // Launch splash: stays up until we know whether there's a saved session, so the
   // sign-in screen never flashes up for people who are already logged in.
@@ -2780,7 +2761,7 @@
       if (!dirtySince()){ signOutAndClear(); return; }
       openMiniModal({
         title: "Sign out?",
-        message: "Some recent changes haven't backed up to your account yet. Signing out removes this device's copy, so they'd be lost. Tap \"Back up now\" first if you have signal.",
+        message: "Some recent changes haven't backed up to your account yet. Signing out removes this device's copy, so they'd be lost. Reconnect to the internet first so they can sync.",
         showInput: false, confirmLabel: "Sign out anyway",
         onConfirm: signOutAndClear
       });
@@ -2811,7 +2792,7 @@
     openMiniModal({
       title: "Format calendar?",
       message: "This removes every shift, event, leave entry, swap and pay tag from your calendar" + (currentUser ? " on all your devices" : "") + ". Your shift types, roster pattern, birthdays and pay setup stay.\n\n" +
-        (currentUser ? "You can undo it from Account → Recover from an earlier backup." : "Without an account this can't be undone.") + "\n\nType FORMAT to confirm.",
+        "This can't be undone.\n\nType FORMAT to confirm.",
       placeholder: "Type FORMAT to confirm",
       confirmLabel: "Format",
       onConfirm: function(val){
@@ -3290,7 +3271,7 @@
   function renderCalendar(){
     renderCalendarGrid("calGrid", state.calMonth, {
       shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById, birthdays: state.birthdays, payTags: state.payTags
-    }, { onDayClick: handleCalendarDayClick, bulkSelectedDates: state.bulkMode ? state.bulkSelectedDates : null });
+    }, { onDayClick: handleCalendarDayClick, bulkSelectedDates: state.bulkMode ? state.bulkSelectedDates : null, payShade: true });
     renderHeader();
   }
   function handleCalendarDayClick(dateKey){
@@ -3325,12 +3306,14 @@
     var cells = buildMonthCells(monthDate);
     var today = new Date();
     var typesById = dataSrc.typesById || {};
+    // Alternate pay periods get a slightly different background once pay is set up
+    var shadeCfg = opts.payShade && PAY_DEFAULTS && payIsSetUp() ? payConfig() : null;
     cells.forEach(function(cell){
       var key = ymd(cell.date);
       var hasLeave = ((dataSrc.leave && dataSrc.leave[key])||[]).length > 0;
       var isBulkSelected = !!(opts.bulkSelectedDates && opts.bulkSelectedDates[key]);
       var btn = document.createElement(opts.onDayClick ? "button" : "div");
-      btn.className = "day-cell" + (cell.inMonth ? "" : " out") + (isSameDay(cell.date, today) ? " today" : "") + (hasLeave ? " leave" : "") + (isBulkSelected ? " bulk-selected" : "");
+      btn.className = "day-cell" + (shadeCfg && payPeriodIsAlt(shadeCfg, cell.date) ? " pp-alt" : "") + (cell.inMonth ? "" : " out") + (isSameDay(cell.date, today) ? " today" : "") + (hasLeave ? " leave" : "") + (isBulkSelected ? " bulk-selected" : "");
       btn.setAttribute("data-date", key);
 
       var numRow = document.createElement("div");
@@ -4847,20 +4830,19 @@
       c.cycle = "monthly";
     }
     c.pen = Object.assign({ sat: 0, sun: 0, ph: 0, night: 0 }, c.pen || {});
-    c.rises = (c.rises || []).filter(function(r){ return r && r.from && num(r.rate, 0) > 0; })
-      .sort(function(a, b){ return a.from < b.from ? -1 : a.from > b.from ? 1 : 0; });
+    // Pay rises were removed: fold any saved ones into the base rate so the
+    // current rate is simply the one in force today.
+    var today = ymd(new Date());
+    (c.rises || []).filter(function(r){ return r && r.from && num(r.rate, 0) > 0 && r.from <= today; })
+      .sort(function(a, b){ return a.from < b.from ? -1 : a.from > b.from ? 1 : 0; })
+      .forEach(function(r){ c.baseRate = num(r.rate, c.baseRate); });
+    c.rises = [];
     c.typeRules = c.typeRules || {};
     c.allowances = c.allowances || [];
     return c;
   }
   function payIsSetUp(){ return payConfig().baseRate > 0; }
-  // Hourly rate in force on a given day: the latest pay rise on or before it,
-  // otherwise the base rate. Pay rises never change earlier estimates.
-  function rateOn(cfg, dateKey){
-    var r = num(cfg.baseRate, 0);
-    cfg.rises.forEach(function(x){ if (x.from <= dateKey) r = num(x.rate, r); });
-    return r;
-  }
+  function rateOn(cfg, dateKey){ return num(cfg.baseRate, 0); }
 
   /* pay periods */
   function cycleDays(cfg){ return cfg.cycle === "weekly" ? 7 : 14; }
@@ -4885,7 +4867,20 @@
       start = addDays(a, n * len);
       end = addDays(start, len);
     }
-    return { start: start, end: end, payday: addDays(end, -1 + Math.round(num(cfg.paydayOffset, 0))) };
+    return { start: start, end: end };
+  }
+  // True for every second pay period, counted from the period start date
+  function payPeriodIsAlt(cfg, date){
+    var n;
+    if (cfg.cycle === "monthly"){
+      var st = payPeriodFor(cfg, date).start;
+      n = st.getFullYear() * 12 + st.getMonth();
+    } else {
+      var a = payAnchor(cfg);
+      var diff = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - a) / 86400000);
+      n = Math.floor(diff / cycleDays(cfg));
+    }
+    return ((n % 2) + 2) % 2 === 1;
   }
   function shiftPayPeriod(cfg, period, dir){
     return payPeriodFor(cfg, dir > 0 ? period.end : addDays(period.start, -1));
@@ -5022,7 +5017,7 @@
     card.innerHTML = "";
     if (!payIsSetUp()){
       document.getElementById("repPayTile").textContent = "—";
-      card.appendChild(hintEl("Add your hourly rate once and Roster Board estimates your pay from your shifts, overtime, penalties, allowances and leave."));
+      card.appendChild(hintEl("Add your hourly rate to see estimated pay."));
       var b = document.createElement("button");
       b.className = "btn sm primary block"; b.style.marginTop = "10px"; b.textContent = "Set my hourly rate";
       b.addEventListener("click", function(){ openPaySetup(); });
@@ -5080,7 +5075,7 @@
     function short(d){ return d.getDate() + " " + MONTH_LABELS[d.getMonth()].slice(0, 3); }
     var cycleName = cfg.cycle === "weekly" ? "Weekly" : cfg.cycle === "monthly" ? "Monthly" : "Fortnightly";
     return { start: per.start, end: per.end, factor: periodsPerYear(cfg), label: short(per.start) + " – " + short(last),
-      sub: cycleName + " pay period · payday " + WEEKDAY_FULL[per.payday.getDay()].slice(0, 3) + " " + short(per.payday) };
+      sub: cycleName + " pay period" };
   }
   function payLine(parent, label, amount, cls, detail){
     var row = document.createElement("div");
@@ -5144,7 +5139,7 @@
     if (cfg.superPct > 0) payLine(box, "Super (paid by employer)", p.superAmt, "muted", fmtHours(cfg.superPct) + "%");
 
     var rateNote = document.getElementById("payRateNote");
-    rateNote.textContent = "Base rate " + fmtMoney(rate) + "/h" + (cfg.rises.length ? " (latest pay rise applied from its date)" : "");
+    rateNote.textContent = "Base rate " + fmtMoney(rate) + "/h";
 
     // by month, for the year containing this view
     var y = (payView.mode === "year" ? payView.anchor : r.start).getFullYear();
@@ -5188,10 +5183,8 @@
   function renderPaySetup(){
     var c = paySetupDraft;
     setVal("psBaseRate", c.baseRate || "");
-    renderPayRises();
     document.querySelectorAll("#psCycleSeg button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-cycle") === c.cycle); });
     setVal("psPeriodStart", c.periodStart || ymd(payAnchor(c)));
-    setVal("psPayday", c.paydayOffset || 0);
     setVal("psOtMult", c.otMult);
     document.getElementById("psOtTiered").checked = !!c.otTiered;
     setVal("psOtTierHours", c.otTierHours);
@@ -5207,30 +5200,35 @@
     setVal("psSuper", c.superPct);
     document.getElementById("psShowTax").checked = !!c.showTax;
     document.getElementById("psTaxFree").checked = c.taxFree !== false;
+    updatePaySummaries();
   }
-  function renderPayRises(){
-    var wrap = document.getElementById("psRises");
-    wrap.innerHTML = "";
-    paySetupDraft.rises.forEach(function(x, i){
-      var row = document.createElement("div");
-      row.className = "ps-inline";
-      var f = document.createElement("div"); f.className = "form-row";
-      var fl = document.createElement("label"); fl.textContent = "From"; f.appendChild(fl);
-      var fi = document.createElement("input"); fi.type = "date"; fi.value = x.from || "";
-      fi.addEventListener("change", function(){ x.from = fi.value; });
-      f.appendChild(fi);
-      var g = document.createElement("div"); g.className = "form-row";
-      var gl = document.createElement("label"); gl.textContent = "New rate ($/h)"; g.appendChild(gl);
-      var gi = document.createElement("input"); gi.type = "number"; gi.min = "0"; gi.step = "0.01"; gi.inputMode = "decimal"; gi.value = x.rate || "";
-      gi.addEventListener("input", function(){ x.rate = parseFloat(gi.value) || 0; });
-      g.appendChild(gi);
-      var del = document.createElement("button");
-      del.type = "button"; del.className = "ps-remove"; del.setAttribute("aria-label", "Remove pay rise"); del.textContent = "✕";
-      del.addEventListener("click", function(){ paySetupDraft.rises.splice(i, 1); renderPayRises(); });
-      row.appendChild(f); row.appendChild(g); row.appendChild(del);
-      wrap.appendChild(row);
-    });
+  // One-line summaries on each collapsed pay setup section
+  function updatePaySummaries(){
+    if (!paySetupDraft) return;
+    function v(id){ return document.getElementById(id).value; }
+    function on(id){ return document.getElementById(id).checked; }
+    function put(id, t){ document.getElementById(id).textContent = t; }
+    var rate = parseFloat(v("psBaseRate"));
+    put("psSumRate", rate > 0 ? fmtMoney(rate) + "/h" : "Not set");
+    var cyc = paySetupDraft.cycle || "fortnightly";
+    put("psSumCycle", cyc.charAt(0).toUpperCase() + cyc.slice(1));
+    var ot = (v("psOtMult") || "1.5") + "× OT · " + (v("psExMult") || "1") + "× excess";
+    put("psSumOt", on("psOtTiered") ? ot + " · tiered" : ot);
+    var pens = [["psPenSat", "Sat"], ["psPenSun", "Sun"], ["psPenPh", "PH"], ["psPenNight", "Night"]]
+      .filter(function(x){ return parseFloat(v(x[0])) > 0; })
+      .map(function(x){ return x[1] + " " + v(x[0]) + "%"; });
+    put("psSumPen", pens.length ? pens.join(" · ") : "None");
+    var n = workTypes().length;
+    put("psSumTypes", n ? n + (n === 1 ? " type" : " types") : "None");
+    var a = paySetupDraft.allowances.length;
+    put("psSumAllow", a ? a + (a === 1 ? " allowance" : " allowances") : "None");
+    var ll = parseFloat(v("psLeaveLoading"));
+    put("psSumLeave", on("psPayLeave") ? (ll > 0 ? "Paid · " + ll + "% loading" : "Paid") : "Unpaid");
+    put("psSumTax", (v("psSuper") || "12") + "% super" + (on("psShowTax") ? " · tax shown" : ""));
   }
+  ["input", "change"].forEach(function(ev){
+    document.getElementById("paySetupScreen").addEventListener(ev, updatePaySummaries);
+  });
   function workTypes(){ return state.types.filter(function(t){ return t.kind !== "personal"; }); }
   function renderTypeRules(){
     var wrap = document.getElementById("psTypeRules");
@@ -5284,7 +5282,7 @@
   function renderAllowanceList(){
     var wrap = document.getElementById("psAllowances");
     wrap.innerHTML = "";
-    if (!paySetupDraft.allowances.length) wrap.appendChild(hintEl("None yet. Add things like a meal allowance or missed meal break."));
+    if (!paySetupDraft.allowances.length) wrap.appendChild(hintEl("None yet."));
     paySetupDraft.allowances.forEach(function(a, i){
       var row = document.createElement("div");
       row.className = "ps-allow";
@@ -5295,19 +5293,16 @@
       v.textContent = a.kind === "hours" ? fmtHours(a.amount) + "h at base rate" : fmtMoney(a.amount);
       var del = document.createElement("button");
       del.type = "button"; del.className = "ps-remove"; del.setAttribute("aria-label", "Remove " + a.name); del.textContent = "✕";
-      del.addEventListener("click", function(){ paySetupDraft.allowances.splice(i, 1); renderAllowanceList(); });
+      del.addEventListener("click", function(){ paySetupDraft.allowances.splice(i, 1); renderAllowanceList(); updatePaySummaries(); });
       row.appendChild(t); row.appendChild(v); row.appendChild(del);
       wrap.appendChild(row);
     });
   }
-  document.getElementById("psAddRise").addEventListener("click", function(){
-    paySetupDraft.rises.push({ from: ymd(new Date()), rate: 0 });
-    renderPayRises();
-  });
   document.querySelectorAll("#psCycleSeg button").forEach(function(b){
     b.addEventListener("click", function(){
       paySetupDraft.cycle = b.getAttribute("data-cycle");
       document.querySelectorAll("#psCycleSeg button").forEach(function(x){ x.classList.toggle("active", x === b); });
+      updatePaySummaries();
     });
   });
   document.getElementById("psOtTiered").addEventListener("change", function(){
@@ -5322,6 +5317,7 @@
     paySetupDraft.allowances.push({ id: mkId(), name: name.slice(0, 40), kind: kind, amount: amount });
     setVal("psAllowName", ""); setVal("psAllowAmount", "");
     renderAllowanceList();
+    updatePaySummaries();
   });
   document.getElementById("paySetupBackBtn").addEventListener("click", closePaySetup);
   document.getElementById("paySetupCancel").addEventListener("click", closePaySetup);
@@ -5330,9 +5326,8 @@
     var rate = parseFloat(document.getElementById("psBaseRate").value);
     if (!(rate > 0)){ toast("Enter your hourly rate"); document.getElementById("psBaseRate").focus(); return; }
     c.baseRate = rate;
-    c.rises = c.rises.filter(function(x){ return x.from && x.rate > 0; });
+    c.rises = [];
     c.periodStart = document.getElementById("psPeriodStart").value || "";
-    c.paydayOffset = Math.max(0, Math.min(31, Math.round(num(document.getElementById("psPayday").value, 0))));
     c.otMult = Math.max(0, num(document.getElementById("psOtMult").value, 1.5));
     c.otTiered = document.getElementById("psOtTiered").checked;
     c.otTierHours = Math.max(0, num(document.getElementById("psOtTierHours").value, 3));
