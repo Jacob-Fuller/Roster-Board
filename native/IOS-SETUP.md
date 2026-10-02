@@ -34,13 +34,48 @@ Apple rejects apps that let people sign up but not delete their account in the a
 4. In the app: Account → Delete account now deletes everything immediately.
    Until step 2 is done, the button shows an error instead.
 
-## 2. Apple Developer account
+## 2. Build without a Mac (GitHub Actions to TestFlight)
+
+`.github/workflows/ios-testflight.yml` builds the app on GitHub's Macs (macOS 26,
+Xcode 26) and uploads it to TestFlight, using `native/fastlane/Fastfile`. No Mac
+rental needed.
+
+**One-off, about 15 minutes:**
+
+1. App Store Connect, Users and Access, Integrations, App Store Connect API: create
+   a **Team key** with the **Admin** role. Download the `.p8` file (Apple only lets
+   you download it once). Note the **Key ID** and the **Issuer ID** shown above
+   the list.
+2. GitHub repo, Settings, Secrets and variables, Actions, add four secrets:
+   - `ASC_KEY_ID`: the Key ID
+   - `ASC_ISSUER_ID`: the Issuer ID
+   - `ASC_KEY_P8`: the whole contents of the `.p8` file, including the
+     BEGIN/END lines
+   - `MATCH_PASSWORD`: any long password you make up. It encrypts the signing
+     certificate stored on the `fastlane-match` branch. Keep a copy.
+3. GitHub, Actions, "iOS build to TestFlight", Run workflow, choose **setup**.
+   This registers the app ID `net.rosterboard.app` and creates the signing
+   certificate.
+4. App Store Connect, Apps, +, New App: platform iOS, name "Roster Board", bundle
+   ID `net.rosterboard.app`, SKU `rosterboard`.
+5. Run the workflow again with **beta**. The build appears in TestFlight once
+   Apple has processed it (usually 10 to 30 minutes).
+
+**Every update after that:** push your changes, then run the workflow with **beta**.
+Each run uploads a new build number automatically.
+
+The build is iPhone-only, so only iPhone screenshots are needed. It declares no
+custom encryption, so there is no export-compliance question.
+
+## 3. Alternative: build on a Mac
+
+### Apple Developer account
 
 Enrol at developer.apple.com/programs. There is an annual fee, and approval can take
 a day or two. Enrolling as an individual is quickest. Enrolling as an organisation,
 for example "Emberfall Interactive", needs a D-U-N-S number.
 
-## 3. Mac with Xcode (MacInCloud or similar)
+### Mac with Xcode (MacInCloud or similar)
 
 You need the latest Xcode from the Mac App Store, Node.js 20 or newer, git and
 CocoaPods (`sudo gem install cocoapods`, or `brew install cocoapods`). Rented Macs

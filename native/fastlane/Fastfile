@@ -1,0 +1,98 @@
+# Roster Board iOS: build and upload to TestFlight from GitHub Actions.
+# See .github/workflows/ios-testflight.yml and native/IOS-SETUP.md.
+require "base64"
+
+default_platform(:ios)
+
+APP_ID = "net.rosterboard.app"
+PROJECT = "ios/App/App.xcodeproj"
+
+platform :ios do
+  def asc_key
+    %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 MATCH_PASSWORD].each do |k|
+      UI.user_error!("Missing GitHub secret #{k}. See native/IOS-SETUP.md.") if ENV[k].to_s.strip.empty?
+    end
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"].strip,
+      issuer_id: ENV["ASC_ISSUER_ID"].strip,
+      key_content: ENV["ASC_KEY_P8"],
+      in_house: false
+    )
+  end
+
+  # Registers the app ID with Apple if it isn't there yet.
+  def ensure_bundle_id
+    existing = Spaceship::ConnectAPI::BundleId.find(APP_ID)
+    if existing
+      UI.message("App ID #{APP_ID} already registered")
+    else
+      Spaceship::ConnectAPI::BundleId.create(name: "Roster Board", platform: "IOS", identifier: APP_ID)
+      UI.success("Registered app ID #{APP_ID}")
+    end
+  end
+
+  # Distribution certificate + App Store profile, stored encrypted on the
+  # fastlane-match branch of this repo so every build reuses the same ones.
+  def signing(api_key)
+    setup_ci
+    match(
+      type: "appstore",
+      app_identifier: APP_ID,
+      git_url: ENV["MATCH_GIT_URL"],
+      git_branch: "fastlane-match",
+      git_basic_authorization: Base64.strict_encode64("x-access-token:#{ENV['GH_TOKEN']}"),
+      api_key: api_key,
+      readonly: false
+    )
+  end
+
+  desc "One-off: register the app ID and create the signing certificate"
+  lane :setup do
+    api_key = asc_key
+    ensure_bundle_id
+    signing(api_key)
+    UI.success("Setup done. Next: create the app in App Store Connect, then run the 'beta' lane.")
+  end
+
+  desc "Build the app and upload it to TestFlight"
+  lane :beta do
+    api_key = asc_key
+    ensure_bundle_id
+    signing(api_key)
+
+    team_id = ENV["sigh_#{APP_ID}_appstore_team-id"]
+    profile = ENV["sigh_#{APP_ID}_appstore_profile-name"]
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: PROJECT,
+      team_id: team_id,
+      bundle_identifier: APP_ID,
+      profile_name: profile,
+      code_sign_identity: "Apple Distribution",
+      targets: ["App"]
+    )
+
+    begin
+      last = latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, initial_build_number: 0)
+    rescue => e
+      UI.user_error!("Couldn't find the app in App Store Connect. Create it first (My Apps -> + -> New App, bundle ID #{APP_ID}). (#{e.message})")
+    end
+    increment_build_number(xcodeproj: PROJECT, build_number: last.to_i + 1)
+
+    workspace = "ios/App/App.xcworkspace"
+    build_app(
+      workspace: File.exist?(File.join("..", workspace)) ? workspace : nil,
+      project: File.exist?(File.join("..", workspace)) ? nil : PROJECT,
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      xcargs: "TARGETED_DEVICE_FAMILY=1",  # iPhone only, so no iPad screenshots are required
+      export_options: { provisioningProfiles: { APP_ID => profile } },
+      output_directory: "build",
+      clean: true
+    )
+
+    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+    UI.success("Uploaded build #{last.to_i + 1} to TestFlight. It shows up in App Store Connect after Apple processes it (usually 10-30 minutes).")
+  end
+end
