@@ -6,7 +6,7 @@
   "scripts": {
     "copy-web": "node scripts/copy-web.js",
     "assets": "npx @capacitor/assets generate --ios --assetPath resources --iconBackgroundColor '#0F2244' --splashBackgroundColor '#0F2244' --splashBackgroundColorDark '#0F2244'",
-    "ios:add": "npm run copy-web && npx cap add ios && npm run assets",
+    "ios:add": "npm run copy-web && (npx cap add ios || true) && node scripts/ios-target.js && npx cap sync ios && npm run assets",
     "ios": "npm run copy-web && npx cap sync ios",
     "ios:open": "npx cap open ios"
   },
