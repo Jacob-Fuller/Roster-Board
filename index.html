@@ -3612,7 +3612,7 @@
         if (s.tag){
           var note = document.createElement("span");
           note.className = "tagged-note";
-          note.textContent = "· " + s.tag;
+          note.textContent = "· “" + s.tag + "”";
           tag.appendChild(note);
         }
         if (comboT){
@@ -3631,11 +3631,13 @@
         }
         var tagBtn = document.createElement("button");
         tagBtn.textContent = "✎";
-        tagBtn.title = "Add a note to this shift";
+        tagBtn.title = "Note";
         tagBtn.addEventListener("click", function(){
           openMiniModal({
-            title: "Shift note",
-            message: t.name + " on this day",
+            title: "Note",
+            message: entryDisplayName(s) + (isSplitEntry(s)
+              ? " · " + fmtHours(entryExcessHours(s)) + "h EX + " + fmtHours(entryOTHours(s)) + "h OT"
+              : (comboT && s.hours != null ? " · " + fmtHours(s.hours) + "h" : "")),
             placeholder: "e.g. Swapped with Sam",
             value: s.tag || "",
             confirmLabel: "Save",
