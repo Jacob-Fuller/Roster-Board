@@ -469,6 +469,20 @@
   .pay-summary-sub{font-size:.76rem; color:var(--text-dim); margin-top:2px;}
   .pay-card-seg{margin-bottom:14px;}
   .pay-summary-more{flex:none; font-size:.78rem; font-weight:700; color:var(--accent);}
+  .pw-body{display:flex; flex-direction:column; gap:14px; padding-top:18px;}
+  .pw-title{font-family:'Fraunces', Georgia, serif; font-size:1.6rem; font-weight:600; text-align:center; margin:6px 0 0;}
+  .pw-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px;}
+  .pw-list li{display:flex; gap:10px; align-items:flex-start; font-size:.92rem;}
+  .pw-list li::before{content:"✓"; flex:none; width:22px; height:22px; border-radius:50%; background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:.75rem; display:flex; align-items:center; justify-content:center;}
+  .pw-plan{display:flex; justify-content:space-between; align-items:center; width:100%; padding:16px; border-radius:14px; border:1.5px solid var(--border); background:var(--surface); color:var(--text); font-size:.95rem; text-align:left;}
+  .pw-plan b{font-size:1rem;}
+  .pw-plan span{color:var(--text-dim); font-size:.8rem;}
+  .pw-plan.best{border-color:var(--accent);}
+  .pw-plan .pw-price{font-weight:700; font-size:1.05rem; color:var(--text);}
+  .pw-legal{font-size:.7rem; color:var(--text-faint); line-height:1.5; text-align:center;}
+  .pw-legal a{color:var(--text-dim);}
+  .lock-card{text-align:center; padding:18px 14px;}
+  .lock-card p{margin:0 0 12px; font-size:.85rem; color:var(--text-dim);}
   .ps-card{margin-top:12px;}
   .ps-card h3{font-size:1rem;}
   .ps-card > summary{list-style:none; display:flex; align-items:center; gap:10px; cursor:pointer; margin:-2px 0;}
@@ -781,6 +795,41 @@
     </div>
   </div>
 
+  <!-- Premium paywall (iPhone app) -->
+  <div class="full-screen" id="paywallScreen">
+    <div class="privacy-head">
+      <button class="icon-btn" id="paywallCloseBtn" aria-label="Close">&#10005;</button>
+      <h2>Premium</h2>
+      <span></span>
+    </div>
+    <div class="fs-body">
+      <div class="pw-body">
+        <h1 class="pw-title">Roster Board Premium</h1>
+        <p class="section-sub" id="paywallReason" style="text-align:center; margin:0;"></p>
+        <div class="card">
+          <ul class="pw-list">
+            <li>Unlimited shift types</li>
+            <li>Roster patterns: fill your calendar for a year in one tap</li>
+            <li>Estimated pay for every week, fortnight, month and year</li>
+            <li>Full reports: by shift type, weekday vs weekend, period comparison</li>
+            <li>PDF roster export</li>
+          </ul>
+        </div>
+        <button class="pw-plan best" id="pwLifetimeBtn" type="button">
+          <span style="display:flex; flex-direction:column; gap:2px;"><b style="color:var(--text);">Lifetime</b><span>One payment, yours forever</span></span>
+          <span class="pw-price" id="pwLifetimePrice">$49.99</span>
+        </button>
+        <button class="pw-plan" id="pwMonthlyBtn" type="button">
+          <span style="display:flex; flex-direction:column; gap:2px;"><b style="color:var(--text);">Monthly</b><span>Cancel anytime</span></span>
+          <span class="pw-price" id="pwMonthlyPrice">$4.99 / month</span>
+        </button>
+        <button class="btn block" id="pwRestoreBtn" type="button">Restore purchases</button>
+        <p class="pw-legal">The monthly plan is an auto-renewing subscription charged to your Apple ID. It renews each month unless cancelled at least 24 hours before the end of the current period. Manage or cancel it in your Apple ID settings. Lifetime is a one-off purchase.<br>
+          <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">Terms of Use</a> · <a href="https://www.rosterboard.net/privacy.html" target="_blank" rel="noopener">Privacy Policy</a></p>
+      </div>
+    </div>
+  </div>
+
   <div class="privacy-screen" id="privacyOverlay">
     <div class="privacy-head">
       <button class="icon-btn" id="privacyBackBtn" aria-label="Back">&#8249;</button>
@@ -895,6 +944,13 @@
       <p>PDF rosters are created on your device. They are only shared if
       you choose to save, print or send them, for example through the iOS
       share sheet.</p>
+      <p><strong>Purchases</strong></p>
+      <p>Roster Board Premium is sold in the iPhone app through Apple's App
+      Store. Apple processes the payment, so we never receive your card or
+      payment details. The app checks whether you own Premium using the
+      purchase information Apple provides on your device; this is not sent to
+      our servers. Manage or cancel a subscription in your Apple ID
+      settings.</p>
       <p><strong>The iPhone app</strong></p>
       <p>The Roster Board iPhone app does not use advertising identifiers,
       does not track you across other companies' apps or websites, and
@@ -1229,6 +1285,19 @@
             </span>
             <span class="chev">&#8250;</span>
           </button>
+        </div>
+
+        <div id="premiumSection" style="display:none;">
+          <div class="section-head" style="margin-top:20px;"><h2>Premium</h2></div>
+          <div class="card">
+            <div class="rate-row" style="justify-content:space-between;">
+              <span>Status</span>
+              <span id="premiumStatus" style="font-weight:600;">Free</span>
+            </div>
+            <button class="btn primary sm block" id="premiumUpgradeBtn" style="margin-top:10px;">Unlock Premium</button>
+            <button class="btn sm block" id="premiumManageBtn" style="margin-top:8px; display:none;">Manage subscription</button>
+            <button class="btn sm block" id="premiumRestoreBtn" style="margin-top:8px;">Restore purchases</button>
+          </div>
         </div>
 
         <div class="section-head" style="margin-top:20px;"><h2>Birthdays</h2></div>
@@ -4753,6 +4822,7 @@
   });
 
   document.getElementById("rosterApplyBtn").addEventListener("click", function(){
+    if (premiumLocked()){ openPaywall("Filling your calendar from a roster pattern is part of Premium."); return; }
     var startVal = document.getElementById("rosterStartDate").value;
     if (!startVal){ toast("Pick a start date"); return; }
     var months = parseInt(document.getElementById("rosterDuration").value, 10);
@@ -5110,6 +5180,11 @@
   function renderPayCard(){
     var card = document.getElementById("repPay");
     card.innerHTML = "";
+    if (premiumLocked()){
+      document.getElementById("repPayTile").textContent = "—";
+      card.appendChild(lockCard("See your estimated pay for every week, fortnight, month and year."));
+      return;
+    }
     if (!payIsSetUp()){
       document.getElementById("repPayTile").textContent = "—";
       card.appendChild(hintEl("Add your hourly rate to see estimated pay."));
@@ -5452,7 +5527,10 @@
     if (document.getElementById("payScreen").classList.contains("show")) renderPayScreen();
     toast("Pay setup saved");
   });
-  document.getElementById("payRatesBtn").addEventListener("click", function(){ openPaySetup(); });
+  document.getElementById("payRatesBtn").addEventListener("click", function(){
+    if (premiumLocked()){ openPaywall("Pay estimates are part of Premium."); return; }
+    openPaySetup();
+  });
 
   function renderReports(){
     var range = periodRange();
@@ -5541,6 +5619,15 @@
     } else {
       yirHead.style.display = "none";
       yir.style.display = "none";
+    }
+    if (premiumLocked()){
+      bars.innerHTML = "";
+      bars.appendChild(lockCard("Full reports are part of Premium: hours by shift type, weekday vs weekend, comparisons and year in review."));
+      [ww, cmp, yir].forEach(function(el){
+        el.innerHTML = "";
+        var h = hintEl("Part of Premium.");
+        el.appendChild(h);
+      });
     }
   }
   function makeBarRow(name, color, val, max, amtText){
@@ -5750,6 +5837,7 @@
     return out;
   }
   function exportPdf(){
+    if (premiumLocked()){ openPaywall("PDF export is part of Premium."); return; }
     if (!window.jspdf){ toast("PDF library didn't load — check your connection"); return; }
     if (!state.types.length && !Object.keys(state.shifts).length){ toast("Nothing to export yet"); return; }
     // Export what the Reports tab is showing: that month, or every month of that year.
@@ -5919,6 +6007,120 @@
     doc.setTextColor(0); doc.setLineWidth(.6);
   }
 
+  /* ---------------- Premium (in-app purchases, iPhone app only) ----------------
+     Free: calendar, up to 3 shift types, overtime/excess, leave, events, birthdays,
+     reminders, sharing and cloud backup. Premium unlocks the rest. Purchases go
+     through Apple (StoreKit 2, verified on the device); the website stays free. */
+  var PREMIUM_MONTHLY = "net.rosterboard.app.premium.monthly";
+  var PREMIUM_LIFETIME = "net.rosterboard.app.premium.lifetime";
+  var FREE_TYPE_LIMIT = 3;
+  var PREMIUM_KEY = "rosterBoard.premium";
+  var premium = { active: false, kind: "", until: 0 };
+  try {
+    var pc = JSON.parse(localStorage.getItem(PREMIUM_KEY) || "null");
+    if (pc && (pc.kind === "lifetime" || pc.until > Date.now())) premium = pc;
+  } catch(e){}
+  function purchasesPlugin(){
+    var P = IS_NATIVE && window.Capacitor && Capacitor.Plugins;
+    return P && P.NativePurchases ? P.NativePurchases : null;
+  }
+  function premiumLocked(){ return !!purchasesPlugin() && !(premium && premium.active); }
+  function savePremium(next){
+    var changed = next.active !== premium.active || next.kind !== premium.kind;
+    premium = next;
+    try { localStorage.setItem(PREMIUM_KEY, JSON.stringify(premium)); } catch(e){}
+    if (changed) renderAll();
+    renderPremiumSection();
+  }
+  function refreshPremium(){
+    var NP = purchasesPlugin();
+    if (!NP) return Promise.resolve();
+    function get(type){ return NP.getPurchases({ productType: type }).then(function(r){ return (r && r.purchases) || []; }).catch(function(){ return []; }); }
+    return Promise.all([get("subs"), get("inapp")]).then(function(lists){
+      var all = lists[0].concat(lists[1]), now = Date.now();
+      var next = { active: false, kind: "", until: 0 };
+      all.forEach(function(p){
+        if (p.productIdentifier === PREMIUM_LIFETIME){ next = { active: true, kind: "lifetime", until: 0 }; }
+        else if (p.productIdentifier === PREMIUM_MONTHLY && next.kind !== "lifetime"){
+          var exp = p.expirationDate ? new Date(p.expirationDate).getTime() : 0;
+          if (p.isActive !== false && (!exp || exp > now)) next = { active: true, kind: "monthly", until: exp || now + 86400000 };
+        }
+      });
+      savePremium(next);
+    });
+  }
+  function loadPremiumPrices(){
+    var NP = purchasesPlugin();
+    if (!NP) return;
+    NP.getProducts({ productIdentifiers: [PREMIUM_MONTHLY], productType: "subs" }).then(function(r){
+      var pr = r && r.products && r.products[0];
+      if (pr && pr.priceString) document.getElementById("pwMonthlyPrice").textContent = pr.priceString + " / month";
+    }).catch(function(){});
+    NP.getProducts({ productIdentifiers: [PREMIUM_LIFETIME], productType: "inapp" }).then(function(r){
+      var pr = r && r.products && r.products[0];
+      if (pr && pr.priceString) document.getElementById("pwLifetimePrice").textContent = pr.priceString;
+    }).catch(function(){});
+  }
+  function openPaywall(reason){
+    document.getElementById("paywallReason").textContent = reason || "";
+    loadPremiumPrices();
+    document.getElementById("paywallScreen").classList.add("show");
+  }
+  function closePaywall(){ document.getElementById("paywallScreen").classList.remove("show"); }
+  var buying = false;
+  function buyPremium(id, type){
+    var NP = purchasesPlugin();
+    if (!NP || buying) return;
+    buying = true;
+    NP.purchaseProduct({ productIdentifier: id, productType: type, quantity: 1 }).then(function(){
+      return refreshPremium();
+    }).then(function(){
+      if (premium.active){ closePaywall(); toast("Premium unlocked. Thank you!"); }
+    }).catch(function(e){
+      var msg = (e && (e.message || e.code)) || "";
+      if (!/cancel/i.test(msg)) toast("Purchase didn't go through");
+    }).then(function(){ buying = false; });
+  }
+  function restorePremium(){
+    var NP = purchasesPlugin();
+    if (!NP) return;
+    NP.restorePurchases().catch(function(){}).then(refreshPremium).then(function(){
+      toast(premium.active ? "Purchases restored" : "No purchases found for this Apple ID");
+      if (premium.active) closePaywall();
+    });
+  }
+  function renderPremiumSection(){
+    var sec = document.getElementById("premiumSection");
+    if (!sec) return;
+    sec.style.display = purchasesPlugin() ? "block" : "none";
+    document.getElementById("premiumStatus").textContent = !premium.active ? "Free"
+      : premium.kind === "lifetime" ? "Lifetime" : "Monthly";
+    document.getElementById("premiumUpgradeBtn").style.display = premium.active ? "none" : "block";
+    document.getElementById("premiumManageBtn").style.display = premium.kind === "monthly" ? "block" : "none";
+  }
+  function lockCard(text){
+    var c = document.createElement("div");
+    c.className = "lock-card";
+    var p = document.createElement("p"); p.textContent = text; c.appendChild(p);
+    var b = document.createElement("button");
+    b.className = "btn primary sm"; b.type = "button"; b.textContent = "Unlock Premium";
+    b.addEventListener("click", function(){ openPaywall(); });
+    c.appendChild(b);
+    return c;
+  }
+  document.getElementById("paywallCloseBtn").addEventListener("click", closePaywall);
+  document.getElementById("pwMonthlyBtn").addEventListener("click", function(){ buyPremium(PREMIUM_MONTHLY, "subs"); });
+  document.getElementById("pwLifetimeBtn").addEventListener("click", function(){ buyPremium(PREMIUM_LIFETIME, "inapp"); });
+  document.getElementById("pwRestoreBtn").addEventListener("click", restorePremium);
+  document.getElementById("premiumUpgradeBtn").addEventListener("click", function(){ openPaywall(); });
+  document.getElementById("premiumRestoreBtn").addEventListener("click", restorePremium);
+  document.getElementById("premiumManageBtn").addEventListener("click", function(){
+    window.open("https://apps.apple.com/account/subscriptions", "_blank");
+  });
+  renderPremiumSection();
+  refreshPremium();
+  document.addEventListener("visibilitychange", function(){ if (!document.hidden) refreshPremium(); });
+
   document.getElementById("exportPdf").addEventListener("click", exportPdf);
 
   /* ---------------- events ---------------- */
@@ -6017,7 +6219,10 @@
   document.getElementById("addAnnualLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "annual"); });
   document.getElementById("addSickLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "sick"); });
 
-  document.getElementById("newTypeBtn").addEventListener("click", function(){ openTypeSheet(null); });
+  document.getElementById("newTypeBtn").addEventListener("click", function(){
+    if (premiumLocked() && state.types.length >= FREE_TYPE_LIMIT){ openPaywall("The free version includes " + FREE_TYPE_LIMIT + " shift types. Premium gives you unlimited."); return; }
+    openTypeSheet(null);
+  });
   document.getElementById("typeSheetClose").addEventListener("click", closeTypeSheet);
   document.getElementById("typeSheetOverlay").addEventListener("click", function(e){ if (e.target === this) closeTypeSheet(); });
   document.getElementById("saveTypeBtn").addEventListener("click", saveType);
