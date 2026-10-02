@@ -860,7 +860,7 @@
           <li>leave records;</li>
           <li>shift swaps;</li>
           <li>roster notes;</li>
-          <li>pay settings (hourly rate and overtime and excess multipliers);</li>
+          <li>pay settings (such as hourly rate, pay cycle, overtime, excess and penalty rates, allowances, leave loading, super percentage and tax-estimate preferences);</li>
           <li>birthdays you add (name, day, month and optional year); and</li>
           <li>other information you choose to associate with your roster.</li>
         </ul>
@@ -904,6 +904,25 @@
       cannot recover it if you delete your browser storage, clear your
       application data, lose access to the device, or otherwise remove the
       locally stored information.</p>
+      <p><strong>Reminders and notifications</strong></p>
+      <p>If you turn on a reminder for a calendar event, the reminder is
+      scheduled on your own device. In the iPhone app it is delivered by
+      iOS's local notification system; on the web it is shown by your
+      browser while Roster Board is open. Reminders are not sent through a
+      push-notification server, and we do not receive a device token or
+      notification identifier. You can turn notifications off at any time in
+      your device or browser settings.</p>
+      <p><strong>PDF exports</strong></p>
+      <p>PDF rosters are created on your device. They are only shared if
+      you choose to save, print or send them, for example through the iOS
+      share sheet.</p>
+      <p><strong>The iPhone app</strong></p>
+      <p>The Roster Board iPhone app does not use advertising identifiers,
+      does not track you across other companies' apps or websites, and
+      does not include third-party analytics or advertising tools. If you
+      have chosen to share diagnostics with app developers in your device
+      settings, Apple may provide us with anonymous crash reports and
+      usage statistics under Apple's own privacy policy.</p>
 
       <h3>3. How we collect information</h3>
       <p>We generally collect personal information:</p>
@@ -1029,8 +1048,8 @@
       account within a reasonable period, subject to information that we
       are required or permitted to retain.</p>
       <p>To let you recover lost entries, your account keeps up to 10
-      earlier copies of your roster data (Account → Recover from an earlier
-      backup). Something you delete may therefore remain in those copies
+      earlier copies of your roster data, which we can restore if you contact
+      us. Something you delete may therefore remain in those copies
       until newer backups replace them. All copies are removed when you
       delete your account.</p>
       <p>Some information may remain temporarily in security logs or other
@@ -1454,11 +1473,6 @@
             <button class="leave-btn" id="addSickLeave">+ Sick Leave</button>
           </div>
         </div>
-        <div class="sheet-section" id="sheetPaySection" style="display:none;">
-          <div class="label-row"><span>Pay</span></div>
-          <div id="sheetPayTags"></div>
-          <div class="leave-btns" id="sheetPayPicker"></div>
-        </div>
         <div class="sheet-section" id="sheetBirthdaysSection" style="display:none;">
           <div class="label-row"><span>Birthdays</span></div>
           <div id="sheetBirthdays"></div>
@@ -1486,7 +1500,7 @@
           </div>
           <label class="remind-row" id="noteRemindRow">
             <input type="checkbox" id="noteRemindToggle">
-            <span>Remind me at this time (while Roster Board is open)</span>
+            <span>Remind me at this time</span>
           </label>
         </div>
       </div>
@@ -3586,7 +3600,6 @@
 
   function renderDaySheetBody(){
     var key = state.selectedDate;
-    renderPayTagsSection(key);
 
     var shiftsWrap = document.getElementById("sheetShifts");
     shiftsWrap.innerHTML = "";
@@ -3609,7 +3622,7 @@
           ? " · " + fmtHours(entryExcessHours(s)) + "h EX + " + fmtHours(entryOTHours(s)) + "h OT"
           : (comboT && s.hours!=null ? " · " + fmtHours(s.hours) + "h" : ""));
         tag.appendChild(label);
-        if (s.tag){
+        if (s.tag && t.kind === "personal"){
           var note = document.createElement("span");
           note.className = "tagged-note";
           note.textContent = "· “" + s.tag + "”";
@@ -3629,22 +3642,6 @@
           });
           tag.appendChild(hoursBtn);
         }
-        var tagBtn = document.createElement("button");
-        tagBtn.textContent = "✎";
-        tagBtn.title = "Note";
-        tagBtn.addEventListener("click", function(){
-          openMiniModal({
-            title: "Note",
-            message: entryDisplayName(s) + (isSplitEntry(s)
-              ? " · " + fmtHours(entryExcessHours(s)) + "h EX + " + fmtHours(entryOTHours(s)) + "h OT"
-              : (comboT && s.hours != null ? " · " + fmtHours(s.hours) + "h" : "")),
-            placeholder: "e.g. Swapped with Sam",
-            value: s.tag || "",
-            confirmLabel: "Save",
-            onConfirm: function(val){ setShiftTag(key, s.id, val.trim()); }
-          });
-        });
-        tag.appendChild(tagBtn);
         if (!comboT){
           var swapBtn = document.createElement("button");
           swapBtn.textContent = "⇄";
@@ -4219,8 +4216,71 @@
     saveStore(); renderAll();
   }
 
-  /* ---------------- note reminders (while the app is open) ---------------- */
+  /* ---------------- event reminders ---------------- */
+  // iPhone app: reminders are scheduled with iOS, so they arrive even when the
+  // app is closed. Browser: they pop up while Roster Board is open.
+  function nativeNotifications(){
+    var P = IS_NATIVE && window.Capacitor && Capacitor.Plugins;
+    return P && P.LocalNotifications ? P.LocalNotifications : null;
+  }
+  function remindersSupported(){ return !!(nativeNotifications() || window.Notification); }
+  function reminderNumId(id){ // iOS wants a 32-bit number
+    var h = 0;
+    for (var i = 0; i < id.length; i++){ h = ((h << 5) - h + id.charCodeAt(i)) | 0; }
+    return Math.abs(h) || 1;
+  }
+  var nativeReminderTimer = null;
+  function syncNativeReminders(){
+    var LN = nativeNotifications();
+    if (!LN) return;
+    clearTimeout(nativeReminderTimer);
+    nativeReminderTimer = setTimeout(function(){
+      var now = Date.now(), upcoming = [];
+      Object.keys(state.notes || {}).forEach(function(k){
+        (state.notes[k] || []).forEach(function(n){
+          if (!n.remind || !n.time || n.allDay) return;
+          var p = n.time.split(":"), d = parseYmd(k);
+          d.setHours(+p[0], +p[1], 0, 0);
+          if (d.getTime() > now) upcoming.push({ at: d, n: n });
+        });
+      });
+      // iOS keeps at most 64 pending; schedule the soonest
+      upcoming.sort(function(a, b){ return a.at - b.at; });
+      upcoming = upcoming.slice(0, 60);
+      LN.checkPermissions().then(function(perm){
+        if (perm.display !== "granted") return;
+        return LN.getPending().then(function(res){
+          var old = (res && res.notifications) || [];
+          return old.length ? LN.cancel({ notifications: old.map(function(x){ return { id: x.id }; }) }) : null;
+        }).then(function(){
+          if (!upcoming.length) return;
+          return LN.schedule({ notifications: upcoming.map(function(u){
+            return { id: reminderNumId(u.n.id), title: u.n.text, body: u.n.time, schedule: { at: u.at, allowWhileIdle: true } };
+          }) });
+        });
+      }).catch(function(){});
+    }, 800);
+  }
+  function askReminderPermission(){
+    var LN = nativeNotifications();
+    if (LN){
+      LN.requestPermissions().then(function(p){
+        if (p.display !== "granted") toast("Notifications are off for Roster Board in your iPhone Settings");
+        syncNativeReminders();
+      }).catch(function(){});
+      return;
+    }
+    if (!window.Notification) return;
+    if (Notification.permission === "default"){
+      Notification.requestPermission().then(function(p){
+        if (p !== "granted") toast("Notifications are blocked, so this reminder won't pop up");
+      }).catch(function(){});
+    } else if (Notification.permission === "denied"){
+      toast("Notifications are blocked in your settings, so reminders won't pop up");
+    }
+  }
   function checkReminders(){
+    if (nativeNotifications()) return; // iOS delivers these itself
     if (!window.Notification || Notification.permission !== "granted") return;
     var now = new Date();
     var todayKey = ymd(now);
@@ -5447,63 +5507,6 @@
   });
   document.getElementById("payRatesBtn").addEventListener("click", function(){ openPaySetup(); });
 
-  /* ---- day sheet: public holiday + allowances ---- */
-  function renderPayTagsSection(key){
-    var section = document.getElementById("sheetPaySection");
-    if (!payIsSetUp()){ section.style.display = "none"; return; }
-    section.style.display = "block";
-    var cfg = payConfig();
-    var tagsWrap = document.getElementById("sheetPayTags");
-    var picker = document.getElementById("sheetPayPicker");
-    tagsWrap.innerHTML = ""; picker.innerHTML = "";
-    var tags = payTagsOn(key);
-    var allowById = {};
-    cfg.allowances.forEach(function(a){ allowById[a.id] = a; });
-    tags.forEach(function(tag){
-      var a = tag.kind === "allowance" ? (allowById[tag.allowanceId] || { name: "Removed allowance", kind: "flat", amount: 0 }) : null;
-      var el = document.createElement("span");
-      el.className = "shift-tag pay-tag";
-      var txt = document.createElement("span");
-      txt.textContent = tag.kind === "holiday" ? "Public holiday" : a.name + " · " + (a.kind === "hours" ? fmtHours(a.amount) + "h" : fmtMoney(a.amount));
-      el.appendChild(txt);
-      var x = document.createElement("button");
-      x.type = "button"; x.setAttribute("aria-label", "Remove " + txt.textContent); x.textContent = "✕";
-      x.addEventListener("click", function(){ removePayTag(key, tag.id); });
-      el.appendChild(x);
-      tagsWrap.appendChild(el);
-    });
-    if (!tags.some(function(t){ return t.kind === "holiday"; })){
-      var ph = document.createElement("button");
-      ph.type = "button"; ph.className = "leave-btn"; ph.textContent = "+ Public holiday";
-      ph.addEventListener("click", function(){ addPayTag(key, { kind: "holiday" }); });
-      picker.appendChild(ph);
-    }
-    cfg.allowances.forEach(function(a){
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "leave-btn"; b.textContent = "+ " + a.name;
-      b.addEventListener("click", function(){ addPayTag(key, { kind: "allowance", allowanceId: a.id }); });
-      picker.appendChild(b);
-    });
-    if (!cfg.allowances.length){
-      var h = hintEl("Add allowances in Reports → Pay setup to tag them here.");
-      h.style.flexBasis = "100%";
-      picker.appendChild(h);
-    }
-  }
-  function addPayTag(key, tag){
-    tag.id = mkId(); tag.updatedAt = Date.now();
-    state.payTags = state.payTags || {};
-    (state.payTags[key] = state.payTags[key] || []).push(tag);
-    saveStore(); renderAll();
-    toast(tag.kind === "holiday" ? "Marked as a public holiday" : "Allowance added");
-  }
-  function removePayTag(key, id){
-    state.payTags[key] = (state.payTags[key] || []).filter(function(t){ return t.id !== id; });
-    if (!state.payTags[key].length) delete state.payTags[key];
-    tomb(id);
-    saveStore(); renderAll();
-  }
-
   function renderReports(){
     var range = periodRange();
     document.getElementById("repTitle").textContent = range.label;
@@ -5635,6 +5638,7 @@
 
   /* ---------------- render: everything ---------------- */
   function renderAll(){
+    syncNativeReminders();
     renderCalendar();
     renderTypes();
     renderReports();
@@ -5778,7 +5782,9 @@
         var detail = isSplitEntry(s)
           ? "EX " + fmtHours(entryExcessHours(s)) + "h + OT " + fmtHours(entryOTHours(s)) + "h"
           : (comboT === EXCESS_TYPE ? "Excess" : "Overtime") + (h ? " · " + fmtHours(h) + "h" : "");
-        out.push({name: bt ? bt.name : comboT.name, detail: detail, color: comboT.color, typeId: s.typeId, hours: h, work: true});
+        var exH = entryExcessHours(s), otH = entryOTHours(s);
+        if (!exH && !otH){ if (s.typeId === EXCESS_ID) exH = h; else otH = h; }
+        out.push({name: bt ? bt.name : comboT.name, detail: detail, color: comboT.color, typeId: s.typeId, hours: h, work: true, ex: exH, ot: otH});
       } else if (t.kind === "personal"){
         out.push({name: t.name, detail: t.allDay || !t.time ? "All day" : t.time, color: t.color, typeId: t.id, hours: 0});
       } else {
@@ -5848,8 +5854,15 @@
     cells.forEach(function(cell){
       if (!cell.inMonth) return;
       dayEntriesForPdf(ymd(cell.date)).forEach(function(e){
-        if (!totals[e.typeId]){ totals[e.typeId] = {name: e.typeId === OVERTIME_ID ? "Overtime" : e.typeId === EXCESS_ID ? "Excess" : e.name, color: e.color, count: 0, hours: 0}; order.push(e.typeId); }
-        totals[e.typeId].count++; totals[e.typeId].hours += e.hours || 0;
+        function add(id, name, color, hrs){
+          if (!totals[id]){ totals[id] = {name: name, color: color, count: 0, hours: 0}; order.push(id); }
+          totals[id].count++; totals[id].hours += hrs || 0;
+        }
+        if (COMBO_TYPES[e.typeId]){
+          // excess and overtime counted separately, so a split shift adds to both
+          if (e.ex) add(EXCESS_ID, "Excess", "#F7B3CE", e.ex);
+          if (e.ot) add(OVERTIME_ID, "Overtime", "#F0679E", e.ot);
+        } else add(e.typeId, e.name, e.color, e.hours);
         if (e.work){ hours += e.hours || 0; if (!COMBO_TYPES[e.typeId]) shifts++; }
       });
     });
@@ -5880,12 +5893,11 @@
     var gridBottom = pageH - margin - footerH - legendH;
     var rowH = (gridBottom - gridTop) / rows;
 
-    // weekend columns shaded, out-of-month days washed out
+    // out-of-month days washed out
     cells.forEach(function(cell, idx){
       var row = Math.floor(idx / 7), col = idx % 7;
       var x = gridLeft + col * colW, y = gridTop + row * rowH;
       if (!cell.inMonth){ doc.setFillColor(246, 246, 248); doc.rect(x, y, colW, rowH, "F"); }
-      else if (col >= 5){ doc.setFillColor(240, 241, 244); doc.rect(x, y, colW, rowH, "F"); }
     });
     // grid lines
     doc.setDrawColor(LINE[0], LINE[1], LINE[2]); doc.setLineWidth(.6);
@@ -6034,15 +6046,7 @@
       toast("Pick a time for the reminder");
       return;
     }
-    if (remindToggle.checked && window.Notification){
-      if (Notification.permission === "default"){
-        Notification.requestPermission().then(function(p){
-          if (p !== "granted") toast("Notifications are blocked, so this reminder won't pop up");
-        }).catch(function(){});
-      } else if (Notification.permission === "denied"){
-        toast("Notifications are blocked in your settings, so reminders won't pop up");
-      }
-    }
+    if (remindToggle.checked) askReminderPermission();
     if (state.editingNote){
       var toKey = document.getElementById("noteDate").value || state.editingNote.date;
       var ok = updateNote(state.editingNote.date, state.editingNote.id, toKey, input.value, timeInput.value, state.noteCategory, remindToggle.checked, allDayToggle.checked);
@@ -6057,8 +6061,7 @@
   function updateNoteAllDayVisibility(){
     var allDay = document.getElementById("noteAllDayToggle").checked;
     document.getElementById("noteTime").style.display = allDay ? "none" : "block";
-    // Reminders rely on browser notifications, which the iPhone app doesn't have.
-    document.getElementById("noteRemindRow").style.display = (allDay || !window.Notification) ? "none" : "flex";
+    document.getElementById("noteRemindRow").style.display = (allDay || !remindersSupported()) ? "none" : "flex";
   }
   document.getElementById("noteAllDayToggle").addEventListener("change", updateNoteAllDayVisibility);
   document.getElementById("addAnnualLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "annual"); });

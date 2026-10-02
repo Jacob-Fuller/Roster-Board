@@ -57,3 +57,21 @@ Privacy policy: https://www.rosterboard.net/privacy.html
 **Age rating:** 4+
 
 **What's New (first version):** First release.
+
+## App Privacy answers (App Store Connect → App Privacy)
+
+Tracking: **No**, the app does not track users.
+
+Data collected, all **linked to the user**, all used only for **App Functionality**, none used for tracking:
+
+| Category | Data type | Why |
+|---|---|---|
+| Contact Info | Email Address | Account sign-in |
+| Contact Info | Name | Optional display name |
+| Identifiers | User ID | Supabase account ID |
+| Financial Info | Other Financial Info | Hourly rate and pay settings for estimates |
+| User Content | Other User Content | Shifts, leave, events and birthdays synced to the account |
+
+Not collected: location, contacts, health, browsing history, purchases, usage data, diagnostics, advertising data. Reminders are local notifications, so no push token is collected.
+
+If someone uses the app without an account, nothing leaves the device, but the answers above still apply because signing in is offered.

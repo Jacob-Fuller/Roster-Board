@@ -16,6 +16,10 @@ The steps below are the parts that need a Mac, Xcode and your Apple account.
 - `appstore-screenshots/`: six captioned 1290×2796 screenshots, the size accepted
   for the 6.9" iPhone slot in App Store Connect.
 - `supabase/delete_my_account.sql`: in-app account deletion, which Apple requires.
+- Event reminders: `@capacitor/local-notifications` is in `package.json`, and the
+  app schedules reminders with iOS so they arrive even when the app is closed. iOS
+  asks the user for permission the first time they turn a reminder on. No Xcode
+  capability or server is needed for these local notifications.
 - Web app changes for the native app: password-reset emails link to
   rosterboard.net, and the web-only offline cache is skipped inside the app.
 
