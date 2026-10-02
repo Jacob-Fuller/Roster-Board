@@ -4,9 +4,28 @@ A shift calendar web app: custom shift types with auto-calculated duration,
 overtime, leave tracking, a repeating roster pattern that bulk-fills the
 calendar, month/year analytics with comparisons, pay estimates, per-shift
 notes, and a calendar-grid PDF roster export. Plain HTML/CSS/JS — no build
-step, no server-side code, nothing to install beyond a static file server.
+step. Optional accounts, cloud backup and roster sharing run on Supabase.
 
-## What's new (v55 – v59)
+## What's new (v60 – v61)
+
+- **v61 (full audit):** Safer cloud sync — two devices saving at once can no
+  longer wipe each other's changes (the cloud write only succeeds if nobody
+  else wrote since it was read), two open tabs merge instead of overwriting,
+  and edits to notes, shift types and birthdays now sync. Signing out clears
+  the device, and one account's data is never merged into another. Shared
+  rosters no longer include personal entries or notes (needs
+  `native/supabase/security_fixes.sql` run in Supabase). Re-stamping the
+  roster keeps hand-edited days (overtime, notes, swaps, leave) and personal
+  entries. Closing a pop-up with ✕ can no longer trigger the action later.
+  Recovering a backup brings back deleted entries. Plus fixes to swaps,
+  reminders, deleting shift types, report bars, pay multipliers of 0, leave
+  day counts, Feb 29 birthdays, PDF export (exports the month or year shown
+  in Reports), the server (crash on bad links, no longer serves repo files)
+  and a single, up-to-date privacy policy.
+- **v60:** The offline cache no longer stores cloud reads. Devices were reading
+  an old copy of the cloud data and uploading over each other's changes.
+
+## Earlier changes (v55 – v59)
 
 - **v59:** Full-bleed navy/gold icon, plus a separate padded "maskable" icon for
   Android. Combined shifts now read **Excess + Overtime**, with excess first.
@@ -446,8 +465,8 @@ step, no server-side code, nothing to install beyond a static file server.
   overtime, days worked, leave taken, an hourly-rate pay estimate, a
   breakdown by shift type, weekday vs weekend, and a comparison against the
   previous period. Year view adds a year-in-review card (busiest month,
-  totals). Export the period as CSV, a polished PDF roster (month view), or
-  a full JSON backup.
+  totals). Export a polished PDF roster of the month shown, or every month
+  of the year shown.
 
 ## Files
 
@@ -455,18 +474,20 @@ step, no server-side code, nothing to install beyond a static file server.
 - `privacy.html` — the Privacy Policy page, linked from the login screen and Account
 - `manifest.json` — lets phones/desktops "install" it as an app icon
 - `sw.js` — service worker; caches the app so it still opens with no signal
-- `icon-192.png`, `icon-512.png` — app icons used by the manifest
-- `server.js`, `package.json` — an optional tiny Node static-file server,
-  only needed if you're hosting this as a "Web Service" (Render, Railway,
-  Fly.io, etc.) rather than a "Static Site". Not used for GitHub Pages,
-  Netlify, Vercel, or opening the file locally.
+- `icon-192.png`, `icon-512.png`, `icon-maskable-*.png`, `apple-touch-icon.png`,
+  `icon.svg`, `icon-1024.png` — app icons
+- `screenshots/` — install-screen screenshots referenced by the manifest
+- `server.js`, `package.json` — the Node file server Render runs. It only
+  serves the public files above (never README, `native/` or `.git`), sends
+  security headers, and tells browsers to always re-check `index.html` and
+  `sw.js` so updates arrive straight away.
+- `native/` — the Capacitor wrapper for the iPhone app, plus
+  `native/supabase/*.sql` database scripts. See `native/IOS-SETUP.md`.
 
-Data is stored in the browser's `localStorage`, per device — no account,
-no server. Use "Full backup" (Reports tab) to move data between devices,
-or host it and open the same URL everywhere so it's at least the same
-browser profile. PDF export uses jsPDF, loaded from a CDN — it needs an
-internet connection the moment you click Export, even if the rest of the
-app works offline.
+Without an account, data is stored only in the browser's `localStorage` on
+that device. Signed in, every change is also backed up to Supabase and
+merged across all your devices. The sign-in and PDF libraries load from a
+CDN; the offline cache keeps a copy after the first visit.
 
 ## Setting up your Supabase project
 
@@ -507,10 +528,13 @@ table that stores each account's data.
 3. Optional, for faster testing: Authentication → Providers → Email → turn
    off "Confirm email" so new accounts can log in immediately instead of
    needing to click a confirmation link first. Leave it on for real users.
-4. Authentication → URL Configuration → set **Site URL** to your real
-   deployed URL (e.g. `https://roster-board.onrender.com`) and add
-   `https://roster-board.onrender.com/*` under **Redirect URLs**, so email
-   confirmation links work instead of pointing at localhost.
+4. Authentication → URL Configuration → set **Site URL** to
+   `https://www.rosterboard.net` and add `https://www.rosterboard.net/*` and
+   `https://rosterboard.net/*` under **Redirect URLs**, so confirmation and
+   password-reset links open the real site.
+5. Run `native/supabase/delete_my_account.sql` (in-app account deletion,
+   required by Apple) and then `native/supabase/security_fixes.sql` (locks
+   down sharing) in the SQL Editor the same way.
 
 That's the account/sync setup — sign-up, login, and sync are already wired up
 in the app itself. This is also the foundation for sharing one account/login
@@ -661,9 +685,12 @@ Notes on how this stays private:
   rate), so those two never leave the owner's own account no matter what.
 - It also refuses to return anything unless an `accepted` connection exists
   between the caller and the account being viewed, checked server-side.
-- A person can only be invited by an email that already has an account —
-  there's no way to probe for arbitrary emails otherwise, since the function
-  only ever says "sent" or "no account found."
+- After `security_fixes.sql`, inviting an email always looks the same
+  whether or not it has an account, so it can't be used to check who uses
+  Roster Board, and each person can send at most 20 invites a day. That
+  script also replaces `get_shared_roster` with a version that strips
+  personal types and entries, shift and type notes, and swap partner
+  names/notes on the server.
 
 ### Shared rosters troubleshooting
 
@@ -705,7 +732,7 @@ policy if exists` guard above.)
 ## Run it locally
 
 ```
-cd webapp
+cd roster-board
 python3 -m http.server 8000
 ```
 
@@ -715,7 +742,7 @@ Screen" prompt need it served over `http://` or `https://`.)
 
 Or, with Node instead of Python:
 ```
-cd webapp
+cd roster-board
 node server.js
 ```
 Then open `http://localhost:3000`.
@@ -787,8 +814,15 @@ JavaScript, no framework). Data model, in `localStorage` under the key
   if you picked a different "Swapping for" type)
 - `roster` — `{weeks, pattern}`, where `pattern[weekIndex][dayIndex]` is an
   array of type ids for that day of the repeating cycle (`dayIndex` 0 = Monday)
-- `settings` — `{hourlyRate, theme}` — `hourlyRate` is currently unused (the
-  pay calculator was removed); `theme` is `"system"|"light"|"dark"`
+- `birthdays` — `[{id, name, day, month, year?}]`
+- `settings` — `{hourlyRate, otMultiplier, excessMultiplier, payLeave,
+  updatedAt}` for the pay estimate. Light/dark is stored per device under
+  `rosterBoard.theme`, not synced.
+- `tombstones` — `{id: deletedAtMs}`, so a deletion on one device isn't
+  undone by another device's copy. A record survives a tombstone only if it
+  was saved after the deletion (e.g. restored from a backup).
+- Every edited record carries `updatedAt` (ms); when two devices have
+  different copies of the same record, the newer one wins.
 
 If you change what `index.html` caches or add files, bump the `CACHE`
 version string at the top of `sw.js` so returning visitors pick up the
@@ -796,13 +830,17 @@ update instead of a stale cached copy.
 
 Cloud side: a signed-in account's data lives in Supabase, table `app_data`,
 one row per user (`user_id`, `data` — the same JSON shape as `localStorage`,
-`updated_at`). The app writes to both `localStorage` and this table on every
-save (debounced ~1.2s for the cloud write), and pulls the cloud copy down on
-login so the same account sees its data on any device.
+`updated_at`). On every save (debounced ~1.2s), on opening the app and on
+coming back online, the app reads the cloud row, merges it with the device,
+and writes it back only if `updated_at` hasn't changed since the read;
+otherwise it re-reads and merges again. The row also holds `history`: up to
+10 earlier copies (at most one per 6 hours) for Account → Recover from an
+earlier backup. The device remembers which account its data belongs to
+(`rosterBoard.owner`) so it is never merged into a different account.
 
 ## Where this is headed
 
 This web version is the fast sandbox for nailing down the feature set
-before a native iOS build (Swift/SwiftUI) with real accounts and synced
-data — noted here so future-you remembers the plan: prove the concept
+before the native iOS app (Capacitor wrapper in `native/`), with real
+accounts and synced data — noted here so future-you remembers the plan: prove the concept
 here first, then port once it feels right.

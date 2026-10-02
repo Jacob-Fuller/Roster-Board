@@ -9,7 +9,9 @@ Plan your shifts, track excess hours and overtime on the same shift, and see you
 estimated pay. Your roster is safely backed up to your account.
 
 **Keywords (100 max, comma-separated, no spaces):**
-shift,roster,work schedule,overtime,rota,nurse,police,calendar,pay,timesheet,leave,shift worker
+rota,timesheet,leave,nurse,police,paramedic,schedule,work,hours,planner,swap,excess,wage
+
+(Apple already indexes the words in the name and subtitle, so they aren't repeated here.)
 
 **Description:**
 
@@ -47,3 +49,11 @@ SAFE AND SHARED
   pay are never shared
 
 Privacy policy: https://www.rosterboard.net/privacy.html
+
+**Support URL:** https://www.rosterboard.net
+
+**Copyright:** 2026 Jacob Fuller
+
+**Age rating:** 4+
+
+**What's New (first version):** First release.

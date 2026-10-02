@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roster Board</title>
-<meta name="description" content="A shift calendar app with rosters, overtime, leave tracking, pay estimates and analytics.">
+<meta name="description" content="A shift calendar app with rosters, overtime, leave tracking, pay estimates and reports.">
 <meta name="theme-color" content="#0F2244" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.json">
@@ -15,13 +15,13 @@
 <meta name="apple-mobile-web-app-title" content="Roster Board">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <style>
   :root{
     --bg:#F5F2EA; --surface:#FFFFFF; --surface-2:#EEEAE0; --border:#DED7C6;
-    --text:#1C1B18; --text-dim:#6B6558; --text-faint:#9C9585;
+    --text:#1C1B18; --text-dim:#6B6558; --text-faint:#787163;
     --accent:#B97A1E; --accent-ink:#FFFFFF; --accent-soft:#F0DEBE;
     --danger:#C24444; --shadow: 0 1px 2px rgba(30,25,15,.06), 0 6px 20px rgba(30,25,15,.06);
     --radius-lg:20px; --radius-md:14px; --radius-sm:9px; --today-ring:#B97A1E;
@@ -30,7 +30,7 @@
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --bg:#0C1016; --surface:#141A22; --surface-2:#1C232D; --border:#2B3542;
-      --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#5E6875;
+      --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#7F8A98;
       --accent:#F0A947; --accent-ink:#211400; --accent-soft:#3A2C14;
       --danger:#E5696A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
       --today-ring:#F0A947; --prev-bar:#3A4552;
@@ -38,7 +38,7 @@
   }
   :root[data-theme="dark"]{
     --bg:#0C1016; --surface:#141A22; --surface-2:#1C232D; --border:#2B3542;
-    --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#5E6875;
+    --text:#EEF1F5; --text-dim:#95A1AF; --text-faint:#7F8A98;
     --accent:#F0A947; --accent-ink:#211400; --accent-soft:#3A2C14;
     --danger:#E5696A; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
     --today-ring:#F0A947; --prev-bar:#3A4552;
@@ -205,13 +205,13 @@
   .overlay.center .sheet-handle{display:none;}
 
   .auth-screen{
-    position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center;
-    padding:28px 22px; background:
+    position:fixed; inset:0; z-index:200; display:none; align-items:flex-start; justify-content:center; overflow-y:auto;
+    padding:calc(env(safe-area-inset-top, 0px) + 28px) 22px calc(env(safe-area-inset-bottom, 0px) + 28px); background:
       radial-gradient(120% 90% at 50% -10%, rgba(111,147,204,.35), transparent 60%),
       linear-gradient(165deg, #1B3560 0%, #0F2244 45%, #060E1E 100%);
   }
   .auth-screen.show{display:flex;}
-  .auth-wrap{width:100%; max-width:360px;}
+  .auth-wrap{width:100%; max-width:360px; margin:auto 0;}
   .auth-brand{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:22px; text-align:center;}
   .auth-logo{width:56px; height:56px; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,.35);}
   .auth-appname{font-family:'Fraunces', Georgia, serif; font-size:1.5rem; font-weight:600; color:#FBF6EC;}
@@ -275,7 +275,7 @@
   .sheet-head{display:flex; align-items:flex-start; justify-content:space-between; padding:14px 18px 10px;}
   .sheet-head h3{font-size:1.15rem;}
   .sheet-head .close{border:none; background:var(--surface-2); width:30px; height:30px; border-radius:50%; color:var(--text-dim); font-size:.95rem; flex:none;}
-  .sheet-body{overflow-y:auto; padding:0 18px 22px;}
+  .sheet-body{overflow-y:auto; padding:0 18px calc(22px + env(safe-area-inset-bottom, 0px));}
   .sheet-section{margin-top:8px;}
   .sheet-section .label-row{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
   .sheet-section .label-row span{font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint);}
@@ -432,6 +432,10 @@
     font-size:.78rem; font-weight:600; line-height:1.35; background:var(--accent-soft); color:var(--text);}
   .sync-banner.show{display:block;}
   .sync-banner.bad{background:#F9DADA; color:#7A1F1F;}
+  :root[data-theme="dark"] .sync-banner.bad{background:#3A1A1A; color:#F5B5B5;}
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .sync-banner.bad{background:#3A1A1A; color:#F5B5B5;} }
+  /* room under the last row for the floating edit button */
+  #view-calendar, #view-roster{padding-bottom:84px;}
   .sync-status{font-size:.76rem; color:var(--text-dim); margin-top:6px;}
   .sync-status.ok{color:#2E9E6A;}
   .sync-status.bad{color:var(--danger);}
@@ -543,19 +547,19 @@
   </div>
 
   <div class="onboarding-screen" id="onboardingOverlay">
-    <button class="onboarding-skip" id="onboardingSkipBtn">&#10005;</button>
+    <button class="onboarding-skip" id="onboardingSkipBtn" aria-label="Skip intro">&#10005;</button>
     <button class="onboarding-arrow prev" id="onboardingPrevBtn" aria-label="Back">&#8249;</button>
     <button class="onboarding-arrow next" id="onboardingArrowNextBtn" aria-label="Next">&#8250;</button>
     <div class="onboarding-slides" id="onboardingSlides">
       <div class="onboarding-slide">
-        <div class="onboarding-icon">&#128257;</div>
-        <h2>Set up your roster</h2>
-        <p>Start on the Roster tab and build your repeating shift pattern — set how many weeks it runs for, then stamp it onto the calendar as your starting template.</p>
-      </div>
-      <div class="onboarding-slide">
         <div class="onboarding-icon">&#9200;</div>
         <h2>Create your shifts</h2>
-        <p>Head to Shifts and add your own shift types — name, colour and start/end time — and the hours are worked out for you automatically.</p>
+        <p>Start on the Shifts tab and add your own shift types — name, colour and start/end time — and the hours are worked out for you automatically.</p>
+      </div>
+      <div class="onboarding-slide">
+        <div class="onboarding-icon">&#128257;</div>
+        <h2>Set up your roster</h2>
+        <p>Then on the Roster tab, build your repeating pattern, set how many weeks it runs for, and stamp it onto the calendar as your starting template.</p>
       </div>
       <div class="onboarding-slide">
         <div class="onboarding-icon">&#128202;</div>
@@ -565,7 +569,7 @@
       <div class="onboarding-slide">
         <div class="onboarding-icon">&#128200;</div>
         <h2>Reports</h2>
-        <p>See totals for the month — hours worked, overtime, excess hours and leave — and export whenever you need them.</p>
+        <p>See totals for the month or year — hours worked, excess hours, overtime, leave and estimated pay — and export your roster as a PDF.</p>
       </div>
       <div class="onboarding-slide">
         <div class="onboarding-icon">&#128198;</div>
@@ -586,7 +590,7 @@
       <span></span>
     </div>
     <div class="privacy-body">
-      <p class="policy-updated">Last updated 21 September 2026</p>
+      <p class="policy-updated">Last updated 2 October 2026</p>
 
       <p>This Privacy Policy explains how Roster Board ("Roster Board", "we",
       "us" or "our") collects, uses, stores, discloses and protects personal
@@ -602,7 +606,8 @@
       by law before collecting or using your information.</p>
 
       <h3>1. Who we are</h3>
-      <p>Roster Board is the operator of the Roster Board Service.</p>
+      <p>Roster Board is operated by Jacob Fuller, an individual based in
+      Australia.</p>
       <p>If you have any questions about this Privacy Policy, your personal
       information, or how your information is handled, you can contact us
       at: <a href="mailto:contact@rosterboard.net">contact@rosterboard.net</a></p>
@@ -616,6 +621,7 @@
       <div class="policy-card">
         <ul>
           <li>your email address;</li>
+          <li>an optional display name;</li>
           <li>authentication information associated with your account; and</li>
           <li>information necessary to maintain the security of your account.</li>
         </ul>
@@ -634,7 +640,9 @@
           <li>overtime and excess hours;</li>
           <li>leave records;</li>
           <li>shift swaps;</li>
-          <li>roster notes; and</li>
+          <li>roster notes;</li>
+          <li>pay settings (hourly rate and overtime and excess multipliers);</li>
+          <li>birthdays you add (name, day, month and optional year); and</li>
           <li>other information you choose to associate with your roster.</li>
         </ul>
       </div>
@@ -657,22 +665,15 @@
       connection, including the relevant email address and invitation or
       connection status.</p>
 
-      <p><strong>Technical and usage information</strong></p>
-      <p>We may automatically collect limited technical and diagnostic
-      information when you use the Service, including information such as:</p>
-      <div class="policy-card">
-        <ul>
-          <li>device type;</li>
-          <li>browser type and version;</li>
-          <li>operating system;</li>
-          <li>IP address or other connection information where technically necessary;</li>
-          <li>approximate technical information about your session;</li>
-          <li>error and diagnostic information; and</li>
-          <li>information necessary to maintain the security, reliability and performance of the Service.</li>
-        </ul>
-      </div>
-      <p>We use this information primarily to operate, secure, troubleshoot
-      and improve Roster Board.</p>
+      <p><strong>Technical information</strong></p>
+      <p>Roster Board does not include analytics, advertising or tracking
+      tools. Our hosting and database providers automatically process
+      standard technical information, such as your IP address, browser
+      type and request logs, only to deliver and secure the Service.</p>
+      <p>To display the app, your device also downloads code libraries from
+      jsDelivr and cdnjs (Cloudflare) and fonts from Google Fonts. Like any
+      website, these providers receive your IP address and browser
+      information when they deliver those files.</p>
 
       <p><strong>Information stored locally on your device</strong></p>
       <p>Roster Board may allow you to use certain features without
@@ -729,15 +730,15 @@
       <p>At present, shared roster information may include:</p>
       <div class="policy-card">
         <ul>
-          <li>shift types;</li>
-          <li>rostered shifts;</li>
-          <li>overtime;</li>
-          <li>leave; and</li>
-          <li>shift swaps.</li>
+          <li>your work shift types (name, colour and times);</li>
+          <li>rostered work shifts, including overtime and excess hours;</li>
+          <li>leave (type and hours); and</li>
+          <li>which shifts were swapped and to which dates.</li>
         </ul>
       </div>
-      <p>Personal calendar entries and personal calendar notes are not
-      included in shared roster information.</p>
+      <p>Personal calendar entries, personal shift types, shift and type
+      notes, the names and notes on shift swaps, birthdays and pay settings
+      are never included in shared roster information.</p>
       <p>These restrictions are enforced by the Service's server-side access
       controls and are not intended to rely solely on information being
       hidden from the user interface.</p>
@@ -753,8 +754,9 @@
       <p>Our infrastructure currently includes services such as:</p>
       <div class="policy-card">
         <ul>
-          <li><strong>Supabase</strong> — database and authentication infrastructure; and</li>
-          <li><strong>Render</strong> — application hosting and related infrastructure.</li>
+          <li><strong>Supabase</strong> — database and authentication infrastructure;</li>
+          <li><strong>Render</strong> — application hosting and related infrastructure; and</li>
+          <li><strong>jsDelivr, cdnjs (Cloudflare) and Google Fonts</strong> — delivery of code libraries and fonts used to display the app.</li>
         </ul>
       </div>
       <p>We may use additional service providers in the future where
@@ -807,8 +809,13 @@
       delete or de-identify personal information associated with your
       account within a reasonable period, subject to information that we
       are required or permitted to retain.</p>
-      <p>Some information may remain temporarily in backups, security logs
-      or other technical systems before it is automatically deleted or
+      <p>To let you recover lost entries, your account keeps up to 10
+      earlier copies of your roster data (Account → Recover from an earlier
+      backup). Something you delete may therefore remain in those copies
+      until newer backups replace them. All copies are removed when you
+      delete your account.</p>
+      <p>Some information may remain temporarily in security logs or other
+      technical systems before it is automatically deleted or
       overwritten.</p>
       <p>Information that is required to be retained by law may be retained
       for the applicable legal period.</p>
@@ -964,7 +971,7 @@
         <div class="stat-tile"><div class="label">Days worked</div><div class="value num" id="repDaysWorked">0</div></div>
         <div class="stat-tile"><div class="label">Excess hours</div><div class="value num" id="repEXHours">0</div></div>
         <div class="stat-tile"><div class="label">Overtime</div><div class="value num" id="repOTHours">0</div></div>
-        <div class="stat-tile"><div class="label">Leave taken</div><div class="value num" id="repLeaveDays">0</div></div>
+        <div class="stat-tile"><div class="label">Leave days</div><div class="value num" id="repLeaveDays">0</div></div>
         <div class="stat-tile"><div class="label">Est. pay</div><div class="value num" id="repPayTile">—</div></div>
       </div>
 
@@ -1210,7 +1217,7 @@
       <div class="sheet-handle"></div>
       <div class="sheet-head">
         <h3 id="sheetDate">Saturday, 19 September</h3>
-        <button class="close" id="sheetClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="sheetClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <div class="sheet-section">
@@ -1226,8 +1233,8 @@
           <div class="label-row"><span>Leave</span></div>
           <div id="sheetLeave" class="leave-list"></div>
           <div class="leave-btns">
-            <button class="leave-btn" id="addAnnualLeave">+ Annual leave</button>
-            <button class="leave-btn" id="addSickLeave">+ Sick leave</button>
+            <button class="leave-btn" id="addAnnualLeave">+ Annual Leave</button>
+            <button class="leave-btn" id="addSickLeave">+ Sick Leave</button>
           </div>
         </div>
         <div class="sheet-section" id="sheetBirthdaysSection" style="display:none;">
@@ -1251,13 +1258,13 @@
             <span>All day</span>
           </label>
           <div class="add-note-row">
-            <input type="time" id="noteTime">
-            <input type="text" id="noteInput" placeholder="e.g. Dentist, Birthday dinner...">
+            <input type="time" id="noteTime" aria-label="Event time (optional)">
+            <input type="text" id="noteInput" aria-label="Event name" placeholder="e.g. Dentist, Birthday dinner...">
             <button class="btn sm primary" id="addNoteBtn">Add</button>
           </div>
           <label class="remind-row" id="noteRemindRow">
             <input type="checkbox" id="noteRemindToggle">
-            <span>Remind me at this time</span>
+            <span>Remind me at this time (while Roster Board is open)</span>
           </label>
         </div>
       </div>
@@ -1269,7 +1276,7 @@
       <div class="sheet-handle"></div>
       <div class="sheet-head">
         <h3 id="typeSheetTitle">New shift type</h3>
-        <button class="close" id="typeSheetClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="typeSheetClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <div class="form-row">
@@ -1284,7 +1291,7 @@
           </div>
         </div>
         <div class="form-row">
-          <label>Color</label>
+          <label>Colour</label>
           <div class="color-grid" id="colorGrid"></div>
         </div>
         <div id="typeWorkTime">
@@ -1347,7 +1354,7 @@
       <div class="sheet-handle"></div>
       <div class="sheet-head">
         <h3 id="birthdaySheetTitle">Add birthday</h3>
-        <button class="close" id="birthdaySheetClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="birthdaySheetClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <div class="form-row">
@@ -1381,7 +1388,7 @@
     <div class="sheet">
       <div class="sheet-head">
         <h3 id="miniModalTitle">Title</h3>
-        <button class="close" id="miniModalClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="miniModalClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <p id="miniModalMessage" class="section-sub" style="margin:0 0 4px;"></p>
@@ -1401,7 +1408,7 @@
     <div class="sheet">
       <div class="sheet-head">
         <h3 id="kindChooserTitle">Dayshift</h3>
-        <button class="close" id="kindChooserClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="kindChooserClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <div class="kind-options" id="kindChooserOptions"></div>
@@ -1414,7 +1421,7 @@
     <div class="sheet">
       <div class="sheet-head">
         <h3>Pay rates</h3>
-        <button class="close" id="payClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="payClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <div class="form-row" style="margin-top:0;">
@@ -1448,7 +1455,7 @@
     <div class="sheet">
       <div class="sheet-head">
         <h3>Earlier backups</h3>
-        <button class="close" id="historyClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="historyClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <p class="section-sub" style="margin:0 0 10px;">Pick a backup to bring back anything that's gone missing. Your current data is kept.</p>
@@ -1465,7 +1472,7 @@
           <div class="split-kicker">Excess + Overtime</div>
           <h3 id="splitTitle">Dayshift</h3>
         </div>
-        <button class="close" id="splitClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="splitClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <p class="section-sub" id="splitIntro" style="margin:0 0 6px;"></p>
@@ -1495,7 +1502,7 @@
       <div class="sheet-handle"></div>
       <div class="sheet-head">
         <h3 id="patternSheetTitle">Week 1 · Monday</h3>
-        <button class="close" id="patternSheetClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="patternSheetClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <div class="section-sub" style="margin:0 0 10px;">Tap to include a shift type on this day of the pattern.</div>
@@ -1509,7 +1516,7 @@
     <div class="sheet">
       <div class="sheet-head">
         <h3 id="swapFormTitle">Swap this shift</h3>
-        <button class="close" id="swapFormClose">&#10005;</button>
+        <button aria-label="Close" class="close" id="swapFormClose">&#10005;</button>
       </div>
       <div class="sheet-body">
         <div class="form-row">
@@ -1616,7 +1623,11 @@
   function birthdaysOnDate(list, date){
     if (!list || !list.length) return [];
     var day = date.getDate(), month = date.getMonth()+1, year = date.getFullYear();
-    return list.filter(function(b){ return b.day === day && b.month === month; }).map(function(b){
+    var leap = new Date(year, 1, 29).getMonth() === 1;
+    return list.filter(function(b){
+      if (b.day === day && b.month === month) return true;
+      return !leap && b.month === 2 && b.day === 29 && month === 2 && day === 28; // Feb 29 birthdays on Feb 28 in other years
+    }).map(function(b){
       var age = b.year ? (year - b.year) : null;
       return {id:b.id, name:b.name, age: (age != null && age >= 0) ? age : null};
     });
@@ -1659,7 +1670,12 @@
   }
 
   /* ---------------- mini modal (prompt / confirm) ---------------- */
+  // Only one mini modal is ever open. Its listeners are removed however it is
+  // closed (Save, Cancel or the ✕), so a cancelled action can never run later
+  // when the next mini modal is confirmed.
+  var activeMiniModalCancel = null;
   function openMiniModal(opts){
+    if (activeMiniModalCancel) activeMiniModalCancel(true);
     document.getElementById("miniModalTitle").textContent = opts.title || "";
     var msgEl = document.getElementById("miniModalMessage");
     msgEl.textContent = opts.message || "";
@@ -1684,13 +1700,15 @@
       overlay.classList.remove("show");
       confirmBtn.removeEventListener("click", onConfirm);
       cancelBtn.removeEventListener("click", onCancel);
+      if (activeMiniModalCancel === onCancel) activeMiniModalCancel = null;
     }
     function onConfirm(){
       var val = opts.showInput === false ? true : input.value;
       cleanup();
       if (opts.onConfirm) opts.onConfirm(val);
     }
-    function onCancel(){ cleanup(); if (opts.onCancel) opts.onCancel(); }
+    function onCancel(replaced){ cleanup(); if (opts.onCancel && replaced !== true) opts.onCancel(); }
+    activeMiniModalCancel = onCancel;
     var confirmBtn = document.getElementById("miniModalConfirm");
     var cancelBtn = document.getElementById("miniModalCancel");
     confirmBtn.addEventListener("click", onConfirm);
@@ -1698,11 +1716,15 @@
     if (opts.showInput !== false) setTimeout(function(){ input.focus(); }, 50);
   }
   document.getElementById("miniModalClose").addEventListener("click", function(){
-    document.getElementById("miniModalOverlay").classList.remove("show");
+    if (activeMiniModalCancel) activeMiniModalCancel();
+    else document.getElementById("miniModalOverlay").classList.remove("show");
   });
 
   /* ---------------- persistence ---------------- */
   var storageOk = true;
+  loadStore.empty = function(){
+    return { types: [], shifts:{}, notes:{}, leave:{}, swaps:{}, birthdays: [], roster:{ weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 }, settings:{ hourlyRate:0 }, tombstones:{} };
+  };
   function loadStore(){
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
@@ -1711,7 +1733,7 @@
         if (parsed && Array.isArray(parsed.types)) return parsed;
       }
     } catch(e){ storageOk = false; }
-    return { types: [], shifts:{}, notes:{}, leave:{}, swaps:{}, roster:{ weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 }, settings:{ hourlyRate:0 }, tombstones:{} };
+    return loadStore.empty();
   }
   function tomb(id){
     if (!id) return;
@@ -1895,14 +1917,37 @@
     document.getElementById("shareRosterSignedOut").style.display = currentUser ? "none" : "block";
   }
 
+  // Which account the data on this device belongs to. Data saved while signed
+  // in to one account must never be merged into a different account.
+  var OWNER_KEY = "rosterBoard.owner";
+  function dataOwner(){ try { return localStorage.getItem(OWNER_KEY) || ""; } catch(e){ return ""; } }
+  var loadedOwner = dataOwner(); // whose data this tab loaded into memory
+  function setDataOwner(id){ loadedOwner = id; try { localStorage.setItem(OWNER_KEY, id); } catch(e){} }
+  function resetLocalState(){
+    var fresh = loadStore.empty();
+    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(SYNC_DIRTY_KEY); localStorage.removeItem(SYNC_LAST_KEY); } catch(e){}
+    applyMergedLocally(fresh, true);
+  }
   function onSignedIn(user){
+    if (currentUser && currentUser.id === user.id){
+      // token refresh / profile update for the same account: no new sync needed
+      currentUser = user;
+      updateAccountCard();
+      if (authMode !== "recovery") hideAuthOverlay();
+      return;
+    }
+    if (loadedOwner && loadedOwner !== user.id) resetLocalState();
+    setDataOwner(user.id);
     currentUser = user;
+    syncAuthLost = false;
     clearSkippedAuth();
-    hideAuthOverlay();
+    if (authMode !== "recovery") hideAuthOverlay();
     updateAccountCard();
     pullCloudData();
   }
   function onSignedOut(){
+    // Session ended without the person choosing to sign out (e.g. it expired):
+    // keep their data here so it can back up once they sign in again.
     currentUser = null;
     syncAuthLost = false;
     updateAccountCard();
@@ -1924,6 +1969,12 @@
     Object.keys(b||{}).forEach(function(id){ if (!out[id] || b[id] > out[id]) out[id] = b[id]; });
     return out;
   }
+  // A record beats a deletion only if it was saved after the deletion (e.g. it
+  // was restored from a backup); otherwise the deletion wins on every device.
+  function survives(item, tombstones){
+    var t = tombstones[item.id];
+    return !t || (item.updatedAt || 0) > t;
+  }
   function mergeBucketed(localBuckets, remoteBuckets, tombstones){
     // Union by id. If the same record exists on both sides (e.g. it was edited or
     // moved to another day on one device), keep whichever copy was edited most
@@ -1933,7 +1984,6 @@
       Object.keys(buckets||{}).forEach(function(dateKey){
         (buckets[dateKey]||[]).forEach(function(item){
           if (!item || !item.id) return;
-          if (tombstones[item.id]) return;
           var cur = picked[item.id];
           if (!cur){ picked[item.id] = {dateKey:dateKey, item:item}; order.push(item.id); return; }
           if (!isLocal && (item.updatedAt||0) > (cur.item.updatedAt||0)) picked[item.id] = {dateKey:dateKey, item:item};
@@ -1945,25 +1995,56 @@
     var result = {};
     order.forEach(function(id){
       var p = picked[id];
+      if (!survives(p.item, tombstones)) return;
+      if (tombstones[id]) delete tombstones[id];
       (result[p.dateKey] = result[p.dateKey] || []).push(p.item);
     });
     return result;
   }
   function mergeArrayById(localArr, remoteArr, tombstones){
-    var seen = {}, out = [];
-    (localArr||[]).concat(remoteArr||[]).forEach(function(item){
+    var picked = {}, order = [];
+    (localArr||[]).forEach(function(item){
+      if (!item || !item.id || picked[item.id]) return;
+      picked[item.id] = item; order.push(item.id);
+    });
+    (remoteArr||[]).forEach(function(item){
       if (!item || !item.id) return;
-      if (tombstones[item.id]) return;
-      if (seen[item.id]) return;
-      seen[item.id] = true;
+      var cur = picked[item.id];
+      if (!cur){ picked[item.id] = item; order.push(item.id); return; }
+      if ((item.updatedAt||0) > (cur.updatedAt||0)) picked[item.id] = item;
+    });
+    var out = [];
+    order.forEach(function(id){
+      var item = picked[id];
+      if (!survives(item, tombstones)) return;
+      if (tombstones[id]) delete tombstones[id];
       out.push(item);
     });
     return out;
   }
+  function rosterHasContent(r){
+    return !!(r && r.pattern && r.pattern.some(function(w){ return w.some(function(d){ return d && d.length; }); }));
+  }
   function mergeRoster(local, remote){
     if (!remote || !remote.pattern) return local;
     if (!local || !local.pattern) return remote;
-    return (remote.updatedAt||0) > (local.updatedAt||0) ? remote : local;
+    var lu = local.updatedAt || 0, ru = remote.updatedAt || 0;
+    if (ru !== lu) return ru > lu ? remote : local;
+    // Same age (e.g. both saved before timestamps existed): never let an empty
+    // default roster replace one that has shifts in it.
+    if (!rosterHasContent(local) && rosterHasContent(remote)) return remote;
+    return local;
+  }
+  function settingsHaveContent(st){
+    return !!(st && (st.hourlyRate || st.otMultiplier || st.excessMultiplier || st.payLeave));
+  }
+  function mergeSettings(local, remote){
+    if (!remote) return local || {hourlyRate:0};
+    if (!local) return remote;
+    var lu = local.updatedAt || 0, ru = remote.updatedAt || 0;
+    if (ru !== lu) return ru > lu ? remote : local;
+    if (!settingsHaveContent(local) && settingsHaveContent(remote)) return remote;
+    return local;
   }
   function mergeSnapshots(local, remote){
     var tombstones = mergeTombstones(local.tombstones, remote && remote.tombstones);
@@ -1975,9 +2056,36 @@
       swaps: mergeBucketed(local.swaps, remote && remote.swaps, tombstones),
       birthdays: mergeArrayById(local.birthdays, remote && remote.birthdays, tombstones),
       roster: mergeRoster(local.roster, remote && remote.roster),
-      settings: (remote && remote.settings && (remote.settings.updatedAt||0) > ((local.settings && local.settings.updatedAt)||0)) ? remote.settings : (local.settings || (remote && remote.settings) || {hourlyRate:0}),
+      settings: mergeSettings(local.settings, remote && remote.settings),
       tombstones: tombstones
     };
+  }
+  // Fingerprint of a snapshot that ignores key order and the order of records
+  // within a day / list, so two copies holding the same records compare equal.
+  function sameSnapshot(a, b){ return stableStringify(canonicalSnapshot(a)) === stableStringify(canonicalSnapshot(b)); }
+  function canonicalSnapshot(snap){
+    var out = {};
+    function byId(x, y){ var a = (x && x.id) || "", b = (y && y.id) || ""; return a < b ? -1 : a > b ? 1 : 0; }
+    Object.keys(snap || {}).forEach(function(k){
+      var v = snap[k];
+      if (k === "shifts" || k === "notes" || k === "leave" || k === "swaps"){
+        var days = {};
+        Object.keys(v || {}).forEach(function(d){ if ((v[d] || []).length) days[d] = (v[d] || []).slice().sort(byId); });
+        out[k] = days;
+      } else if (k === "types" || k === "birthdays"){
+        out[k] = (v || []).slice().sort(byId);
+      } else out[k] = v;
+    });
+    return out;
+  }
+  // JSON with sorted keys, so two copies of the same data compare equal no
+  // matter what order the database returned the keys in.
+  function stableStringify(v){
+    if (v === null || typeof v !== "object") return JSON.stringify(v);
+    if (Array.isArray(v)) return "[" + v.map(function(x){ return x === undefined ? "null" : stableStringify(x); }).join(",") + "]";
+    return "{" + Object.keys(v).filter(function(k){ return v[k] !== undefined; }).sort().map(function(k){
+      return JSON.stringify(k) + ":" + stableStringify(v[k]);
+    }).join(",") + "}";
   }
   function localSnapshot(){
     return {
@@ -1985,7 +2093,7 @@
       birthdays: state.birthdays, roster: state.roster, settings: state.settings, tombstones: state.tombstones
     };
   }
-  function applyMergedLocally(merged){
+  function applyMergedLocally(merged, skipWrite){
     state.types = merged.types;
     state.typesById = {};
     state.typesById[OVERTIME_ID] = OVERTIME_TYPE;
@@ -1999,7 +2107,9 @@
     state.roster = merged.roster;
     state.tombstones = merged.tombstones;
     if (merged.settings) state.settings = merged.settings;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); } catch(e){}
+    if (!skipWrite){
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(localSnapshot())); storageOk = true; } catch(e){ storageOk = false; }
+    }
     renderAll();
   }
 
@@ -2061,27 +2171,56 @@
     var delay = Math.min(5 * 60000, 15000 * Math.pow(2, Math.min(syncFailures, 4)));
     syncRetryTimer = setTimeout(function(){ syncNow(); }, delay);
   }
+  // One sync = read the cloud copy, merge it with this device, write it back.
+  // The write only succeeds if nobody else wrote in between (compare-and-swap on
+  // updated_at); if another device did, we read again and re-merge, so two
+  // devices syncing at the same moment can't wipe out each other's changes.
+  function syncOnce(uid){
+    return sb.from("app_data").select("data, updated_at").eq("user_id", uid).maybeSingle().then(function(res){
+      if (res.error) throw res.error;
+      var row = res.data || null;
+      var remote = (row && row.data) || null;
+      var merged = mergeSnapshots(localSnapshot(), remote);
+      applyMergedLocally(merged);
+      if (!currentUser || currentUser.id !== uid) throw { message: "account changed" };
+      if (remote && sameSnapshot(merged, stripHistory(remote))) return "same";
+      var toUpload = {};
+      Object.keys(merged).forEach(function(k){ toUpload[k] = merged[k]; });
+      toUpload.history = buildHistory(remote);
+      var stamp = new Date().toISOString();
+      if (!row){
+        return sb.from("app_data").insert({ user_id: uid, data: toUpload, updated_at: stamp }).then(function(r){
+          if (r.error){ if (r.error.code === "23505") return "conflict"; throw r.error; }
+          return "saved";
+        });
+      }
+      var q = sb.from("app_data").update({ data: toUpload, updated_at: stamp }).eq("user_id", uid);
+      q = row.updated_at ? q.eq("updated_at", row.updated_at) : q.is("updated_at", null);
+      return q.select("user_id").then(function(r){
+        if (r.error) throw r.error;
+        return (r.data && r.data.length) ? "saved" : "conflict";
+      });
+    });
+  }
   function syncNow(opts){
     opts = opts || {};
     if (!sb || !currentUser) { updateSyncStatusUI(); return; }
     if (syncInFlight){ scheduleSyncRetry(); return; }
     syncInFlight = true;
     var startedAt = Date.now();
+    var uid = currentUser.id;
+    var attempts = 0;
     updateSyncStatusUI("syncing");
-    ensureFreshSession().then(purgeCloudCache).then(function(){
-      return sb.from("app_data").select("data").eq("user_id", currentUser.id).maybeSingle();
-    }).then(function(res){
-      if (res.error) throw res.error;
-      var remote = (res.data && res.data.data) || null;
-      var merged = mergeSnapshots(localSnapshot(), remote);
-      applyMergedLocally(merged);
-      var toUpload = {};
-      Object.keys(merged).forEach(function(k){ toUpload[k] = merged[k]; });
-      toUpload.history = buildHistory(remote);
-      return sb.from("app_data").upsert({ user_id: currentUser.id, data: toUpload, updated_at: new Date().toISOString() })
-        .then(function(res2){ if (res2.error) throw res2.error; });
-    }).then(function(){
+    function attempt(){
+      return purgeCloudCache().then(function(){ return syncOnce(uid); }).then(function(result){
+        if (result !== "conflict") return result;
+        if (++attempts >= 5) throw { message: "sync conflict" };
+        return new Promise(function(r){ setTimeout(r, 300 + Math.random() * 700); }).then(attempt);
+      });
+    }
+    ensureFreshSession().then(attempt).then(function(){
       syncInFlight = false;
+      if (!currentUser || currentUser.id !== uid) return;
       markSynced(startedAt);
       if (opts.toast) toast("Synced");
     }).catch(function(err){
@@ -2094,6 +2233,22 @@
     });
   }
   function pullCloudData(){ syncNow({toast: true}); }
+  // Roster Board open in two tabs/windows: merge whatever the other one saved
+  // instead of overwriting it with this tab's older copy on the next save.
+  window.addEventListener("storage", function(e){
+    // Another tab signed out, deleted the account or switched account: start
+    // over from what's saved now, so this tab's copy can't leak into it.
+    if (e.key === OWNER_KEY || (e.key === STORAGE_KEY && !e.newValue) || e.key === null){
+      window.location.reload();
+      return;
+    }
+    if (e.key !== STORAGE_KEY || !e.newValue) return;
+    var incoming;
+    try { incoming = JSON.parse(e.newValue); } catch(err){ return; }
+    if (!incoming || !Array.isArray(incoming.types)) return;
+    var merged = mergeSnapshots(localSnapshot(), incoming);
+    applyMergedLocally(merged, sameSnapshot(merged, incoming));
+  });
 
   // ---- backup history (undo for the cloud) --------------------------------
   // Each upload keeps up to 10 earlier copies of the cloud data (at most one
@@ -2106,7 +2261,8 @@
     return out;
   }
   function snapshotHasData(d){
-    return !!d && (Object.keys(d.shifts || {}).length || Object.keys(d.notes || {}).length || (d.types || []).length);
+    return !!d && (Object.keys(d.shifts || {}).length || Object.keys(d.notes || {}).length || (d.types || []).length ||
+      Object.keys(d.leave || {}).length || Object.keys(d.swaps || {}).length || (d.birthdays || []).length);
   }
   function buildHistory(remote){
     var h = ((remote && remote.history) || []).slice(0, HISTORY_MAX);
@@ -2149,10 +2305,38 @@
         btn.addEventListener("click", function(){
           openMiniModal({
             title: "Recover from this backup?",
-            message: "Anything in this backup that's missing now will be added back. Nothing you have now is removed or changed.",
+            message: "Entries from this backup that are missing now will be added back, including on days that are now empty. Nothing you have now is removed or changed.",
             showInput: false, confirmLabel: "Recover",
             onConfirm: function(){
-              var merged = mergeSnapshots(localSnapshot(), stripHistory(entry.data));
+              // Recovery adds back what's missing without undoing deliberate changes:
+              // a day that's now completely empty gets its backed-up entries back
+              // even if they were deleted; on days that still have entries, only
+              // records that were never deleted are added. Revived records are
+              // stamped as just saved so they also come back on other devices.
+              var backup = JSON.parse(JSON.stringify(stripHistory(entry.data)));
+              var now = Date.now(), have = {}, swapRefs = {};
+              ["shifts","notes","leave","swaps"].forEach(function(k){
+                Object.keys(state[k] || {}).forEach(function(d){ (state[k][d] || []).forEach(function(it){ if (it && it.id) have[it.id] = 1; }); });
+              });
+              Object.keys(state.swaps || {}).forEach(function(d){ (state.swaps[d] || []).forEach(function(r){ if (r.shiftEntryId) swapRefs[r.shiftEntryId] = 1; }); });
+              (state.types || []).concat(state.birthdays || []).forEach(function(it){ if (it && it.id) have[it.id] = 1; });
+              function revive(it){ if (it && it.id && !have[it.id]){ it.updatedAt = now; delete state.tombstones[it.id]; return true; } return false; }
+              var neededTypes = {};
+              ["shifts","notes","leave"].forEach(function(k){
+                Object.keys(backup[k] || {}).forEach(function(d){
+                  var dayIsEmpty = !(state[k][d] || []).length && !(k === "shifts" && (state.swaps[d] || []).length);
+                  if (!dayIsEmpty) return;
+                  (backup[k][d] || []).forEach(function(it){
+                    if (k === "shifts" && swapRefs[it.id]) return;
+                    if (revive(it) && k === "shifts") neededTypes[it.baseTypeId || it.typeId] = neededTypes[it.typeId] = 1;
+                  });
+                });
+              });
+              (backup.types || []).forEach(function(t){ if (neededTypes[t.id]) revive(t); });
+              (backup.birthdays || []).forEach(revive);
+              backup.tombstones = {};
+              delete backup.roster; delete backup.settings;
+              var merged = mergeSnapshots(localSnapshot(), backup);
               applyMergedLocally(merged);
               closeBackupHistory();
               queueCloudSync(localSnapshot(), true);
@@ -2275,7 +2459,8 @@
         showAuthOverlay(true);
         return;
       }
-      if (session && session.user) onSignedIn(session.user); else onSignedOut();
+      if (session && session.user) onSignedIn(session.user);
+      else if (event === "SIGNED_OUT" || currentUser) onSignedOut();
     });
   }
 
@@ -2356,8 +2541,31 @@
       }
     });
   });
+  function signOutAndClear(){
+    // "local" signs this device out even without signal.
+    sb.auth.signOut({ scope: "local" }).then(function(res){
+      if (res && res.error){ toast("Couldn't sign out — try again"); return; }
+      wipeLocalData();
+      window.location.reload();
+    }).catch(function(){ toast("Couldn't sign out — try again"); });
+  }
   document.getElementById("signOutBtn").addEventListener("click", function(){
-    if (sb) sb.auth.signOut();
+    if (!sb) return;
+    var go = function(){
+      if (!dirtySince()){ signOutAndClear(); return; }
+      openMiniModal({
+        title: "Sign out?",
+        message: "Some recent changes haven't backed up to your account yet. Signing out removes this device's copy, so they'd be lost. Tap \"Back up now\" first if you have signal.",
+        showInput: false, confirmLabel: "Sign out anyway",
+        onConfirm: signOutAndClear
+      });
+    };
+    // Back up first so nothing is lost; signing out then clears this device.
+    if (currentUser && dirtySince()){
+      toast("Backing up before signing out…");
+      syncNow();
+      setTimeout(go, 4000);
+    } else go();
   });
   document.getElementById("deleteAccountBtn").addEventListener("click", function(){
     openMiniModal({
@@ -2373,7 +2581,7 @@
   });
   function wipeLocalData(){
     try {
-      [STORAGE_KEY, SYNC_DIRTY_KEY, SYNC_LAST_KEY, "rosterBoard.skipAuth", "rosterBoard.localOnlyAck"].forEach(function(k){ localStorage.removeItem(k); });
+      [STORAGE_KEY, SYNC_DIRTY_KEY, SYNC_LAST_KEY, OWNER_KEY, THEME_KEY, "rosterBoard.skipAuth", "rosterBoard.localOnlyAck"].forEach(function(k){ localStorage.removeItem(k); });
     } catch(e){}
   }
   function deleteAccountNow(){
@@ -2387,19 +2595,21 @@
       wipeLocalData();
       return sb.auth.signOut().catch(function(){});
     }).then(function(){
+      var done = function(){ window.location.reload(); };
       openMiniModal({
         title: "Account deleted",
         message: "Your account and data have been permanently deleted.",
         showInput: false, confirmLabel: "OK",
-        onConfirm: function(){ window.location.reload(); }
+        onConfirm: done, onCancel: done
       });
     }).catch(function(err){
-      // Server-side deletion isn't available (e.g. the database function hasn't
-      // been installed yet) — fall back to an emailed request so it's still handled.
       console.error("delete_my_account failed:", err);
-      var subject = encodeURIComponent("Account deletion request");
-      var body = encodeURIComponent("Please delete my Roster Board account and associated data.\n\nAccount email: " + email);
-      window.location.href = "mailto:contact@rosterboard.net?subject=" + subject + "&body=" + body;
+      openMiniModal({
+        title: "Couldn't delete your account",
+        message: "Nothing has been deleted. Check your connection and try again. If it keeps failing, email contact@rosterboard.net from " + (email || "your account email") + " and we'll delete it for you.",
+        showInput: false, confirmLabel: "Try again",
+        onConfirm: deleteAccountNow
+      });
     });
   }
 
@@ -2462,11 +2672,11 @@
     setChangeEmailError("");
     var btn = document.getElementById("changeEmailBtn");
     btn.disabled = true;
-    sb.auth.updateUser({ email: email }).then(function(res){
+    sb.auth.updateUser({ email: email }, { emailRedirectTo: IS_NATIVE ? WEB_URL : window.location.origin + "/" }).then(function(res){
       btn.disabled = false;
       if (res.error){ setChangeEmailError(res.error.message); return; }
       document.getElementById("changeEmailInput").value = "";
-      toast("Check your new email to confirm the change");
+      toast("Check your email (new address, and your old one if asked) to confirm");
     });
   });
 
@@ -2495,8 +2705,18 @@
   });
 
   /* ---------------- appearance (theme) ---------------- */
+  // Light/dark is a per-device choice (a phone and a PC can differ), so it's kept
+  // on this device rather than in the synced settings.
+  var THEME_KEY = "rosterBoard.theme";
+  function savedTheme(){
+    try { return localStorage.getItem(THEME_KEY) || (state.settings && state.settings.theme) || ""; } catch(e){ return ""; }
+  }
   function applyTheme(choice){
     var root = document.documentElement;
+    if (IS_NATIVE && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.StatusBar){
+      var dark = choice === "dark" || (choice !== "light" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      try { Capacitor.Plugins.StatusBar.setStyle({ style: dark ? "DARK" : "LIGHT" }); } catch(e){}
+    }
     if (choice === "light") root.setAttribute("data-theme", "light");
     else if (choice === "dark") root.setAttribute("data-theme", "dark");
     else root.removeAttribute("data-theme");
@@ -2507,9 +2727,8 @@
   document.querySelectorAll("#themeSeg button").forEach(function(b){
     b.addEventListener("click", function(){
       var choice = b.getAttribute("data-theme-choice");
-      state.settings.theme = choice;
+      try { localStorage.setItem(THEME_KEY, choice); } catch(e){}
       applyTheme(choice);
-      saveStore();
     });
   });
 
@@ -2675,7 +2894,7 @@
   }
 
   document.getElementById("inviteFriendBtn").addEventListener("click", function(){
-    var url = window.location.origin + "/";
+    var url = IS_NATIVE ? WEB_URL : window.location.origin + "/";
     var text = "I'm using Roster Board to manage my shifts and roster — thought you might like it too. Check it out: " + url;
     if (navigator.share){
       navigator.share({ title: "Roster Board", text: text, url: url }).catch(function(){});
@@ -2702,7 +2921,7 @@
       btn.disabled = false;
       if (res.error){ setInviteError(res.error.message || "Couldn't send invite"); return; }
       document.getElementById("inviteEmailInput").value = "";
-      toast("Invite sent");
+      toast("If they have a Roster Board account, they'll see your request");
       refreshConnections();
     });
   });
@@ -2716,7 +2935,17 @@
       var typesById = {};
       typesById[OVERTIME_ID] = OVERTIME_TYPE;
       typesById[EXCESS_ID] = EXCESS_TYPE;
-      (data.types || []).forEach(function(t){ typesById[t.id] = t; });
+      // The server only sends work shifts; this is a second safety net so
+      // personal entries and notes are never shown even from an older server.
+      (data.types || []).forEach(function(t){ if (t && t.kind !== "personal") typesById[t.id] = t; });
+      var cleanShifts = {};
+      Object.keys(data.shifts || {}).forEach(function(k){
+        var list = (data.shifts[k] || []).filter(function(sh){ return sh && typesById[sh.typeId]; }).map(function(sh){
+          var c = {}; Object.keys(sh).forEach(function(f){ if (f !== "tag") c[f] = sh[f]; }); return c;
+        });
+        if (list.length) cleanShifts[k] = list;
+      });
+      data.shifts = cleanShifts;
       sharedRoster = {
         connectionId: conn.id, ownerId: ownerId, email: otherPartyEmail(conn),
         month: startOfMonth(new Date()),
@@ -2795,7 +3024,7 @@
       if (d.getFullYear()===y && d.getMonth()===m){
         state.shifts[dateKey].forEach(function(s){
           var t = state.typesById[s.typeId];
-          if (t && t.kind === "personal") return;
+          if (!t || t.kind === "personal") return;
           totalShifts++;
           var h = effectiveHours(s);
           totalH += h;
@@ -2920,7 +3149,7 @@
         var lv = dataSrc.leave[key][0];
         var lline = document.createElement("div");
         lline.className = "leave-line";
-        lline.textContent = LEAVE_COLORS[lv.kind].label + (lv.hours != null ? " " + fmtHours(lv.hours) + "h" : "");
+        lline.textContent = (LEAVE_COLORS[lv.kind] ? LEAVE_COLORS[lv.kind].label : "Leave") + (lv.hours != null ? " " + fmtHours(lv.hours) + "h" : "");
         btn.appendChild(lline);
       }
       var dayEvents = (dataSrc.notes && dataSrc.notes[key]) || [];
@@ -3056,7 +3285,7 @@
     var d = parseYmd(dateKey);
     document.getElementById("sheetDate").textContent = WEEKDAY_FULL[d.getDay()] + ", " + d.getDate() + " " + MONTH_LABELS[d.getMonth()];
     renderDaySheetBody();
-    document.getElementById("noteTime").value = "00:00";
+    document.getElementById("noteTime").value = "";
     document.getElementById("noteAllDayToggle").checked = false;
     updateNoteAllDayVisibility();
     document.getElementById("daySheetOverlay").classList.add("show");
@@ -3294,9 +3523,11 @@
       info.className = "swap-info";
       var otherDate = parseYmd(rec.linkedDate);
       var otherLabel = otherDate.getDate() + " " + MONTH_LABELS[otherDate.getMonth()].slice(0,3);
-      info.innerHTML = "<b>" + shiftLabel + "</b>" +
-        (rec.kind === "off" ? " moved to " : " picked up from ") + otherLabel +
-        (rec.partner ? " · " + rec.partner : "");
+      var infoName = document.createElement("b");
+      infoName.textContent = shiftLabel;
+      info.appendChild(infoName);
+      info.appendChild(document.createTextNode((rec.kind === "off" ? " moved to " : " picked up from ") + otherLabel +
+        (rec.partner ? " · " + rec.partner : "")));
       chip.appendChild(info);
       chip.addEventListener("click", function(){
         var msg = shiftLabel + (rec.kind==="off" ? " swapped away to " : " picked up from ") + otherLabel + ".";
@@ -3376,7 +3607,7 @@
 
     var offId = mkId(), onId = mkId();
     (state.swaps[fromDate] = state.swaps[fromDate] || []).push({
-      id: offId, kind: "off", partner: partner, note: note, linkedDate: toDate, linkedSwapId: onId, typeId: typeId, baseTypeId: baseTypeId || null, hours: hours != null ? hours : null
+      id: offId, kind: "off", partner: partner, note: note, linkedDate: toDate, linkedSwapId: onId, typeId: typeId, baseTypeId: baseTypeId || null, hours: hours != null ? hours : null, shiftEntryId: shiftId
     });
     (state.swaps[toDate] = state.swaps[toDate] || []).push({
       id: onId, kind: "on", partner: partner, note: note, linkedDate: fromDate, linkedSwapId: offId, typeId: newEntry.typeId, baseTypeId: newEntry.baseTypeId || null, hours: newEntry.hours != null ? newEntry.hours : null, shiftEntryId: newEntry.id
@@ -3472,12 +3703,28 @@
       onDate = fromClickedDate; onRec = rec; offDate = rec.linkedDate;
       offRec = (state.swaps[offDate]||[]).find(function(r){ return r.id === rec.linkedSwapId; });
     }
+    if (onRec && onRec.shiftEntryId && !(state.shifts[onDate] || []).some(function(s){ return s.id === onRec.shiftEntryId; })){
+      var swappedAgain = (state.swaps[onDate] || []).some(function(r){ return r.kind === "off" && r.shiftEntryId === onRec.shiftEntryId; });
+      if (swappedAgain){
+        toast("That shift was swapped again — undo the later swap first");
+        return;
+      }
+      // the picked-up shift was deleted: just clear the leftover swap records
+      if (offRec){ state.swaps[offDate] = (state.swaps[offDate]||[]).filter(function(r){ return r.id !== offRec.id; }); tomb(offRec.id); }
+      state.swaps[onDate] = (state.swaps[onDate]||[]).filter(function(r){ return r.id !== onRec.id; }); tomb(onRec.id);
+      saveStore(); renderAll(); toast("Swap removed");
+      return;
+    }
     if (onRec && state.shifts[onDate]){
       state.shifts[onDate] = state.shifts[onDate].filter(function(s){ return s.id !== onRec.shiftEntryId; });
       tomb(onRec.shiftEntryId);
     }
     var srcRec = offRec || rec;
-    var restored = {id: mkId(), typeId: srcRec.typeId};
+    // Put the original shift back under its original id, so any earlier swap
+    // that points at it can still be undone afterwards.
+    var restoreId = (offRec && offRec.shiftEntryId) || mkId();
+    var restored = {id: restoreId, typeId: srcRec.typeId, updatedAt: Date.now()};
+    delete state.tombstones[restoreId];
     if (srcRec.hours != null) restored.hours = srcRec.hours;
     if (srcRec.baseTypeId) restored.baseTypeId = srcRec.baseTypeId;
     (state.shifts[offDate] = state.shifts[offDate] || []).push(restored);
@@ -3500,12 +3747,24 @@
   function removeShift(dateKey, id){
     if (state.shifts[dateKey]) state.shifts[dateKey] = state.shifts[dateKey].filter(function(s){ return s.id!==id; });
     tomb(id);
+    // A removed picked-up shift takes its swap records with it, so the calendar
+    // doesn't keep showing a swap (and "Undo swap" can't resurrect it).
+    var onRec = (state.swaps[dateKey] || []).find(function(r){ return r.kind === "on" && r.shiftEntryId === id; });
+    if (onRec){
+      state.swaps[dateKey] = state.swaps[dateKey].filter(function(r){ return r.id !== onRec.id; });
+      tomb(onRec.id);
+      var od = onRec.linkedDate;
+      if (state.swaps[od]){
+        state.swaps[od] = state.swaps[od].filter(function(r){ return r.id !== onRec.linkedSwapId; });
+        tomb(onRec.linkedSwapId);
+      }
+    }
     saveStore(); renderAll(); toast("Shift removed");
   }
   function setShiftTag(dateKey, id, text){
     var list = state.shifts[dateKey] || [];
     var s = list.find(function(x){ return x.id===id; });
-    if (s){ if (text) s.tag = text; else delete s.tag; }
+    if (s){ if (text) s.tag = text; else delete s.tag; s.updatedAt = Date.now(); }
     saveStore(); renderAll(); toast(text ? "Note saved" : "Note removed");
   }
   function applySplitToEntry(entry, ot, ex){
@@ -3598,7 +3857,7 @@
   function setShiftHours(dateKey, id, hours){
     var list = state.shifts[dateKey] || [];
     var s = list.find(function(x){ return x.id===id; });
-    if (s) s.hours = hours;
+    if (s){ s.hours = hours; s.updatedAt = Date.now(); }
     saveStore(); renderAll(); toast("Hours updated");
   }
   function addLeave(dateKey, kind){
@@ -3670,14 +3929,19 @@
     if (!window.Notification || Notification.permission !== "granted") return;
     var now = new Date();
     var todayKey = ymd(now);
-    var hhmm = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+    var nowMin = now.getHours() * 60 + now.getMinutes();
     var list = state.notes[todayKey];
     if (!list || !list.length) return;
     var fired = false;
     list.forEach(function(n){
-      if (n.remind && !n.notified && n.time && n.time <= hhmm){
+      if (!n.remind || n.notified || !n.time) return;
+      var p = n.time.split(":"), at = (+p[0]) * 60 + (+p[1]);
+      // fire at the time (or within 10 minutes if the app was just opened),
+      // never for times that were already well past when the event was added
+      if (nowMin >= at && nowMin - at <= 10){
         try { new Notification(n.text, { body: "Personal event — " + n.time, tag: n.id }); } catch(e){}
         n.notified = true;
+        n.updatedAt = Date.now();
         fired = true;
       }
     });
@@ -3719,7 +3983,7 @@
 
     if (state.editingTypeId){
       var t = state.typesById[state.editingTypeId];
-      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.excessEligible=excessEligible; t.kind=kind; t.time=singleTime; t.allDay=allDay; t.notes=notes; }
+      if (t){ t.name=name; t.color=color; t.ink=ink; t.startTime=start; t.endTime=end; t.hours=hours; t.overtimeEligible=overtimeEligible; t.excessEligible=excessEligible; t.kind=kind; t.time=singleTime; t.allDay=allDay; t.notes=notes; t.updatedAt=Date.now(); }
       typeIdForRange = state.editingTypeId;
       toast("Type updated");
     } else {
@@ -3748,11 +4012,38 @@
     saveStore(); renderAll(); closeTypeSheet();
   }
   function deleteType(){
-    if (!state.editingTypeId) return;
-    state.types = state.types.filter(function(t){ return t.id!==state.editingTypeId; });
-    delete state.typesById[state.editingTypeId];
-    tomb(state.editingTypeId);
-    saveStore(); renderAll(); toast("Type deleted"); closeTypeSheet();
+    var typeId = state.editingTypeId;
+    if (!typeId) return;
+    var t = state.typesById[typeId];
+    var used = 0;
+    Object.keys(state.shifts).forEach(function(k){
+      (state.shifts[k] || []).forEach(function(s){ if (s.typeId === typeId) used++; });
+    });
+    openMiniModal({
+      title: "Delete " + (t ? t.name : "this type") + "?",
+      message: used
+        ? "It's on your calendar " + used + (used === 1 ? " time" : " times") + ". Those entries will be removed too, along with it in your roster pattern. This can't be undone."
+        : "This can't be undone.",
+      showInput: false, confirmLabel: "Delete",
+      onConfirm: function(){
+        state.types = state.types.filter(function(x){ return x.id !== typeId; });
+        delete state.typesById[typeId];
+        tomb(typeId);
+        Object.keys(state.shifts).forEach(function(k){
+          var list = state.shifts[k] || [];
+          var keep = list.filter(function(s){ if (s.typeId === typeId){ tomb(s.id); return false; } return true; });
+          if (keep.length !== list.length) state.shifts[k] = keep;
+        });
+        var changed = false;
+        (state.roster.pattern || []).forEach(function(w){
+          w.forEach(function(day, i){
+            if (day && day.indexOf(typeId) !== -1){ w[i] = day.filter(function(id){ return id !== typeId; }); changed = true; }
+          });
+        });
+        if (changed) state.roster.updatedAt = Date.now();
+        saveStore(); renderAll(); toast("Type deleted"); closeTypeSheet();
+      }
+    });
   }
 
   function openTypeSheet(typeId){
@@ -3763,7 +4054,9 @@
     document.getElementById("typeStart").value = (t && t.kind !== "personal") ? t.startTime : "07:00";
     document.getElementById("typeEnd").value = (t && t.kind !== "personal") ? t.endTime : "19:00";
     document.getElementById("typeSingleTime").value = (t && t.kind === "personal" && t.time) ? t.time : "12:00";
-    var todayKey = ymd(new Date());
+    // New personal types default to today; editing one leaves the range blank so
+    // saving an edit doesn't add another copy to the calendar.
+    var todayKey = t ? "" : ymd(new Date());
     document.getElementById("typePersonalStartDate").value = todayKey;
     document.getElementById("typePersonalEndDate").value = todayKey;
     document.getElementById("typeAllDay").checked = !!(t && t.kind === "personal" && t.allDay);
@@ -3789,6 +4082,7 @@
       sw.setAttribute("data-hex", p.hex);
       sw.setAttribute("data-ink", p.ink);
       sw.type = "button";
+      sw.setAttribute("aria-label", "Colour " + p.hex);
       sw.addEventListener("click", function(){
         grid.querySelectorAll(".color-swatch").forEach(function(s){ s.classList.remove("sel"); });
         sw.classList.add("sel");
@@ -3945,7 +4239,7 @@
 
     if (state.editingBirthdayId){
       var b = state.birthdays.find(function(x){ return x.id===state.editingBirthdayId; });
-      if (b){ b.name=name; b.day=day; b.month=month; b.year=year; }
+      if (b){ b.name=name; b.day=day; b.month=month; b.year=year; b.updatedAt=Date.now(); }
       toast("Birthday updated");
     } else {
       state.birthdays.push({id: mkId(), name:name, day:day, month:month, year:year});
@@ -4069,8 +4363,11 @@
       if (on){ b.style.background = t.color; b.style.color = t.ink; }
       b.textContent = t.name;
       b.addEventListener("click", function(){
-        var idx = cur.indexOf(t.id);
-        if (idx === -1) cur.push(t.id); else cur.splice(idx,1);
+        // look the cell up again: a sync may have replaced the roster meanwhile
+        var cell = state.roster.pattern[state.patternCell.week] && state.roster.pattern[state.patternCell.week][state.patternCell.day];
+        if (!cell) return;
+        var idx = cell.indexOf(t.id);
+        if (idx === -1) cell.push(t.id); else cell.splice(idx,1);
         state.roster.updatedAt = Date.now();
         saveStore();
         renderPatternPicker();
@@ -4090,12 +4387,21 @@
     var n = parseInt(document.getElementById("rosterWeeksInput").value, 10);
     if (!n || n < 1) n = 1;
     if (n > 52) n = 52;
-    state.roster.weeks = n;
-    ensurePatternShape();
-    state.roster.updatedAt = Date.now();
-    saveStore();
-    renderRoster();
-    toast("Rotation length updated");
+    var apply = function(){
+      state.roster.weeks = n;
+      ensurePatternShape();
+      state.roster.updatedAt = Date.now();
+      saveStore();
+      renderRoster();
+      toast("Rotation length updated");
+    };
+    var losing = state.roster.pattern.slice(n).some(function(w){ return w.some(function(d){ return d && d.length; }); });
+    if (!losing){ apply(); return; }
+    openMiniModal({
+      title: "Shorten the rotation?",
+      message: "Weeks " + (n + 1) + "–" + state.roster.pattern.length + " have shifts in them. Shortening to " + n + (n === 1 ? " week" : " weeks") + " removes them.",
+      showInput: false, confirmLabel: "Shorten", onConfirm: apply
+    });
   });
 
   document.getElementById("rosterApplyBtn").addEventListener("click", function(){
@@ -4106,7 +4412,7 @@
     if (!hasAny){ toast("Assign shifts to the pattern first"); return; }
     openMiniModal({
       title: "Fill the calendar?",
-      message: "This overwrites any existing shifts on the affected dates with the repeating pattern, starting " + startVal + " for " + months + " months. This can't be undone automatically.",
+      message: "This fills the calendar with your repeating pattern, starting " + startVal + " for " + months + " months, replacing the regular shifts already on those dates.\n\nDays you've changed by hand — overtime or excess, shift notes, swaps or leave — are left as they are, and personal entries are kept.",
       showInput: false,
       confirmLabel: "Fill calendar",
       onConfirm: function(){ applyRosterPattern(startVal, months); }
@@ -4115,7 +4421,9 @@
 
   function applyRosterPattern(startVal, months){
     var start = parseYmd(startVal);
-    var end = new Date(start.getFullYear(), start.getMonth()+months, start.getDate());
+    // e.g. 31 Jan + 3 months ends on 30 Apr, not 1 May
+    var lastDayOfEndMonth = new Date(start.getFullYear(), start.getMonth()+months+1, 0).getDate();
+    var end = new Date(start.getFullYear(), start.getMonth()+months, Math.min(start.getDate(), lastDayOfEndMonth));
     var weeks = state.roster.weeks;
     var patternStart = addDays(start, -mondayIndex(start.getDay())); // Monday on/before start
     var filled = 0;
@@ -4125,10 +4433,22 @@
       var totalDayIdx = ((diffDays % (weeks*7)) + (weeks*7)) % (weeks*7);
       var wi = Math.floor(totalDayIdx / 7);
       var di = mondayIndex(cur.getDay());
-      var typeIds = (state.roster.pattern[wi] && state.roster.pattern[wi][di]) || [];
+      var typeIds = ((state.roster.pattern[wi] && state.roster.pattern[wi][di]) || []).filter(function(tid){ return state.typesById[tid]; });
       var key = ymd(cur);
-      state.shifts[key] = typeIds.map(function(tid){ return {id: mkId(), typeId: tid}; });
-      filled++;
+      var existing = state.shifts[key] || [];
+      var handEdited = (state.swaps[key] && state.swaps[key].length) || (state.leave[key] && state.leave[key].length) ||
+        existing.some(function(e){ return COMBO_TYPES[e.typeId] || e.tag; });
+      if (!handEdited){
+        var keep = [];
+        existing.forEach(function(e){
+          var et = state.typesById[e.typeId];
+          if (et && et.kind === "personal") keep.push(e);
+          else tomb(e.id); // record the removal so other devices drop it too
+        });
+        state.shifts[key] = typeIds.map(function(tid){ return {id: mkId(), typeId: tid}; }).concat(keep);
+        if (!state.shifts[key].length) delete state.shifts[key];
+        filled++;
+      }
       cur = addDays(cur, 1);
     }
     saveStore();
@@ -4185,8 +4505,8 @@
     Object.keys(state.leave).forEach(function(dateKey){
       var d = parseYmd(dateKey);
       if (d < range.start || d >= range.end) return;
+      if ((state.leave[dateKey] || []).length) leaveDays++; // days, not entries
       state.leave[dateKey].forEach(function(l){
-        leaveDays++;
         var h = l.hours != null ? l.hours : 0;
         leaveHours += h;
         if (leaveHoursByKind[l.kind] != null) leaveHoursByKind[l.kind] += h;
@@ -4273,8 +4593,9 @@
     if (!(rate > 0)){ toast("Enter your hourly rate"); return; }
     state.settings = state.settings || {};
     state.settings.hourlyRate = rate;
-    state.settings.otMultiplier = ot > 0 ? ot : 1.5;
-    state.settings.excessMultiplier = ex > 0 ? ex : 1;
+    // 0 is allowed (e.g. excess taken as unpaid time in lieu); blank falls back to the default
+    state.settings.otMultiplier = (isFinite(ot) && ot >= 0) ? ot : 1.5;
+    state.settings.excessMultiplier = (isFinite(ex) && ex >= 0) ? ex : 1;
     state.settings.payLeave = document.getElementById("payLeave").checked;
     state.settings.updatedAt = Date.now();
     closePayRates();
@@ -4319,8 +4640,9 @@
     var prevStats = collectPeriodStats(prevRange);
     var cmp = document.getElementById("repComparison");
     cmp.innerHTML = "";
-    cmp.appendChild(makeComparisonRow("This period", stats.totalHours, "var(--accent)"));
-    cmp.appendChild(makeComparisonRow("Previous period", prevStats.totalHours, "var(--prev-bar)"));
+    var cmpMax = Math.max(stats.totalHours, prevStats.totalHours, 1);
+    cmp.appendChild(makeComparisonRow("This period", stats.totalHours, "var(--accent)", cmpMax));
+    cmp.appendChild(makeComparisonRow("Previous period", prevStats.totalHours, "var(--prev-bar)", cmpMax));
     var delta = stats.totalHours - prevStats.totalHours;
     var deltaEl = document.createElement("div");
     deltaEl.className = "cmp-delta " + (delta >= 0 ? "up" : "down");
@@ -4367,7 +4689,7 @@
     var amt = document.createElement("div"); amt.className="amt num"; amt.textContent=amtText; row.appendChild(amt);
     return row;
   }
-  function makeComparisonRow(label, hours, color){
+  function makeComparisonRow(label, hours, color, max){
     var wrap = document.createElement("div");
     wrap.className = "cmp-row";
     var lab = document.createElement("div");
@@ -4377,8 +4699,7 @@
     var bar = document.createElement("div");
     bar.className = "cmp-bar";
     var fill = document.createElement("div");
-    var maxRef = Math.max(hours, 1);
-    fill.style.width = "100%";
+    fill.style.width = (hours > 0 ? Math.max(2, hours / (max || 1) * 100) : 0) + "%";
     fill.style.background = color;
     bar.appendChild(fill);
     wrap.appendChild(bar);
@@ -4560,14 +4881,43 @@
     return out;
   }
   function exportPdf(){
-    if (!window.jspdf){ toast("PDF library didn't load"); return; }
+    if (!window.jspdf){ toast("PDF library didn't load — check your connection"); return; }
     if (!state.types.length && !Object.keys(state.shifts).length){ toast("Nothing to export yet"); return; }
-    var monthDate = state.repMode === "year" ? periodRange().start : (state.calMonth || startOfMonth(new Date()));
+    // Export what the Reports tab is showing: that month, or every month of that year.
+    var months = [];
+    if (state.repMode === "year"){
+      for (var mi = 0; mi < 12; mi++) months.push(new Date(state.repYear, mi, 1));
+    } else {
+      months.push(startOfMonth(state.repMonth || new Date()));
+    }
+    var doc = new window.jspdf.jsPDF({unit:"pt", format:"a4"});
+    months.forEach(function(monthDate, i){
+      if (i) doc.addPage();
+      drawPdfMonth(doc, monthDate);
+    });
+    var fileName = state.repMode === "year"
+      ? "roster-" + state.repYear + ".pdf"
+      : "roster-" + months[0].getFullYear() + "-" + pad2(months[0].getMonth()+1) + ".pdf";
+    savePdf(doc, fileName);
+  }
+  function savePdf(doc, fileName){
+    var P = window.Capacitor && Capacitor.Plugins;
+    if (IS_NATIVE){
+      // The iPhone app has no browser downloads: write the file, then open the share sheet.
+      if (!P || !P.Filesystem || !P.Share){ toast("PDF export isn't available in this version of the app"); return; }
+      var data = doc.output("datauristring").split(",")[1];
+      P.Filesystem.writeFile({ path: fileName, data: data, directory: "CACHE" }).then(function(res){
+        return P.Share.share({ title: fileName, url: res.uri });
+      }).catch(function(){ toast("Couldn't share the PDF"); });
+      return;
+    }
+    doc.save(fileName);
+    toast("PDF saved");
+  }
+  function drawPdfMonth(doc, monthDate){
     var monthLabel = MONTH_LABELS[monthDate.getMonth()] + " " + monthDate.getFullYear();
     var cells = buildMonthCells(monthDate);
     var rows = cells.length / 7;
-
-    var doc = new window.jspdf.jsPDF({unit:"pt", format:"a4"});
     var pageW = doc.internal.pageSize.getWidth();
     var pageH = doc.internal.pageSize.getHeight();
     var margin = 32;
@@ -4634,9 +4984,6 @@
     doc.setFontSize(7.5); doc.setTextColor(150);
     doc.text("Generated by Roster Board · " + new Date().toLocaleDateString(), margin, gridBottom + 26);
     doc.setTextColor(0);
-
-    doc.save("roster-" + monthDate.getFullYear() + "-" + pad2(monthDate.getMonth()+1) + ".pdf");
-    toast("PDF saved");
   }
 
   document.getElementById("exportPdf").addEventListener("click", exportPdf);
@@ -4677,7 +5024,7 @@
   function resetNoteForm(silent){
     state.editingNote = null;
     document.getElementById("noteInput").value = "";
-    document.getElementById("noteTime").value = "00:00";
+    document.getElementById("noteTime").value = "";
     document.getElementById("noteRemindToggle").checked = false;
     document.getElementById("noteAllDayToggle").checked = false;
     document.getElementById("addNoteBtn").textContent = "Add";
@@ -4691,7 +5038,7 @@
     state.editingNote = { id: n.id, date: dateKey };
     document.getElementById("noteInput").value = n.text || "";
     document.getElementById("noteAllDayToggle").checked = !!n.allDay;
-    document.getElementById("noteTime").value = n.time || "00:00";
+    document.getElementById("noteTime").value = n.time || "";
     document.getElementById("noteRemindToggle").checked = !!n.remind;
     document.getElementById("noteDate").value = dateKey;
     state.noteCategory = EVENT_CATS[n.category] ? n.category : "other";
@@ -4712,8 +5059,18 @@
     var timeInput = document.getElementById("noteTime");
     var remindToggle = document.getElementById("noteRemindToggle");
     var allDayToggle = document.getElementById("noteAllDayToggle");
-    if (remindToggle.checked && window.Notification && Notification.permission === "default"){
-      Notification.requestPermission();
+    if (remindToggle.checked && !allDayToggle.checked && !timeInput.value){
+      toast("Pick a time for the reminder");
+      return;
+    }
+    if (remindToggle.checked && window.Notification){
+      if (Notification.permission === "default"){
+        Notification.requestPermission().then(function(p){
+          if (p !== "granted") toast("Notifications are blocked, so this reminder won't pop up");
+        }).catch(function(){});
+      } else if (Notification.permission === "denied"){
+        toast("Notifications are blocked in your settings, so reminders won't pop up");
+      }
     }
     if (state.editingNote){
       var toKey = document.getElementById("noteDate").value || state.editingNote.date;
@@ -4729,7 +5086,8 @@
   function updateNoteAllDayVisibility(){
     var allDay = document.getElementById("noteAllDayToggle").checked;
     document.getElementById("noteTime").style.display = allDay ? "none" : "block";
-    document.getElementById("noteRemindRow").style.display = allDay ? "none" : "flex";
+    // Reminders rely on browser notifications, which the iPhone app doesn't have.
+    document.getElementById("noteRemindRow").style.display = (allDay || !window.Notification) ? "none" : "flex";
   }
   document.getElementById("noteAllDayToggle").addEventListener("change", updateNoteAllDayVisibility);
   document.getElementById("addAnnualLeave").addEventListener("click", function(){ addLeave(state.selectedDate, "annual"); });
@@ -4741,13 +5099,22 @@
   document.getElementById("saveTypeBtn").addEventListener("click", saveType);
   document.getElementById("deleteTypeBtn").addEventListener("click", deleteType);
 
+  // Keep "today" right if the app stays open past midnight.
+  var shownDayKey = ymd(new Date());
+  function refreshIfNewDay(){
+    var k = ymd(new Date());
+    if (k !== shownDayKey){ shownDayKey = k; renderAll(); }
+  }
+  setInterval(refreshIfNewDay, 60000);
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible") refreshIfNewDay(); });
+
   /* ---------------- boot ---------------- */
   if (hasSkippedAuth()) hideAuthOverlay();
   updateAccountCard();
   onboardingSetup();
   if (!hasSeenOnboarding()) showOnboarding();
   loadIntoState();
-  applyTheme(state.settings.theme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+  applyTheme(savedTheme() || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
   renderAll();
   updateSyncStatusUI();
   // Coming back from privacy.html's "Back to Roster Board" link — land on Calendar

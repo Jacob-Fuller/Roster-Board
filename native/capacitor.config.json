@@ -5,7 +5,6 @@
   "backgroundColor": "#0F2244",
   "ios": {
     "contentInset": "never",
-    "scheme": "Roster Board",
     "backgroundColor": "#0F2244",
     "limitsNavigationsToAppBoundDomains": false
   },
