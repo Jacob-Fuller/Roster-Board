@@ -467,6 +467,7 @@
   .pay-note{font-size:.72rem; color:var(--text-faint); line-height:1.5; margin:12px 6px;}
   .pay-summary{display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px; background:none; border:none; padding:0; text-align:left; color:var(--text);}
   .pay-summary-sub{font-size:.76rem; color:var(--text-dim); margin-top:2px;}
+  .pay-card-seg{margin-bottom:14px;}
   .pay-summary-more{flex:none; font-size:.78rem; font-weight:700; color:var(--accent);}
   .ps-card{margin-top:12px;}
   .ps-card h3{font-size:1rem;}
@@ -4792,11 +4793,24 @@
         if (!t) return;
         if (t.kind === "personal") return;
         var h = effectiveHours(s);
-        var groupKey = COMBO_TYPES[s.typeId] && s.baseTypeId ? ((isSplitEntry(s) ? "split" : s.typeId) + ":" + s.baseTypeId) : s.typeId;
-        var groupColor = entryColor(s);
-        byType[groupKey] = byType[groupKey] || {count:0, hours:0, t:t, name: entryDisplayName(s), color: groupColor.bg};
-        byType[groupKey].count++;
-        byType[groupKey].hours += h;
+        if (COMBO_TYPES[s.typeId]){
+          // Excess and overtime get their own rows; a split entry counts toward both
+          var exH = entryExcessHours(s), otH = entryOTHours(s);
+          if (!exH && !otH){ if (s.typeId === EXCESS_ID) exH = h; else otH = h; }
+          if (exH){
+            byType[EXCESS_ID] = byType[EXCESS_ID] || {count:0, hours:0, t:EXCESS_TYPE, name:"Excess", color:"#F7B3CE", rank:1};
+            byType[EXCESS_ID].count++; byType[EXCESS_ID].hours += exH;
+          }
+          if (otH){
+            byType[OVERTIME_ID] = byType[OVERTIME_ID] || {count:0, hours:0, t:OVERTIME_TYPE, name:"Overtime", color:"#F0679E", rank:2};
+            byType[OVERTIME_ID].count++; byType[OVERTIME_ID].hours += otH;
+          }
+        } else {
+          var groupColor = entryColor(s);
+          byType[s.typeId] = byType[s.typeId] || {count:0, hours:0, t:t, name: entryDisplayName(s), color: groupColor.bg, rank:0};
+          byType[s.typeId].count++;
+          byType[s.typeId].hours += h;
+        }
         totalHours += h;
         otHours += entryOTHours(s);
         excessHours += entryExcessHours(s);
@@ -4817,6 +4831,10 @@
         if (leaveHoursByKind[l.kind] != null) leaveHoursByKind[l.kind] += h;
       });
     });
+    if (leaveHoursByKind.excess > 0){ // older excess entries saved as leave
+      byType[EXCESS_ID] = byType[EXCESS_ID] || {count:0, hours:0, t:EXCESS_TYPE, name:"Excess", color:"#F7B3CE", rank:1};
+      byType[EXCESS_ID].hours += leaveHoursByKind.excess;
+    }
     return { byType:byType, daysWorked:Object.keys(daysWorked).length, totalHours:totalHours, otHours:otHours,
       excessHours:excessHours,
       ordinaryHours: totalHours - otHours,
@@ -5060,7 +5078,36 @@
       return;
     }
     var range = periodRange();
-    var p = computePay(range.start, range.end, state.repMode === "year" ? 1 : 12);
+    var cfg = payConfig(), view = null, label = "";
+    if (state.repMode !== "year"){
+      // Weekly / Fortnightly / Monthly toggle; weeks line up with the pay period start date
+      view = payCardView(cfg);
+      var seg = document.createElement("div");
+      seg.className = "seg pay-card-seg";
+      [["weekly", "Weekly"], ["fortnightly", "Fortnightly"], ["monthly", "Monthly"]].forEach(function(o){
+        var sb = document.createElement("button");
+        sb.type = "button"; sb.textContent = o[1];
+        sb.classList.toggle("active", o[0] === view);
+        sb.addEventListener("click", function(){
+          try { localStorage.setItem("rosterBoard.payCardView", o[0]); } catch(e){}
+          renderPayCard();
+        });
+        seg.appendChild(sb);
+      });
+      card.appendChild(seg);
+      if (view !== "monthly"){
+        var ms = startOfMonth(state.repMonth || new Date()), now = new Date();
+        var ref = (now >= ms && now < addMonths(ms, 1)) ? now : ms;
+        var len = view === "weekly" ? 7 : 14, a = payAnchor(cfg);
+        var diff = Math.round((new Date(ref.getFullYear(), ref.getMonth(), ref.getDate()) - a) / 86400000);
+        var st = addDays(a, Math.floor(diff / len) * len);
+        range = { start: st, end: addDays(st, len) };
+        var last = addDays(range.end, -1);
+        label = range.start.getDate() + " " + MONTH_LABELS[range.start.getMonth()].slice(0, 3) + " – " + last.getDate() + " " + MONTH_LABELS[last.getMonth()].slice(0, 3);
+      }
+    }
+    var factor = state.repMode === "year" ? 1 : view === "weekly" ? 52 : view === "fortnightly" ? 26 : 12;
+    var p = computePay(range.start, range.end, factor);
     document.getElementById("repPayTile").textContent = fmtMoneyShort(p.gross);
     var btn = document.createElement("button");
     btn.type = "button";
@@ -5072,7 +5119,7 @@
     left.appendChild(big);
     var sub = document.createElement("div");
     sub.className = "pay-summary-sub";
-    sub.textContent = "Gross" + (p.showTax ? " · about " + fmtMoney(p.net) + " take-home" : "") + " · estimate";
+    sub.textContent = (label ? label + " · " : "") + "Gross" + (p.showTax ? " · about " + fmtMoney(p.net) + " take-home" : "");
     left.appendChild(sub);
     btn.appendChild(left);
     var more = document.createElement("span");
@@ -5080,10 +5127,16 @@
     more.textContent = "Breakdown ›";
     btn.appendChild(more);
     btn.addEventListener("click", function(){
+      if (view && view !== "monthly"){ openPayScreen("period", range.start); return; }
       openPayScreen(state.repMode === "year" ? "year" : "month",
         state.repMode === "year" ? new Date(state.repYear, 0, 1) : state.repMonth);
     });
     card.appendChild(btn);
+  }
+  function payCardView(cfg){
+    var v = "";
+    try { v = localStorage.getItem("rosterBoard.payCardView") || ""; } catch(e){}
+    return v === "weekly" || v === "fortnightly" || v === "monthly" ? v : (cfg.cycle || "fortnightly");
   }
 
   /* ---- Estimated pay screen ---- */
@@ -5466,7 +5519,7 @@
 
     var bars = document.getElementById("repBars");
     bars.innerHTML = "";
-    var rows = Object.keys(stats.byType).map(function(id){ return stats.byType[id]; }).sort(function(a,b){ return b.hours-a.hours; });
+    var rows = Object.keys(stats.byType).map(function(id){ return stats.byType[id]; }).sort(function(a,b){ return (a.rank||0)-(b.rank||0) || b.hours-a.hours; });
     var maxHours = rows.reduce(function(m,r){ return Math.max(m,r.hours); }, 0) || 1;
     if (!rows.length) bars.appendChild(hintEl("No shifts logged this period."));
     rows.forEach(function(r){
