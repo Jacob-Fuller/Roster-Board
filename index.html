@@ -5524,9 +5524,12 @@
 
     var bars = document.getElementById("repBars");
     bars.innerHTML = "";
+    // Excess and Overtime always get a row, even at 0h
+    if (!stats.byType[EXCESS_ID]) stats.byType[EXCESS_ID] = {count:0, hours:0, t:EXCESS_TYPE, name:"Excess", color:"#F7B3CE", rank:1};
+    if (!stats.byType[OVERTIME_ID]) stats.byType[OVERTIME_ID] = {count:0, hours:0, t:OVERTIME_TYPE, name:"Overtime", color:"#F0679E", rank:2};
     var rows = Object.keys(stats.byType).map(function(id){ return stats.byType[id]; }).sort(function(a,b){ return (a.rank||0)-(b.rank||0) || b.hours-a.hours; });
     var maxHours = rows.reduce(function(m,r){ return Math.max(m,r.hours); }, 0) || 1;
-    if (!rows.length) bars.appendChild(hintEl("No shifts logged this period."));
+    if (!stats.totalHours){ bars.appendChild(hintEl("No shifts logged this period.")); rows = []; }
     rows.forEach(function(r){
       var pct = stats.totalHours > 0 ? Math.round(r.hours / stats.totalHours * 100) : 0;
       bars.appendChild(makeBarRow(r.name, r.color, r.hours, maxHours, fmtHours(r.hours)+"h · "+pct+"% · "+r.count+"x"));
