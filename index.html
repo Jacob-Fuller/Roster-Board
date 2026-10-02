@@ -325,6 +325,10 @@
   .edit-date-row input{flex:1; border:1px solid var(--border); background:var(--surface-2); border-radius:10px; padding:8px 10px; font-size:16px; color:var(--text);}
   .day-cell .event-line{font-size:.54rem; font-weight:600; color:var(--text-dim); white-space:normal; overflow-wrap:break-word; line-height:1.3; display:flex; align-items:flex-start; gap:3px;}
   .day-cell .event-line .edot{width:4px; height:4px; border-radius:50%; flex:none; margin-top:4px;}
+  .day-cell .bday-pill{display:flex; align-items:center; gap:1px; min-width:0; padding:1px 2px; border-radius:5px;
+    background:var(--accent-soft); color:var(--text); font-size:.52rem; font-weight:600; line-height:1.4; letter-spacing:-.01em; cursor:pointer;}
+  .day-cell .bday-pill .bday-cake{flex:none; font-size:.5rem; line-height:1;}
+  .day-cell .bday-pill .bday-name{min-width:0; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center;}
   .day-cell .event-line .bday-icon{width:auto; height:auto; border-radius:0; background:none !important; font-size:.6rem; line-height:1; margin-top:0;}
   .day-cell .event-line > span:not(.edot){min-width:0; flex:1; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;}
   .leave-btns{display:flex; flex-wrap:wrap; gap:8px;}
@@ -3450,14 +3454,24 @@
       var maxBdays = 2;
       dayBirthdays.slice(0, maxBdays).forEach(function(b){
         var bline = document.createElement("div");
-        bline.className = "event-line bday-line";
+        bline.className = "bday-pill";
         var bicon = document.createElement("span");
-        bicon.className = "edot bday-icon";
+        bicon.className = "bday-cake";
         bicon.textContent = "🎂";
         bline.appendChild(bicon);
         var btext = document.createElement("span");
-        btext.textContent = b.name + (b.age != null ? " (" + b.age + ")" : "");
+        btext.className = "bday-name";
+        btext.textContent = (b.name || "").trim().split(/\s+/)[0];
         bline.appendChild(btext);
+        bline.title = b.name;
+        if (opts.onDayClick){
+          var bKey = key;
+          bline.addEventListener("click", function(e){
+            if (state.bulkMode) return;
+            e.stopPropagation();
+            openBirthdayDetails(b, bKey);
+          });
+        }
         btn.appendChild(bline);
       });
       if (dayBirthdays.length > maxBdays){
@@ -3478,6 +3492,11 @@
       fitPairedChips("#" + gridId + " .ot-chip");
       fitSimpleChips("#" + gridId + " .chip:not(.ot-chip):not(.swap-chip-cal)");
     }
+    // shrink long first names on birthday pills until they fit
+    grid.querySelectorAll(".bday-name").forEach(function(el){
+      var size = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > el.clientWidth + 0.5 && size > 6.5){ size -= 0.5; el.style.fontSize = size + "px"; }
+    });
   }
   function fitSimpleChips(fullSelector){
     document.querySelectorAll(fullSelector).forEach(function(chip){
@@ -4481,6 +4500,19 @@
       list.appendChild(row);
     });
     if (!sorted.length) list.appendChild(hintEl("No birthdays added yet."));
+  }
+  function openBirthdayDetails(b, dateKey){
+    var d = parseYmd(dateKey);
+    var full = state.birthdays.find(function(x){ return x.id === b.id; }) || {};
+    var lines = [WEEKDAY_FULL[d.getDay()] + " " + d.getDate() + " " + MONTH_LABELS[d.getMonth()] + " " + d.getFullYear()];
+    if (b.age != null) lines.push("Turns " + b.age);
+    if (full.year) lines.push("Born " + full.day + " " + MONTH_LABELS[full.month - 1] + " " + full.year);
+    openMiniModal({
+      title: "🎂 " + b.name,
+      message: lines.join("\n"),
+      showInput: false, confirmLabel: "Edit", cancelLabel: "Close",
+      onConfirm: function(){ openBirthdaySheet(b.id); }
+    });
   }
   function openBirthdaySheet(id){
     state.editingBirthdayId = id || null;
@@ -5688,20 +5720,21 @@
       var h = effectiveHours(s);
       if (comboT){
         var bt = state.typesById[s.baseTypeId];
-        var label = isSplitEntry(s)
-          ? (bt ? bt.name : "Shift") + " EX " + fmtHours(entryExcessHours(s)) + "h + OT " + fmtHours(entryOTHours(s)) + "h"
-          : (bt ? bt.name : comboT.name) + " " + (comboT === EXCESS_TYPE ? "EX" : "OT") + (h ? " " + fmtHours(h) + "h" : "");
-        out.push({label: label, color: comboT.color});
+        var detail = isSplitEntry(s)
+          ? "EX " + fmtHours(entryExcessHours(s)) + "h + OT " + fmtHours(entryOTHours(s)) + "h"
+          : (comboT === EXCESS_TYPE ? "Excess" : "Overtime") + (h ? " · " + fmtHours(h) + "h" : "");
+        out.push({name: bt ? bt.name : comboT.name, detail: detail, color: comboT.color, typeId: s.typeId, hours: h, work: true});
       } else if (t.kind === "personal"){
-        out.push({label: t.name, color: t.color});
+        out.push({name: t.name, detail: t.allDay || !t.time ? "All day" : t.time, color: t.color, typeId: t.id, hours: 0});
       } else {
-        out.push({label: t.name + (h ? " " + fmtHours(h) + "h" : ""), color: t.color});
+        var times = t.startTime && t.endTime ? t.startTime + "–" + t.endTime : "";
+        out.push({name: t.name, detail: [times, h ? fmtHours(h) + "h" : ""].filter(Boolean).join(" · "), color: t.color, typeId: t.id, hours: h, work: true});
       }
     });
     (state.leave[key] || []).forEach(function(l){
       var def = LEAVE_COLORS[l.kind];
       if (!def) return;
-      out.push({label: def.label, color: def.color});
+      out.push({name: def.label, detail: "All day", color: def.color, typeId: "leave_" + l.kind, hours: 0});
     });
     return out;
   }
@@ -5715,7 +5748,7 @@
     } else {
       months.push(startOfMonth(state.repMonth || new Date()));
     }
-    var doc = new window.jspdf.jsPDF({unit:"pt", format:"a4"});
+    var doc = new window.jspdf.jsPDF({unit:"pt", format:"a4", orientation:"landscape"});
     months.forEach(function(monthDate, i){
       if (i) doc.addPage();
       drawPdfMonth(doc, monthDate);
@@ -5739,76 +5772,134 @@
     doc.save(fileName);
     toast("PDF saved");
   }
+  // Tint a colour toward white (amt 0–1 = how much of the colour is kept)
+  function pdfTint(rgb, amt){ return rgb.map(function(c){ return Math.round(255 - (255 - c) * amt); }); }
+  function pdfFit(doc, text, maxW){
+    if (doc.getTextWidth(text) <= maxW) return text;
+    while (text.length > 1 && doc.getTextWidth(text + "…") > maxW) text = text.slice(0, -1);
+    return text + "…";
+  }
   function drawPdfMonth(doc, monthDate){
+    var INK = [20, 24, 31], DIM = [107, 113, 128], LINE = [218, 220, 225], NAVY = [31, 58, 95];
     var monthLabel = MONTH_LABELS[monthDate.getMonth()] + " " + monthDate.getFullYear();
     var cells = buildMonthCells(monthDate);
     var rows = cells.length / 7;
     var pageW = doc.internal.pageSize.getWidth();
     var pageH = doc.internal.pageSize.getHeight();
-    var margin = 32;
+    var margin = 34;
 
-    doc.setFont("helvetica","bold"); doc.setFontSize(20);
-    doc.text(monthLabel, margin, margin + 20);
-    doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(150);
-    doc.text("Roster Board", pageW - margin, margin + 20, {align:"right"});
-    doc.setTextColor(0);
-    doc.setDrawColor(210);
-    doc.line(margin, margin + 32, pageW - margin, margin + 32);
-
-    var weekdayLabels = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-    var colW = (pageW - margin*2) / 7;
-    var headY = margin + 50;
-    doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(140);
-    weekdayLabels.forEach(function(w, i){
-      doc.text(w.toUpperCase(), margin + i*colW + colW/2, headY, {align:"center"});
+    // month totals for the header and legend
+    var totals = {}, order = [], hours = 0, shifts = 0;
+    cells.forEach(function(cell){
+      if (!cell.inMonth) return;
+      dayEntriesForPdf(ymd(cell.date)).forEach(function(e){
+        if (!totals[e.typeId]){ totals[e.typeId] = {name: e.typeId === OVERTIME_ID ? "Overtime" : e.typeId === EXCESS_ID ? "Excess" : e.name, color: e.color, count: 0, hours: 0}; order.push(e.typeId); }
+        totals[e.typeId].count++; totals[e.typeId].hours += e.hours || 0;
+        if (e.work){ hours += e.hours || 0; if (!COMBO_TYPES[e.typeId]) shifts++; }
+      });
     });
-    doc.setTextColor(0);
 
-    var footerH = 34;
-    var gridTop = headY + 12;
-    var gridBottom = pageH - margin - footerH;
+    // header
+    doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(INK[0], INK[1], INK[2]);
+    doc.text(monthLabel, margin, margin + 18);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(DIM[0], DIM[1], DIM[2]);
+    var summary = [shifts + (shifts === 1 ? " shift" : " shifts"), fmtHours(hours) + " hours"];
+    if (totals[OVERTIME_ID]) summary.push(fmtHours(totals[OVERTIME_ID].hours) + "h overtime");
+    if (totals[EXCESS_ID]) summary.push(fmtHours(totals[EXCESS_ID].hours) + "h excess");
+    doc.text(summary.join("   ·   "), margin, margin + 34);
+    // wordmark, top right
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+    doc.text("Roster Board", pageW - margin, margin + 15.5, {align: "right"});
+
+    // weekday header
+    var gridLeft = margin, gridW = pageW - margin * 2, colW = gridW / 7;
+    var headY = margin + 58;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(DIM[0], DIM[1], DIM[2]);
+    ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"].forEach(function(w, i){
+      doc.text(w, gridLeft + i * colW + colW / 2, headY, {align: "center", charSpace: .6});
+    });
+
+    var legendH = order.length ? 22 : 0;
+    var footerH = 20;
+    var gridTop = headY + 8;
+    var gridBottom = pageH - margin - footerH - legendH;
     var rowH = (gridBottom - gridTop) / rows;
 
+    // weekend columns shaded, out-of-month days washed out
     cells.forEach(function(cell, idx){
       var row = Math.floor(idx / 7), col = idx % 7;
-      var x = margin + col*colW, y = gridTop + row*rowH;
-      doc.setDrawColor(225);
-      if (!cell.inMonth) { doc.setFillColor(248,247,244); doc.rect(x, y, colW, rowH, "F"); }
-      doc.rect(x, y, colW, rowH);
+      var x = gridLeft + col * colW, y = gridTop + row * rowH;
+      if (!cell.inMonth){ doc.setFillColor(246, 246, 248); doc.rect(x, y, colW, rowH, "F"); }
+      else if (col >= 5){ doc.setFillColor(240, 241, 244); doc.rect(x, y, colW, rowH, "F"); }
+    });
+    // grid lines
+    doc.setDrawColor(LINE[0], LINE[1], LINE[2]); doc.setLineWidth(.6);
+    for (var r = 1; r < rows; r++) doc.line(gridLeft, gridTop + r * rowH, gridLeft + gridW, gridTop + r * rowH);
+    for (var c = 1; c < 7; c++) doc.line(gridLeft + c * colW, gridTop, gridLeft + c * colW, gridBottom);
+    doc.setDrawColor(190, 194, 202); doc.setLineWidth(.8);
+    doc.roundedRect(gridLeft, gridTop, gridW, gridBottom - gridTop, 4, 4, "S");
 
-      doc.setFont("helvetica", cell.inMonth ? "bold" : "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(cell.inMonth ? 30 : 170);
-      doc.text(String(cell.date.getDate()), x + colW - 6, y + 13, {align:"right"});
-      doc.setTextColor(0);
-
+    var today = ymd(new Date());
+    cells.forEach(function(cell, idx){
+      var row = Math.floor(idx / 7), col = idx % 7;
+      var x = gridLeft + col * colW, y = gridTop + row * rowH;
       var key = ymd(cell.date);
+      // day number (today gets a navy disc)
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+      if (!cell.inMonth){ doc.setTextColor(185, 189, 197); doc.text(String(cell.date.getDate()), x + colW - 7, y + 13, {align: "right"}); return; }
+      if (key === today){
+        doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]); doc.circle(x + colW - 11, y + 10, 7.5, "F");
+        doc.setTextColor(255, 255, 255); doc.text(String(cell.date.getDate()), x + colW - 11, y + 13.2, {align: "center"});
+      } else {
+        doc.setTextColor(INK[0], INK[1], INK[2]); doc.text(String(cell.date.getDate()), x + colW - 7, y + 13, {align: "right"});
+      }
+
       var entries = dayEntriesForPdf(key);
-      var maxEntries = Math.max(1, Math.floor((rowH - 18) / 10));
-      var shown = entries.slice(0, maxEntries);
-      var ey = y + 22;
-      doc.setFont("helvetica","normal"); doc.setFontSize(6.3);
-      shown.forEach(function(e){
-        var rgb = hexToRgb(e.color);
+      var pad = 5, blockH = 19, gap = 3, top = y + 20;
+      var room = Math.max(1, Math.floor((rowH - 22 + gap) / (blockH + gap)));
+      var shown = entries.length > room ? entries.slice(0, room - 1) : entries;
+      shown.forEach(function(e, i){
+        var by = top + i * (blockH + gap), bw = colW - pad * 2;
+        var rgb = hexToRgb(e.color), tint = pdfTint(rgb, .16);
+        doc.setFillColor(tint[0], tint[1], tint[2]);
+        doc.roundedRect(x + pad, by, bw, blockH, 3, 3, "F");
         doc.setFillColor(rgb[0], rgb[1], rgb[2]);
-        doc.circle(x + 7, ey - 2.3, 2, "F");
-        var maxW = colW - 16;
-        var lines = doc.splitTextToSize(e.label, maxW);
-        doc.text(lines[0] + (lines.length > 1 ? "…" : ""), x + 12, ey);
-        ey += 9.5;
+        doc.roundedRect(x + pad, by, 3, blockH, 1.5, 1.5, "F");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7); doc.setTextColor(INK[0], INK[1], INK[2]);
+        doc.text(pdfFit(doc, e.name, bw - 10), x + pad + 7, by + 8);
+        if (e.detail){
+          doc.setFont("helvetica", "normal"); doc.setFontSize(6); doc.setTextColor(DIM[0], DIM[1], DIM[2]);
+          doc.text(pdfFit(doc, e.detail, bw - 10), x + pad + 7, by + 15.5);
+        }
       });
       if (entries.length > shown.length){
-        doc.setTextColor(150);
-        doc.text("+" + (entries.length - shown.length) + " more", x + 12, ey);
-        doc.setTextColor(0);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(6.5); doc.setTextColor(DIM[0], DIM[1], DIM[2]);
+        doc.text("+" + (entries.length - shown.length) + " more", x + pad + 2, top + shown.length * (blockH + gap) + 8);
       }
     });
 
-    doc.setDrawColor(210);
-    doc.line(margin, gridBottom + 12, pageW - margin, gridBottom + 12);
-    doc.setFontSize(7.5); doc.setTextColor(150);
-    doc.text("Generated by Roster Board · " + new Date().toLocaleDateString(), margin, gridBottom + 26);
-    doc.setTextColor(0);
+    // legend: each type used this month with its count and hours
+    if (order.length){
+      var lx = gridLeft, ly = gridBottom + 16;
+      doc.setFontSize(7.5);
+      order.forEach(function(id){
+        var t = totals[id], rgb = hexToRgb(t.color);
+        var label = t.name + "  " + t.count + (t.hours ? " · " + fmtHours(t.hours) + "h" : "");
+        doc.setFont("helvetica", "normal");
+        var w = doc.getTextWidth(label) + 22;
+        if (lx + w > gridLeft + gridW) return;
+        doc.setFillColor(rgb[0], rgb[1], rgb[2]); doc.roundedRect(lx, ly - 6.5, 8, 8, 2, 2, "F");
+        doc.setTextColor(INK[0], INK[1], INK[2]); doc.text(label, lx + 12, ly);
+        lx += w;
+      });
+    }
+
+    // footer
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(150, 155, 165);
+    var fy = pageH - margin + 4;
+    doc.text("Printed " + new Date().toLocaleDateString(), gridLeft, fy);
+    doc.text("Made with Roster Board  ·  rosterboard.net", gridLeft + gridW, fy, {align: "right"});
+    doc.setTextColor(0); doc.setLineWidth(.6);
   }
 
   document.getElementById("exportPdf").addEventListener("click", exportPdf);
