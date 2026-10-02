@@ -367,7 +367,7 @@
   #toast{
     position:absolute; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 78px); transform:translateX(-50%) translateY(8px);
     background:var(--text); color:var(--bg); font-size:.8rem; font-weight:600; padding:9px 16px; border-radius:999px;
-    opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:60; white-space:nowrap; max-width:88%; text-align:center;
+    opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:300; white-space:nowrap; max-width:88%; text-align:center;
   }
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
   .banner{
@@ -441,6 +441,46 @@
   .sync-status.bad{color:var(--danger);}
   .sync-status.warn{color:var(--accent);}
 
+  .full-screen{position:fixed; inset:0; z-index:150; display:none; flex-direction:column; background:var(--bg);}
+  .full-screen.show{display:flex;}
+  .full-screen .privacy-head{max-width:480px; width:100%; margin:0 auto;}
+  .fs-body{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; width:100%; max-width:480px; margin:0 auto; padding:0 12px calc(env(safe-area-inset-bottom, 0px) + 40px);}
+  .pay-period-title{flex:1; text-align:right; min-width:0;}
+  .pay-period-title h2{font-size:1.1rem;}
+  .pay-period-title div{font-size:.72rem; color:var(--text-dim); margin-top:2px;}
+  .pay-hero{text-align:center; padding:20px 14px;}
+  .pay-hero-label{font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin-bottom:4px;}
+  .pay-hero-net{font-size:.86rem; color:var(--text-dim); margin-top:4px;}
+  .pay-line{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:8px 2px; font-size:.85rem;}
+  .pay-line span{color:var(--text-dim);}
+  .pay-line small{margin-left:6px; font-size:.72rem; color:var(--text-faint);}
+  .pay-line.sub{padding:2px 2px 2px 14px; font-size:.76rem;}
+  .pay-line.sub b{font-weight:500; color:var(--text-dim);}
+  .pay-line.total{border-top:1px solid var(--border); margin-top:4px; padding-top:11px; font-size:.92rem;}
+  .pay-line.total span{color:var(--text); font-weight:700;}
+  .pay-line.muted b{color:var(--text-dim); font-weight:600;}
+  .pay-note{font-size:.72rem; color:var(--text-faint); line-height:1.5; margin:12px 6px;}
+  .pay-summary{display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px; background:none; border:none; padding:0; text-align:left; color:var(--text);}
+  .pay-summary-sub{font-size:.76rem; color:var(--text-dim); margin-top:2px;}
+  .pay-summary-more{flex:none; font-size:.78rem; font-weight:700; color:var(--accent);}
+  .ps-card{margin-top:12px;}
+  .ps-card h3{font-size:1rem;}
+  .ps-help{font-size:.74rem; color:var(--text-dim); line-height:1.45; margin-top:8px;}
+  .ps-inline{display:flex; gap:10px; align-items:flex-end;}
+  .ps-inline .form-row{flex:1; min-width:0;}
+  .ps-remove{flex:none; border:none; background:var(--surface-2); color:var(--text-dim); width:32px; height:40px; border-radius:10px; font-size:.8rem;}
+  .ps-type{border-top:1px solid var(--border); margin-top:12px; padding-top:12px;}
+  .ps-type-head{display:flex; align-items:center; gap:8px; font-size:.9rem;}
+  .ps-dot{width:10px; height:10px; border-radius:50%; flex:none;}
+  .ps-type-hours{margin-left:auto; font-size:.74rem; color:var(--text-faint);}
+  .ps-allow{display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); font-size:.85rem;}
+  .ps-allow span{flex:1; min-width:0;}
+  .ps-allow b{font-size:.8rem; color:var(--text-dim);}
+  .ps-footer{flex:none; display:flex; gap:10px; width:100%; max-width:480px; margin:0 auto; padding:10px 12px calc(env(safe-area-inset-bottom, 0px) + 12px); border-top:1px solid var(--border); background:var(--bg);}
+  #paySetupScreen .fs-body{padding-bottom:20px;}
+  .pay-tag{background:var(--accent-soft); color:var(--text);}
+  .day-cell .dnum .ph-badge{font-size:.46rem; font-weight:700; letter-spacing:.04em; color:var(--accent); border:1px solid var(--accent); border-radius:4px; padding:0 2px; line-height:1.3;}
+  .chip.ev-chip .ot-chip-base{color:var(--text);}
   .pay-total{font-family:'Fraunces', Georgia, serif; font-size:1.9rem; font-weight:600; letter-spacing:-.01em;}
   .history-row{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; border:1px solid var(--border);
     background:var(--surface-2); color:var(--text); border-radius:12px; padding:10px 12px; margin-bottom:8px; font-size:.82rem;}
@@ -580,6 +620,189 @@
     <div class="onboarding-footer">
       <div class="onboarding-dots" id="onboardingDots"></div>
       <button class="btn primary block" id="onboardingNextBtn">Next</button>
+    </div>
+  </div>
+
+  <!-- Estimated pay: full breakdown -->
+  <div class="full-screen" id="payScreen">
+    <div class="privacy-head">
+      <button class="icon-btn" id="payBackBtn" aria-label="Back">&#8249;</button>
+      <h2>Estimated pay</h2>
+      <button class="btn sm" id="paySetupBtn">Pay setup</button>
+    </div>
+    <div class="fs-body">
+      <div class="seg" id="payModeSeg" style="margin-top:12px;">
+        <button class="active" data-mode="period">Pay period</button>
+        <button data-mode="month">Month</button>
+        <button data-mode="year">Year</button>
+      </div>
+      <div class="section-head" style="margin-top:14px;">
+        <div class="month-nav">
+          <button class="icon-btn" id="payPrev" aria-label="Previous">&#8249;</button>
+          <button class="icon-btn" id="payNext" aria-label="Next">&#8250;</button>
+        </div>
+        <div class="pay-period-title">
+          <h2 id="payPeriodTitle"></h2>
+          <div id="payPeriodSub"></div>
+        </div>
+      </div>
+      <div class="card pay-hero" id="payHero"></div>
+      <div class="section-head"><h2>Breakdown</h2></div>
+      <div class="card" id="payBreakdown"></div>
+      <div class="pay-note" id="payRateNote"></div>
+      <div class="section-head"><h2 id="payByMonthTitle">By month</h2></div>
+      <div class="card" id="payByMonth"></div>
+      <p class="pay-note">Estimates only, worked out from the shifts, leave and allowances on your calendar and your pay setup. Tax is a rough guide using 2026–27 Australian resident rates, the low income tax offset and the 2% Medicare levy; it doesn't know about HELP debts, other income or salary sacrifice. Your payslip may differ.</p>
+    </div>
+  </div>
+
+  <!-- Pay setup -->
+  <div class="full-screen" id="paySetupScreen">
+    <div class="privacy-head">
+      <button class="icon-btn" id="paySetupBackBtn" aria-label="Back">&#8249;</button>
+      <h2>Pay setup</h2>
+      <span></span>
+    </div>
+    <div class="fs-body">
+      <p class="section-sub" style="margin-top:14px;">Only your hourly rate is needed. Everything else is optional and starts with sensible defaults.</p>
+
+      <div class="card ps-card">
+        <h3>Base rate</h3>
+        <div class="form-row" style="margin-top:10px;">
+          <label for="psBaseRate">Hourly rate ($)</label>
+          <input type="number" id="psBaseRate" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 42.50">
+        </div>
+        <div class="ps-help">Got a pay rise? Add it with the date it starts, so earlier estimates stay as they were.</div>
+        <div id="psRises"></div>
+        <button class="btn sm" id="psAddRise" type="button" style="margin-top:10px;">+ Add pay rise</button>
+      </div>
+
+      <div class="card ps-card">
+        <h3>Pay cycle</h3>
+        <div class="seg" id="psCycleSeg" style="margin-top:10px;">
+          <button type="button" data-cycle="weekly">Weekly</button>
+          <button type="button" data-cycle="fortnightly">Fortnightly</button>
+          <button type="button" data-cycle="monthly">Monthly</button>
+        </div>
+        <div class="ps-inline">
+          <div class="form-row">
+            <label for="psPeriodStart">A period starts on</label>
+            <input type="date" id="psPeriodStart">
+          </div>
+          <div class="form-row">
+            <label for="psPayday">Payday (days after it ends)</label>
+            <input type="number" id="psPayday" min="0" max="31" step="1" inputmode="numeric" placeholder="0">
+          </div>
+        </div>
+        <div class="ps-help">Pick any day a pay period started on (it's on your payslip), so the totals line up with what you're paid.</div>
+      </div>
+
+      <div class="card ps-card">
+        <h3>Overtime &amp; excess</h3>
+        <div class="ps-inline">
+          <div class="form-row">
+            <label for="psOtMult">Overtime rate ×</label>
+            <input type="number" id="psOtMult" min="0" step="0.05" inputmode="decimal" placeholder="1.5">
+          </div>
+          <div class="form-row">
+            <label for="psExMult">Excess rate ×</label>
+            <input type="number" id="psExMult" min="0" step="0.05" inputmode="decimal" placeholder="1">
+          </div>
+        </div>
+        <label class="remind-row" style="margin-top:12px;">
+          <input type="checkbox" id="psOtTiered">
+          <span>Overtime has tiers (e.g. first 3 hours at 1.5×, then 2×)</span>
+        </label>
+        <div class="ps-inline" id="psTierRow" style="display:none;">
+          <div class="form-row">
+            <label for="psOtTierHours">First … hours</label>
+            <input type="number" id="psOtTierHours" min="0" step="0.5" inputmode="decimal" placeholder="3">
+          </div>
+          <div class="form-row">
+            <label for="psOtMult2">Then rate ×</label>
+            <input type="number" id="psOtMult2" min="0" step="0.05" inputmode="decimal" placeholder="2">
+          </div>
+        </div>
+        <div class="ps-help">Applies to the hours you enter on Overtime shifts, per day. Set to 0 if excess hours are taken as time in lieu.</div>
+      </div>
+
+      <div class="card ps-card">
+        <h3>Penalty rates</h3>
+        <div class="ps-help" style="margin-top:4px;">Extra % on top of the base rate for ordinary hours. Leave blank if you don't get one. If more than one applies, the highest is used.</div>
+        <div class="ps-inline">
+          <div class="form-row"><label for="psPenSat">Saturday %</label><input type="number" id="psPenSat" min="0" step="1" inputmode="decimal" placeholder="e.g. 50"></div>
+          <div class="form-row"><label for="psPenSun">Sunday %</label><input type="number" id="psPenSun" min="0" step="1" inputmode="decimal" placeholder="e.g. 100"></div>
+        </div>
+        <div class="ps-inline">
+          <div class="form-row"><label for="psPenPh">Public holiday %</label><input type="number" id="psPenPh" min="0" step="1" inputmode="decimal" placeholder="e.g. 150"></div>
+          <div class="form-row"><label for="psPenNight">Night shift %</label><input type="number" id="psPenNight" min="0" step="1" inputmode="decimal" placeholder="e.g. 15"></div>
+        </div>
+        <div class="ps-help">Mark public holidays from the day on your calendar.</div>
+      </div>
+
+      <div class="card ps-card">
+        <h3>Your shift types</h3>
+        <div class="ps-help" style="margin-top:4px;">Choose which penalties each shift gets, and any shift allowance.</div>
+        <div id="psTypeRules"></div>
+      </div>
+
+      <div class="card ps-card">
+        <h3>Allowances</h3>
+        <div class="ps-help" style="margin-top:4px;">Extras you can tag onto any day from the calendar.</div>
+        <div id="psAllowances"></div>
+        <div class="form-row">
+          <label for="psAllowName">New allowance</label>
+          <input type="text" id="psAllowName" maxlength="40" placeholder="e.g. Missed meal break">
+        </div>
+        <div class="ps-inline">
+          <div class="form-row">
+            <label for="psAllowKind">Paid as</label>
+            <select id="psAllowKind">
+              <option value="flat">Flat $ amount</option>
+              <option value="hours">Hours at base rate</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="psAllowAmount">Amount</label>
+            <input type="number" id="psAllowAmount" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 18.50">
+          </div>
+        </div>
+        <button class="btn sm" id="psAllowAdd" type="button" style="margin-top:10px;">+ Add allowance</button>
+      </div>
+
+      <div class="card ps-card">
+        <h3>Leave</h3>
+        <label class="remind-row" style="margin-top:10px;">
+          <input type="checkbox" id="psPayLeave" checked>
+          <span>Annual and sick leave are paid at the base rate</span>
+        </label>
+        <div class="form-row">
+          <label for="psLeaveLoading">Annual leave loading %</label>
+          <input type="number" id="psLeaveLoading" min="0" step="0.5" inputmode="decimal" placeholder="e.g. 17.5">
+        </div>
+      </div>
+
+      <div class="card ps-card">
+        <h3>Super &amp; tax</h3>
+        <div class="form-row" style="margin-top:10px;">
+          <label for="psSuper">Employer super %</label>
+          <input type="number" id="psSuper" min="0" step="0.5" inputmode="decimal" placeholder="12">
+        </div>
+        <label class="remind-row" style="margin-top:12px;">
+          <input type="checkbox" id="psShowTax" checked>
+          <span>Show an estimated tax and take-home figure</span>
+        </label>
+        <label class="remind-row">
+          <input type="checkbox" id="psTaxFree" checked>
+          <span>I claim the tax-free threshold</span>
+        </label>
+        <div class="ps-help">A rough guide only, using 2026–27 Australian resident tax rates.</div>
+      </div>
+
+    </div>
+    <div class="ps-footer">
+      <button class="btn block" id="paySetupCancel" type="button">Cancel</button>
+      <button class="btn primary block" id="paySetupSave" type="button">Save</button>
     </div>
   </div>
 
@@ -975,7 +1198,7 @@
         <div class="stat-tile"><div class="label">Est. pay</div><div class="value num" id="repPayTile">—</div></div>
       </div>
 
-      <div class="section-head"><h2>Estimated pay</h2><button class="btn sm" id="payRatesBtn">Pay rates</button></div>
+      <div class="section-head"><h2>Estimated pay</h2><button class="btn sm" id="payRatesBtn">Pay setup</button></div>
       <div class="card" id="repPay"></div>
 
       <div class="section-head"><h2>By shift type</h2></div>
@@ -1116,6 +1339,7 @@
             <div class="section-sub" style="margin:0 0 12px;">You're using Roster Board on this device only. Sign in or create a free account to sync your data across devices and share rosters with someone.</div>
             <button class="btn primary block" id="acctSignInBtn">Sign in or create account</button>
           </div>
+          <button class="btn sm block" id="formatCalBtnLocal" style="margin-top:16px;">Format calendar</button>
         </div>
 
         <div id="acctSignedInSection" style="display:none;">
@@ -1164,6 +1388,7 @@
           </div>
 
           <button class="btn sm block" id="signOutBtn" style="margin-top:24px; margin-bottom:4px;">Sign out</button>
+          <button class="btn sm block" id="formatCalBtn" style="margin-top:10px; margin-bottom:4px;">Format calendar</button>
           <button class="btn sm block" id="deleteAccountBtn" style="margin-top:10px; margin-bottom:4px; color:var(--danger); border-color:var(--danger);">Delete account</button>
         </div>
       </div>
@@ -1236,6 +1461,11 @@
             <button class="leave-btn" id="addAnnualLeave">+ Annual Leave</button>
             <button class="leave-btn" id="addSickLeave">+ Sick Leave</button>
           </div>
+        </div>
+        <div class="sheet-section" id="sheetPaySection" style="display:none;">
+          <div class="label-row"><span>Pay</span></div>
+          <div id="sheetPayTags"></div>
+          <div class="leave-btns" id="sheetPayPicker"></div>
         </div>
         <div class="sheet-section" id="sheetBirthdaysSection" style="display:none;">
           <div class="label-row"><span>Birthdays</span></div>
@@ -1417,39 +1647,6 @@
   </div>
 
   <!-- pay rates -->
-  <div class="overlay center" id="payOverlay">
-    <div class="sheet">
-      <div class="sheet-head">
-        <h3>Pay rates</h3>
-        <button aria-label="Close" class="close" id="payClose">&#10005;</button>
-      </div>
-      <div class="sheet-body">
-        <div class="form-row" style="margin-top:0;">
-          <label for="payRate">Hourly rate ($)</label>
-          <input type="number" id="payRate" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 42.50">
-        </div>
-        <div class="split-grid">
-          <div class="form-row">
-            <label for="payExMult">Excess rate ×</label>
-            <input type="number" id="payExMult" min="0" step="0.05" inputmode="decimal" placeholder="1">
-          </div>
-          <div class="form-row">
-            <label for="payOtMult">Overtime rate ×</label>
-            <input type="number" id="payOtMult" min="0" step="0.05" inputmode="decimal" placeholder="1.5">
-          </div>
-        </div>
-        <label class="remind-row" style="margin-top:12px;">
-          <input type="checkbox" id="payLeave" checked>
-          <span>Count annual and sick leave as paid hours</span>
-        </label>
-        <div class="sheet-footer">
-          <button class="btn block" id="payCancel">Cancel</button>
-          <button class="btn primary block" id="paySave">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- earlier cloud backups -->
   <div class="overlay center" id="historyOverlay">
     <div class="sheet">
@@ -1569,10 +1766,10 @@
   // Excess Hours entries are logged against a shift (like Overtime) rather than as leave — see EXCESS_ID above.
   var LEAVE_COLORS = { annual:{color:"#7E8B99", ink:"#FFFFFF", label:"Annual Leave"}, sick:{color:"#C24444", ink:"#FFFFFF", label:"Sick Leave"}, excess:{color:"#F0679E", ink:"#FFFFFF", label:"Excess Hours"} };
   var EVENT_CATS = {
-    appointment: {color:"#3FC5C0", label:"Appointment"},
-    family: {color:"#F0679E", label:"Social"},
-    reminder: {color:"#E8B339", label:"Reminder"},
-    other: {color:"#9C9585", label:"Other"}
+    appointment: {color:"#3FC5C0", ink:"#062523", label:"Appointment"},
+    family: {color:"#F0679E", ink:"#FFFFFF", label:"Social"},
+    reminder: {color:"#E8B339", ink:"#241900", label:"Reminder"},
+    other: {color:"#9C9585", ink:"#FFFFFF", label:"Other"}
   };
   var EVENT_CAT_ORDER = ["appointment","family","reminder","other"];
   var MONTH_LABELS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -1592,6 +1789,7 @@
     birthdays: [], // [{id,name,day,month,year?}]
     editingBirthdayId: null,
     swaps: {},    // date -> [{id,kind:'off'|'on',partner,note,linkedDate,linkedSwapId,typeId,hours,shiftEntryId?}]
+    payTags: {},  // date -> [{id,kind:'holiday'} | {id,kind:'allowance',allowanceId}]
     swapPending: null, // {date, shiftId, typeId, hours, baseTypeId}
     noteCategory: "other",
     roster: { weeks: 1, pattern: [[[],[],[],[],[],[],[]]], updatedAt: 0 }, // pattern[weekIdx][dayIdx] = [typeId,...]
@@ -1694,6 +1892,7 @@
       if (opts.step != null) input.step = opts.step; else input.removeAttribute("step");
     }
     document.getElementById("miniModalConfirm").textContent = opts.confirmLabel || "Save";
+    document.getElementById("miniModalCancel").textContent = opts.cancelLabel || "Cancel";
     var overlay = document.getElementById("miniModalOverlay");
     overlay.classList.add("show");
     function cleanup(){
@@ -1723,7 +1922,7 @@
   /* ---------------- persistence ---------------- */
   var storageOk = true;
   loadStore.empty = function(){
-    return { types: [], shifts:{}, notes:{}, leave:{}, swaps:{}, birthdays: [], roster:{ weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 }, settings:{ hourlyRate:0 }, tombstones:{} };
+    return { types: [], shifts:{}, notes:{}, leave:{}, swaps:{}, payTags:{}, birthdays: [], roster:{ weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 }, settings:{ hourlyRate:0 }, tombstones:{} };
   };
   function loadStore(){
     try {
@@ -1741,7 +1940,7 @@
   }
   function saveStore(){
     var snapshot = {
-      types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps,
+      types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps, payTags: state.payTags,
       birthdays: state.birthdays, roster: state.roster, settings: state.settings, tombstones: state.tombstones
     };
     try {
@@ -1761,6 +1960,7 @@
     state.notes = data.notes || {};
     state.leave = data.leave || {};
     state.swaps = data.swaps || {};
+    state.payTags = data.payTags || {};
     state.birthdays = data.birthdays || [];
     state.roster = data.roster && data.roster.pattern ? data.roster : { weeks:1, pattern:[[[],[],[],[],[],[],[]]], updatedAt:0 };
     if (state.roster.updatedAt == null) state.roster.updatedAt = 0;
@@ -2054,6 +2254,7 @@
       notes: mergeBucketed(local.notes, remote && remote.notes, tombstones),
       leave: mergeBucketed(local.leave, remote && remote.leave, tombstones),
       swaps: mergeBucketed(local.swaps, remote && remote.swaps, tombstones),
+      payTags: mergeBucketed(local.payTags, remote && remote.payTags, tombstones),
       birthdays: mergeArrayById(local.birthdays, remote && remote.birthdays, tombstones),
       roster: mergeRoster(local.roster, remote && remote.roster),
       settings: mergeSettings(local.settings, remote && remote.settings),
@@ -2068,7 +2269,7 @@
     function byId(x, y){ var a = (x && x.id) || "", b = (y && y.id) || ""; return a < b ? -1 : a > b ? 1 : 0; }
     Object.keys(snap || {}).forEach(function(k){
       var v = snap[k];
-      if (k === "shifts" || k === "notes" || k === "leave" || k === "swaps"){
+      if (k === "shifts" || k === "notes" || k === "leave" || k === "swaps" || k === "payTags"){
         var days = {};
         Object.keys(v || {}).forEach(function(d){ if ((v[d] || []).length) days[d] = (v[d] || []).slice().sort(byId); });
         out[k] = days;
@@ -2089,7 +2290,7 @@
   }
   function localSnapshot(){
     return {
-      types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps,
+      types: state.types, shifts: state.shifts, notes: state.notes, leave: state.leave, swaps: state.swaps, payTags: state.payTags,
       birthdays: state.birthdays, roster: state.roster, settings: state.settings, tombstones: state.tombstones
     };
   }
@@ -2103,6 +2304,7 @@
     state.notes = merged.notes;
     state.leave = merged.leave;
     state.swaps = merged.swaps;
+    state.payTags = merged.payTags || {};
     state.birthdays = merged.birthdays || [];
     state.roster = merged.roster;
     state.tombstones = merged.tombstones;
@@ -2191,6 +2393,7 @@
       if (!row){
         return sb.from("app_data").insert({ user_id: uid, data: toUpload, updated_at: stamp }).then(function(r){
           if (r.error){ if (r.error.code === "23505") return "conflict"; throw r.error; }
+          setForceHistory(false);
           return "saved";
         });
       }
@@ -2198,7 +2401,9 @@
       q = row.updated_at ? q.eq("updated_at", row.updated_at) : q.is("updated_at", null);
       return q.select("user_id").then(function(r){
         if (r.error) throw r.error;
-        return (r.data && r.data.length) ? "saved" : "conflict";
+        if (!(r.data && r.data.length)) return "conflict";
+        setForceHistory(false);
+        return "saved";
       });
     });
   }
@@ -2255,6 +2460,11 @@
   // every 6 hours) inside the same record, so lost entries can be recovered
   // from Account → "Recover from an earlier backup".
   var HISTORY_MAX = 10, HISTORY_GAP = 6 * 3600000;
+  // When set, the next successful upload keeps a copy of what's in the cloud now
+  // (e.g. before a Format calendar), even if the last backup is recent.
+  var FORCE_HISTORY_KEY = "rosterBoard.forceBackup";
+  function forceHistoryPending(){ try { return localStorage.getItem(FORCE_HISTORY_KEY) === "1"; } catch(e){ return false; } }
+  function setForceHistory(on){ try { if (on) localStorage.setItem(FORCE_HISTORY_KEY, "1"); else localStorage.removeItem(FORCE_HISTORY_KEY); } catch(e){} }
   function stripHistory(d){
     var out = {};
     Object.keys(d || {}).forEach(function(k){ if (k !== "history") out[k] = d[k]; });
@@ -2262,11 +2472,12 @@
   }
   function snapshotHasData(d){
     return !!d && (Object.keys(d.shifts || {}).length || Object.keys(d.notes || {}).length || (d.types || []).length ||
-      Object.keys(d.leave || {}).length || Object.keys(d.swaps || {}).length || (d.birthdays || []).length);
+      Object.keys(d.leave || {}).length || Object.keys(d.swaps || {}).length || (d.birthdays || []).length ||
+      Object.keys(d.payTags || {}).length);
   }
   function buildHistory(remote){
     var h = ((remote && remote.history) || []).slice(0, HISTORY_MAX);
-    if (snapshotHasData(remote) && (!h.length || Date.now() - (h[0].at || 0) > HISTORY_GAP)){
+    if (snapshotHasData(remote) && (forceHistoryPending() || !h.length || Date.now() - (h[0].at || 0) > HISTORY_GAP)){
       h.unshift({ at: Date.now(), data: stripHistory(remote) });
     }
     return h.slice(0, HISTORY_MAX);
@@ -2322,14 +2533,28 @@
               (state.types || []).concat(state.birthdays || []).forEach(function(it){ if (it && it.id) have[it.id] = 1; });
               function revive(it){ if (it && it.id && !have[it.id]){ it.updatedAt = now; delete state.tombstones[it.id]; return true; } return false; }
               var neededTypes = {};
-              ["shifts","notes","leave"].forEach(function(k){
+              ["shifts","notes","leave","payTags"].forEach(function(k){
                 Object.keys(backup[k] || {}).forEach(function(d){
-                  var dayIsEmpty = !(state[k][d] || []).length && !(k === "shifts" && (state.swaps[d] || []).length);
+                  var dayIsEmpty = !((state[k] || {})[d] || []).length && !(k === "shifts" && (state.swaps[d] || []).length);
                   if (!dayIsEmpty) return;
                   (backup[k][d] || []).forEach(function(it){
                     if (k === "shifts" && swapRefs[it.id]) return;
                     if (revive(it) && k === "shifts") neededTypes[it.baseTypeId || it.typeId] = neededTypes[it.typeId] = 1;
                   });
+                });
+              });
+              // Swaps come back as complete pairs, with the shift that was picked up,
+              // when neither day has a swap now (e.g. after Format calendar).
+              Object.keys(backup.swaps || {}).forEach(function(d){
+                (backup.swaps[d] || []).forEach(function(rec){
+                  if (rec.kind !== "on" || have[rec.id]) return;
+                  var offDay = rec.linkedDate;
+                  var off = (backup.swaps[offDay] || []).find(function(r){ return r.id === rec.linkedSwapId; });
+                  if (!off || (state.swaps[d] || []).length || (state.swaps[offDay] || []).length) return;
+                  var picked = (backup.shifts[d] || []).find(function(x){ return x.id === rec.shiftEntryId; });
+                  if (picked && (state.shifts[d] || []).length) return;
+                  revive(rec); revive(off);
+                  if (picked){ revive(picked); neededTypes[picked.baseTypeId || picked.typeId] = neededTypes[picked.typeId] = 1; }
                 });
               });
               (backup.types || []).forEach(function(t){ if (neededTypes[t.id]) revive(t); });
@@ -2561,7 +2786,7 @@
       });
     };
     // Back up first so nothing is lost; signing out then clears this device.
-    if (currentUser && dirtySince()){
+    if (currentUser && navigator.onLine !== false){
       toast("Backing up before signing out…");
       syncNow();
       setTimeout(go, 4000);
@@ -2579,9 +2804,33 @@
       }
     });
   });
+  // Format calendar: clear every dated entry but keep shift types, the roster
+  // pattern, birthdays and pay setup. Deletions sync to all devices, and a copy
+  // of the calendar is kept in the backups so it can be recovered.
+  function formatCalendar(){
+    openMiniModal({
+      title: "Format calendar?",
+      message: "This removes every shift, event, leave entry, swap and pay tag from your calendar" + (currentUser ? " on all your devices" : "") + ". Your shift types, roster pattern, birthdays and pay setup stay.\n\n" +
+        (currentUser ? "You can undo it from Account → Recover from an earlier backup." : "Without an account this can't be undone.") + "\n\nType FORMAT to confirm.",
+      placeholder: "Type FORMAT to confirm",
+      confirmLabel: "Format",
+      onConfirm: function(val){
+        if ((val || "").trim().toUpperCase() !== "FORMAT"){ toast("Type FORMAT to confirm"); return; }
+        ["shifts","notes","leave","swaps","payTags"].forEach(function(k){
+          Object.keys(state[k] || {}).forEach(function(d){ (state[k][d] || []).forEach(function(it){ if (it && it.id) tomb(it.id); }); });
+          state[k] = {};
+        });
+        if (currentUser) setForceHistory(true);
+        saveStore(); renderAll();
+        toast("Calendar formatted");
+      }
+    });
+  }
+  document.getElementById("formatCalBtn").addEventListener("click", formatCalendar);
+  document.getElementById("formatCalBtnLocal").addEventListener("click", formatCalendar);
   function wipeLocalData(){
     try {
-      [STORAGE_KEY, SYNC_DIRTY_KEY, SYNC_LAST_KEY, OWNER_KEY, THEME_KEY, "rosterBoard.skipAuth", "rosterBoard.localOnlyAck"].forEach(function(k){ localStorage.removeItem(k); });
+      [STORAGE_KEY, SYNC_DIRTY_KEY, SYNC_LAST_KEY, OWNER_KEY, THEME_KEY, FORCE_HISTORY_KEY, "rosterBoard.skipAuth", "rosterBoard.localOnlyAck"].forEach(function(k){ localStorage.removeItem(k); });
     } catch(e){}
   }
   function deleteAccountNow(){
@@ -3040,7 +3289,7 @@
   /* ---------------- render: calendar ---------------- */
   function renderCalendar(){
     renderCalendarGrid("calGrid", state.calMonth, {
-      shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById, birthdays: state.birthdays
+      shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById, birthdays: state.birthdays, payTags: state.payTags
     }, { onDayClick: handleCalendarDayClick, bulkSelectedDates: state.bulkMode ? state.bulkSelectedDates : null });
     renderHeader();
   }
@@ -3051,6 +3300,24 @@
 
   // Generic month-grid renderer, reused for the user's own calendar and for a
   // connected person's read-only shared roster (opts.onDayClick omitted there).
+  function openEventDetails(dateKey, id){
+    var n = (state.notes[dateKey] || []).find(function(x){ return x.id === id; });
+    if (!n) return;
+    var cat = EVENT_CATS[n.category] || EVENT_CATS.other;
+    var d = parseYmd(dateKey);
+    var when = WEEKDAY_FULL[d.getDay()] + " " + d.getDate() + " " + MONTH_LABELS[d.getMonth()] + " " + d.getFullYear();
+    var lines = [cat.label, when + (n.allDay ? " · All day" : n.time ? " · " + n.time : "")];
+    if (n.remind) lines.push(n.notified ? "Reminder sent" : "Reminder on");
+    openMiniModal({
+      title: n.text,
+      message: lines.join("\n"),
+      showInput: false, confirmLabel: "Edit", cancelLabel: "Close",
+      onConfirm: function(){
+        openDaySheet(dateKey);
+        startEditNote(dateKey, n);
+      }
+    });
+  }
   function renderCalendarGrid(gridId, monthDate, dataSrc, opts){
     opts = opts || {};
     var grid = document.getElementById(gridId);
@@ -3071,6 +3338,11 @@
       var numSpan = document.createElement("span");
       numSpan.textContent = cell.date.getDate();
       numRow.appendChild(numSpan);
+      if (dataSrc.payTags && (dataSrc.payTags[key] || []).some(function(t){ return t.kind === "holiday"; })){
+        var ph = document.createElement("span");
+        ph.className = "ph-badge"; ph.textContent = "PH"; ph.title = "Public holiday";
+        numRow.appendChild(ph);
+      }
       btn.appendChild(numRow);
 
       var daySwaps = (dataSrc.swaps && dataSrc.swaps[key]) || [];
@@ -3155,17 +3427,34 @@
       var dayEvents = (dataSrc.notes && dataSrc.notes[key]) || [];
       var maxEvents = 2;
       dayEvents.slice(0, maxEvents).forEach(function(n){
+        // Banner like the overtime/swap chips: category strip on top, event below.
         var cat = EVENT_CATS[n.category] || EVENT_CATS.other;
-        var eline = document.createElement("div");
-        eline.className = "event-line";
-        var edot = document.createElement("span");
-        edot.className = "edot";
-        edot.style.background = cat.color;
-        eline.appendChild(edot);
-        var etext = document.createElement("span");
-        etext.textContent = n.text;
-        eline.appendChild(etext);
-        btn.appendChild(eline);
+        var chip = document.createElement("div");
+        chip.className = "chip ot-chip ev-chip";
+        var strip = document.createElement("span");
+        strip.className = "ot-chip-strip";
+        strip.style.background = cat.color;
+        strip.style.color = cat.ink;
+        strip.textContent = cat.label;
+        chip.appendChild(strip);
+        var base = document.createElement("span");
+        base.className = "ot-chip-base";
+        base.style.background = cat.color + "38";
+        base.textContent = n.text;
+        chip.appendChild(base);
+        if (opts.onDayClick){
+          var evKey = key;
+          chip.setAttribute("role", "button");
+          chip.tabIndex = 0;
+          chip.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); chip.click(); } });
+          chip.setAttribute("aria-label", cat.label + ": " + n.text);
+          chip.addEventListener("click", function(e){
+            if (state.bulkMode) return; // mass-edit taps go to the day
+            e.stopPropagation();
+            openEventDetails(evKey, n.id);
+          });
+        }
+        btn.appendChild(chip);
       });
       if (dayEvents.length > maxEvents){
         var moreE = document.createElement("div");
@@ -3294,6 +3583,7 @@
 
   function renderDaySheetBody(){
     var key = state.selectedDate;
+    renderPayTagsSection(key);
 
     var shiftsWrap = document.getElementById("sheetShifts");
     shiftsWrap.innerHTML = "";
@@ -4520,87 +4810,614 @@
   }
 
   /* ---------------- pay estimate ---------------- */
-  function payRates(){
+  // Everything about pay lives in state.settings.pay (synced with the rest of
+  // the settings). Older versions stored hourlyRate / otMultiplier /
+  // excessMultiplier / payLeave directly on settings; those are still read as
+  // defaults and kept up to date so an older copy of the app keeps working.
+  var PAY_DEFAULTS = {
+    baseRate: 0, rises: [],
+    cycle: "fortnightly", periodStart: "", paydayOffset: 0,
+    otMult: 1.5, otTiered: false, otTierHours: 3, otMult2: 2, exMult: 1,
+    pen: { sat: 0, sun: 0, ph: 0, night: 0 },
+    typeRules: {},
+    allowances: [],
+    payLeave: true, leaveLoading: 0,
+    superPct: 12, showTax: true, taxFree: true
+  };
+  function num(v, d){ v = parseFloat(v); return isFinite(v) ? v : d; }
+  function payConfig(){
     var st = state.settings || {};
-    return {
-      rate: +st.hourlyRate || 0,
-      otMult: st.otMultiplier != null ? +st.otMultiplier : 1.5,
-      exMult: st.excessMultiplier != null ? +st.excessMultiplier : 1,
-      leave: st.payLeave !== false
+    var p = st.pay || {};
+    var c = {};
+    c.savedAt = p.savedAt || 0;
+    Object.keys(PAY_DEFAULTS).forEach(function(k){
+      c[k] = p[k] != null ? p[k] : JSON.parse(JSON.stringify(PAY_DEFAULTS[k]));
+    });
+    if (st.pay && st.hourlyRate != null && num(st.hourlyRate, 0) !== num(p.baseRate, 0) && (st.updatedAt || 0) > (p.savedAt || 0)){
+      // an older version of the app changed the simple pay fields since this setup was saved
+      c.baseRate = num(st.hourlyRate, c.baseRate);
+      if (st.otMultiplier != null) c.otMult = num(st.otMultiplier, c.otMult);
+      if (st.excessMultiplier != null) c.exMult = num(st.excessMultiplier, c.exMult);
+    }
+    if (!st.pay){
+      c.baseRate = num(st.hourlyRate, 0);
+      if (st.otMultiplier != null) c.otMult = num(st.otMultiplier, 1.5);
+      if (st.excessMultiplier != null) c.exMult = num(st.excessMultiplier, 1);
+      if (st.payLeave != null) c.payLeave = st.payLeave !== false;
+      c.cycle = "monthly";
+    }
+    c.pen = Object.assign({ sat: 0, sun: 0, ph: 0, night: 0 }, c.pen || {});
+    c.rises = (c.rises || []).filter(function(r){ return r && r.from && num(r.rate, 0) > 0; })
+      .sort(function(a, b){ return a.from < b.from ? -1 : a.from > b.from ? 1 : 0; });
+    c.typeRules = c.typeRules || {};
+    c.allowances = c.allowances || [];
+    return c;
+  }
+  function payIsSetUp(){ return payConfig().baseRate > 0; }
+  // Hourly rate in force on a given day: the latest pay rise on or before it,
+  // otherwise the base rate. Pay rises never change earlier estimates.
+  function rateOn(cfg, dateKey){
+    var r = num(cfg.baseRate, 0);
+    cfg.rises.forEach(function(x){ if (x.from <= dateKey) r = num(x.rate, r); });
+    return r;
+  }
+
+  /* pay periods */
+  function cycleDays(cfg){ return cfg.cycle === "weekly" ? 7 : 14; }
+  function periodsPerYear(cfg){ return cfg.cycle === "weekly" ? 52 : cfg.cycle === "monthly" ? 12 : 26; }
+  function payAnchor(cfg){
+    if (cfg.periodStart) return parseYmd(cfg.periodStart);
+    // no start date set: weeks run Monday–Sunday from 5 Jan 2026; months from the 1st
+    return cfg.cycle === "monthly" ? new Date(2026, 0, 1) : new Date(2026, 0, 5);
+  }
+  function monthDayClamped(y, m, d){ return new Date(y, m, Math.min(d, new Date(y, m + 1, 0).getDate())); }
+  function payPeriodFor(cfg, date){
+    var a = payAnchor(cfg), start, end;
+    if (cfg.cycle === "monthly"){
+      var d0 = a.getDate();
+      start = monthDayClamped(date.getFullYear(), date.getMonth(), d0);
+      if (start > date) start = monthDayClamped(date.getFullYear(), date.getMonth() - 1, d0);
+      end = monthDayClamped(start.getFullYear(), start.getMonth() + 1, d0);
+    } else {
+      var len = cycleDays(cfg);
+      var diff = Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - a) / 86400000);
+      var n = Math.floor(diff / len);
+      start = addDays(a, n * len);
+      end = addDays(start, len);
+    }
+    return { start: start, end: end, payday: addDays(end, -1 + Math.round(num(cfg.paydayOffset, 0))) };
+  }
+  function shiftPayPeriod(cfg, period, dir){
+    return payPeriodFor(cfg, dir > 0 ? period.end : addDays(period.start, -1));
+  }
+
+  /* tax (rough, Australian resident, 2026–27) */
+  function annualTaxEstimate(income, taxFree){
+    if (!(income > 0)) return 0;
+    var b = taxFree
+      ? [[18200, 0], [45000, .15], [135000, .30], [190000, .37], [Infinity, .45]]
+      : [[45000, .15], [135000, .30], [190000, .37], [Infinity, .45]];
+    var tax = 0, prev = 0;
+    b.forEach(function(x){
+      if (income > prev) tax += (Math.min(income, x[0]) - prev) * x[1];
+      prev = x[0];
+    });
+    if (taxFree){
+      // low income tax offset
+      var lito = income <= 37500 ? 700 : income <= 45000 ? 700 - (income - 37500) * .05 : income <= 66667 ? 325 - (income - 45000) * .015 : 0;
+      tax = Math.max(0, tax - Math.max(0, lito));
+    }
+    // Medicare levy 2% (not charged on low incomes)
+    if (income > 27222) tax += Math.min(income * .02, (income - 27222) * .1);
+    return tax;
+  }
+
+  function payTagsOn(dateKey){ return (state.payTags && state.payTags[dateKey]) || []; }
+  function isPublicHoliday(dateKey){ return payTagsOn(dateKey).some(function(t){ return t.kind === "holiday"; }); }
+
+  // The whole calculation for [start, end). annualFactor turns the period's
+  // gross into a yearly figure for the tax estimate (52, 26, 12 or 1).
+  function computePay(start, end, annualFactor){
+    var cfg = payConfig();
+    var r = {
+      ordinaryHours: 0, otHours: 0, excessHours: 0, leaveHours: 0,
+      ordinary: 0, overtime: 0, excess: 0, penalties: 0, shiftAllowance: 0, allowances: 0, leave: 0, leaveLoading: 0,
+      allowanceLines: {}, penaltyLines: {}, gross: 0, superAmt: 0, tax: 0, net: 0, configured: cfg.baseRate > 0
     };
+    if (!r.configured) return r;
+    var sKey = ymd(start), eKey = ymd(end);
+    function inRange(k){ return k >= sKey && k < eKey; }
+    var allowById = {};
+    cfg.allowances.forEach(function(a){ allowById[a.id] = a; });
+
+    Object.keys(state.shifts || {}).forEach(function(k){
+      if (!inRange(k)) return;
+      var rate = rateOn(cfg, k);
+      var d = parseYmd(k), wd = d.getDay();
+      (state.shifts[k] || []).forEach(function(s){
+        var t = state.typesById[s.typeId];
+        if (!t || t.kind === "personal") return;
+        if (s.typeId === OVERTIME_ID){
+          var ot = entryOTHours(s);
+          var first = cfg.otTiered ? Math.min(ot, Math.max(0, num(cfg.otTierHours, 0))) : ot;
+          r.otHours += ot;
+          r.overtime += rate * (first * num(cfg.otMult, 1.5) + (ot - first) * num(cfg.otMult2, 2));
+          var exPart = entryExcessHours(s);
+          r.excessHours += exPart;
+          r.excess += exPart * rate * num(cfg.exMult, 1);
+          return;
+        }
+        if (s.typeId === EXCESS_ID){
+          var ex = entryExcessHours(s) || effectiveHours(s);
+          r.excessHours += ex;
+          r.excess += ex * rate * num(cfg.exMult, 1);
+          return;
+        }
+        var h = effectiveHours(s);
+        r.ordinaryHours += h;
+        r.ordinary += h * rate;
+        var rule = cfg.typeRules[s.typeId] || {};
+        // When more than one penalty applies, the highest one is paid.
+        var best = 0, bestName = "";
+        function consider(pct, name){ pct = num(pct, 0); if (pct > best){ best = pct; bestName = name; } }
+        if (rule.penalties !== false){
+          if (wd === 6) consider(cfg.pen.sat, "Saturday");
+          if (wd === 0) consider(cfg.pen.sun, "Sunday");
+          if (isPublicHoliday(k)) consider(cfg.pen.ph, "Public holiday");
+        }
+        if (rule.night) consider(cfg.pen.night, "Night shift");
+        if (best > 0){
+          var pAmt = h * rate * best / 100;
+          r.penalties += pAmt;
+          r.penaltyLines[bestName] = (r.penaltyLines[bestName] || 0) + pAmt;
+        }
+        if (rule.allowanceKind === "pct") r.shiftAllowance += h * rate * num(rule.allowance, 0) / 100;
+        else if (rule.allowanceKind === "flat") r.shiftAllowance += num(rule.allowance, 0);
+      });
+    });
+
+    Object.keys(state.leave || {}).forEach(function(k){
+      if (!inRange(k)) return;
+      var rate = rateOn(cfg, k);
+      (state.leave[k] || []).forEach(function(l){
+        var h = num(l.hours, 0);
+        if (l.kind !== "annual" && l.kind !== "sick") return;
+        r.leaveHours += h;
+        if (!cfg.payLeave) return;
+        r.leave += h * rate;
+        if (l.kind === "annual") r.leaveLoading += h * rate * num(cfg.leaveLoading, 0) / 100;
+      });
+    });
+
+    Object.keys(state.payTags || {}).forEach(function(k){
+      if (!inRange(k)) return;
+      var rate = rateOn(cfg, k);
+      (state.payTags[k] || []).forEach(function(tag){
+        if (tag.kind !== "allowance") return;
+        var a = allowById[tag.allowanceId];
+        if (!a) return;
+        var amt = a.kind === "hours" ? num(a.amount, 0) * rate : num(a.amount, 0);
+        r.allowances += amt;
+        r.allowanceLines[a.name] = (r.allowanceLines[a.name] || 0) + amt;
+      });
+    });
+
+    r.gross = r.ordinary + r.overtime + r.excess + r.penalties + r.shiftAllowance + r.allowances + r.leave + r.leaveLoading;
+    // Super is paid by the employer on ordinary-time earnings (not overtime).
+    r.superAmt = (r.ordinary + r.penalties + r.shiftAllowance + r.leave + r.leaveLoading) * num(cfg.superPct, 0) / 100;
+    var f = annualFactor || 1;
+    r.tax = cfg.showTax ? annualTaxEstimate(r.gross * f, cfg.taxFree) / f : 0;
+    r.net = r.gross - r.tax;
+    r.showTax = !!cfg.showTax;
+    return r;
   }
   function fmtMoney(v){
     return "$" + (Math.round(v * 100) / 100).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   }
-  function renderPayCard(stats){
+  function fmtMoneyShort(v){ return v >= 10000 ? "$" + (v / 1000).toFixed(1) + "k" : "$" + Math.round(v).toLocaleString(); }
+
+  /* ---- reports: compact pay card (the full breakdown is one tap away) ---- */
+  function renderPayCard(){
     var card = document.getElementById("repPay");
     card.innerHTML = "";
-    var r = payRates();
-    if (!r.rate){
+    if (!payIsSetUp()){
       document.getElementById("repPayTile").textContent = "—";
-      card.appendChild(hintEl("Add your hourly rate once and Roster Board works out your pay from your hours, excess hours and overtime."));
+      card.appendChild(hintEl("Add your hourly rate once and Roster Board estimates your pay from your shifts, overtime, penalties, allowances and leave."));
       var b = document.createElement("button");
       b.className = "btn sm primary block"; b.style.marginTop = "10px"; b.textContent = "Set my hourly rate";
-      b.addEventListener("click", openPayRates);
+      b.addEventListener("click", function(){ openPaySetup(); });
       card.appendChild(b);
       return;
     }
-    var ordinary = Math.max(0, stats.totalHours - stats.otHours - stats.excessHours);
-    var paidLeave = r.leave ? (stats.leaveHoursByKind.annual + stats.leaveHoursByKind.sick) : 0;
-    var rows = [
-      ["Ordinary · " + fmtHours(ordinary) + "h × " + fmtMoney(r.rate), ordinary * r.rate],
-      ["Excess · " + fmtHours(stats.excessHours) + "h × " + fmtMoney(r.rate * r.exMult), stats.excessHours * r.rate * r.exMult],
-      ["Overtime · " + fmtHours(stats.otHours) + "h × " + fmtMoney(r.rate * r.otMult), stats.otHours * r.rate * r.otMult]
-    ];
-    if (r.leave) rows.push(["Paid leave · " + fmtHours(paidLeave) + "h × " + fmtMoney(r.rate), paidLeave * r.rate]);
-    var total = rows.reduce(function(a, x){ return a + x[1]; }, 0);
-    document.getElementById("repPayTile").textContent = total >= 10000 ? "$" + (total/1000).toFixed(1) + "k" : "$" + Math.round(total).toLocaleString();
+    var range = periodRange();
+    var p = computePay(range.start, range.end, state.repMode === "year" ? 1 : 12);
+    document.getElementById("repPayTile").textContent = fmtMoneyShort(p.gross);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pay-summary";
+    var left = document.createElement("div");
     var big = document.createElement("div");
     big.className = "pay-total num";
-    big.textContent = fmtMoney(total);
-    card.appendChild(big);
+    big.textContent = fmtMoney(p.gross);
+    left.appendChild(big);
     var sub = document.createElement("div");
-    sub.className = "section-sub"; sub.style.margin = "0 0 8px";
-    sub.textContent = "Before tax · estimate only";
-    card.appendChild(sub);
-    rows.forEach(function(x, i){
-      if (i){ var d = document.createElement("div"); d.className = "row-divider"; card.appendChild(d); }
+    sub.className = "pay-summary-sub";
+    sub.textContent = "Gross" + (p.showTax ? " · about " + fmtMoney(p.net) + " take-home" : "") + " · estimate";
+    left.appendChild(sub);
+    btn.appendChild(left);
+    var more = document.createElement("span");
+    more.className = "pay-summary-more";
+    more.textContent = "Breakdown ›";
+    btn.appendChild(more);
+    btn.addEventListener("click", function(){
+      openPayScreen(state.repMode === "year" ? "year" : "month",
+        state.repMode === "year" ? new Date(state.repYear, 0, 1) : state.repMonth);
+    });
+    card.appendChild(btn);
+  }
+
+  /* ---- Estimated pay screen ---- */
+  var payView = { mode: "period", anchor: new Date() };
+  function openPayScreen(mode, anchor){
+    if (!payIsSetUp()){ openPaySetup(); return; }
+    payView.mode = mode || "period";
+    payView.anchor = anchor ? new Date(anchor) : new Date();
+    renderPayScreen();
+    document.getElementById("payScreen").classList.add("show");
+  }
+  function closePayScreen(){ document.getElementById("payScreen").classList.remove("show"); }
+  function payViewRange(){
+    var cfg = payConfig(), a = payView.anchor;
+    if (payView.mode === "year"){
+      return { start: new Date(a.getFullYear(), 0, 1), end: new Date(a.getFullYear() + 1, 0, 1), factor: 1, label: "" + a.getFullYear(), sub: "Calendar year" };
+    }
+    if (payView.mode === "month"){
+      var ms = startOfMonth(a);
+      return { start: ms, end: addMonths(ms, 1), factor: 12, label: MONTH_LABELS[ms.getMonth()] + " " + ms.getFullYear(), sub: "Calendar month" };
+    }
+    var per = payPeriodFor(cfg, a);
+    var last = addDays(per.end, -1);
+    function short(d){ return d.getDate() + " " + MONTH_LABELS[d.getMonth()].slice(0, 3); }
+    var cycleName = cfg.cycle === "weekly" ? "Weekly" : cfg.cycle === "monthly" ? "Monthly" : "Fortnightly";
+    return { start: per.start, end: per.end, factor: periodsPerYear(cfg), label: short(per.start) + " – " + short(last),
+      sub: cycleName + " pay period · payday " + WEEKDAY_FULL[per.payday.getDay()].slice(0, 3) + " " + short(per.payday) };
+  }
+  function payLine(parent, label, amount, cls, detail){
+    var row = document.createElement("div");
+    row.className = "pay-line" + (cls ? " " + cls : "");
+    var a = document.createElement("span");
+    a.textContent = label;
+    if (detail){
+      var d = document.createElement("small");
+      d.textContent = detail;
+      a.appendChild(d);
+    }
+    var b = document.createElement("b");
+    b.className = "num";
+    b.textContent = typeof amount === "string" ? amount : fmtMoney(amount);
+    row.appendChild(a); row.appendChild(b);
+    parent.appendChild(row);
+  }
+  function renderPayScreen(){
+    var cfg = payConfig();
+    document.querySelectorAll("#payModeSeg button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-mode") === payView.mode);
+    });
+    var r = payViewRange();
+    document.getElementById("payPeriodTitle").textContent = r.label;
+    document.getElementById("payPeriodSub").textContent = r.sub;
+    var p = computePay(r.start, r.end, r.factor);
+
+    var hero = document.getElementById("payHero");
+    hero.innerHTML = "";
+    var big = document.createElement("div"); big.className = "pay-total num"; big.textContent = fmtMoney(p.gross);
+    var lab = document.createElement("div"); lab.className = "pay-hero-label"; lab.textContent = "Estimated gross pay";
+    hero.appendChild(lab); hero.appendChild(big);
+    if (p.showTax){
+      var net = document.createElement("div"); net.className = "pay-hero-net num";
+      net.textContent = "About " + fmtMoney(p.net) + " take-home";
+      hero.appendChild(net);
+    }
+
+    var box = document.getElementById("payBreakdown");
+    box.innerHTML = "";
+    var rate = rateOn(cfg, ymd(addDays(r.end, -1)));
+    payLine(box, "Ordinary", p.ordinary, "", fmtHours(p.ordinaryHours) + "h");
+    if (p.overtime) payLine(box, "Overtime", p.overtime, "", fmtHours(p.otHours) + "h");
+    if (p.excess) payLine(box, "Excess hours", p.excess, "", fmtHours(p.excessHours) + "h");
+    if (p.penalties){
+      payLine(box, "Penalty rates", p.penalties);
+      Object.keys(p.penaltyLines).forEach(function(k){ payLine(box, k, p.penaltyLines[k], "sub"); });
+    }
+    if (p.shiftAllowance) payLine(box, "Shift allowance", p.shiftAllowance);
+    if (p.allowances){
+      payLine(box, "Allowances", p.allowances);
+      Object.keys(p.allowanceLines).forEach(function(k){ payLine(box, k, p.allowanceLines[k], "sub"); });
+    }
+    if (p.leave) payLine(box, "Leave", p.leave, "", fmtHours(p.leaveHours) + "h");
+    if (p.leaveLoading) payLine(box, "Leave loading", p.leaveLoading);
+    payLine(box, "Gross", p.gross, "total");
+    if (p.showTax){
+      payLine(box, "Estimated tax", "−" + fmtMoney(p.tax), "", "incl. Medicare levy");
+      payLine(box, "Estimated take-home", p.net, "total");
+    }
+    if (cfg.superPct > 0) payLine(box, "Super (paid by employer)", p.superAmt, "muted", fmtHours(cfg.superPct) + "%");
+
+    var rateNote = document.getElementById("payRateNote");
+    rateNote.textContent = "Base rate " + fmtMoney(rate) + "/h" + (cfg.rises.length ? " (latest pay rise applied from its date)" : "");
+
+    // by month, for the year containing this view
+    var y = (payView.mode === "year" ? payView.anchor : r.start).getFullYear();
+    document.getElementById("payByMonthTitle").textContent = "By month · " + y;
+    var bars = document.getElementById("payByMonth");
+    bars.innerHTML = "";
+    var vals = [], yearTotal = 0, max = 0;
+    for (var m = 0; m < 12; m++){
+      var g = computePay(new Date(y, m, 1), new Date(y, m + 1, 1), 12).gross;
+      vals.push(g); yearTotal += g; if (g > max) max = g;
+    }
+    vals.forEach(function(g, m){
+      bars.appendChild(makeBarRow(MONTH_LABELS[m].slice(0, 3), "var(--accent)", g, max || 1, g ? fmtMoneyShort(g) : "—"));
+    });
+    payLine(bars, "Year total (gross)", yearTotal, "total");
+  }
+  document.getElementById("payBackBtn").addEventListener("click", closePayScreen);
+  document.getElementById("paySetupBtn").addEventListener("click", function(){ openPaySetup(); });
+  document.querySelectorAll("#payModeSeg button").forEach(function(b){
+    b.addEventListener("click", function(){ payView.mode = b.getAttribute("data-mode"); renderPayScreen(); });
+  });
+  function stepPayView(dir){
+    var a = payView.anchor;
+    if (payView.mode === "year") payView.anchor = new Date(a.getFullYear() + dir, 0, 1);
+    else if (payView.mode === "month") payView.anchor = addMonths(startOfMonth(a), dir);
+    else payView.anchor = shiftPayPeriod(payConfig(), payPeriodFor(payConfig(), a), dir).start;
+    renderPayScreen();
+  }
+  document.getElementById("payPrev").addEventListener("click", function(){ stepPayView(-1); });
+  document.getElementById("payNext").addEventListener("click", function(){ stepPayView(1); });
+
+  /* ---- Pay setup screen ---- */
+  var paySetupDraft = null;
+  function openPaySetup(){
+    paySetupDraft = JSON.parse(JSON.stringify(payConfig()));
+    renderPaySetup();
+    document.getElementById("paySetupScreen").classList.add("show");
+  }
+  function closePaySetup(){ document.getElementById("paySetupScreen").classList.remove("show"); paySetupDraft = null; }
+  function setVal(id, v){ document.getElementById(id).value = (v == null ? "" : v); }
+  function renderPaySetup(){
+    var c = paySetupDraft;
+    setVal("psBaseRate", c.baseRate || "");
+    renderPayRises();
+    document.querySelectorAll("#psCycleSeg button").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-cycle") === c.cycle); });
+    setVal("psPeriodStart", c.periodStart || ymd(payAnchor(c)));
+    setVal("psPayday", c.paydayOffset || 0);
+    setVal("psOtMult", c.otMult);
+    document.getElementById("psOtTiered").checked = !!c.otTiered;
+    setVal("psOtTierHours", c.otTierHours);
+    setVal("psOtMult2", c.otMult2);
+    document.getElementById("psTierRow").style.display = c.otTiered ? "flex" : "none";
+    setVal("psExMult", c.exMult);
+    setVal("psPenSat", c.pen.sat || ""); setVal("psPenSun", c.pen.sun || "");
+    setVal("psPenPh", c.pen.ph || ""); setVal("psPenNight", c.pen.night || "");
+    renderTypeRules();
+    renderAllowanceList();
+    document.getElementById("psPayLeave").checked = c.payLeave !== false;
+    setVal("psLeaveLoading", c.leaveLoading || "");
+    setVal("psSuper", c.superPct);
+    document.getElementById("psShowTax").checked = !!c.showTax;
+    document.getElementById("psTaxFree").checked = c.taxFree !== false;
+  }
+  function renderPayRises(){
+    var wrap = document.getElementById("psRises");
+    wrap.innerHTML = "";
+    paySetupDraft.rises.forEach(function(x, i){
       var row = document.createElement("div");
-      row.style.cssText = "display:flex; justify-content:space-between; gap:10px; padding:8px 2px; font-size:.82rem;";
-      var a = document.createElement("span"); a.style.color = "var(--text-dim)"; a.textContent = x[0];
-      var b2 = document.createElement("b"); b2.className = "num"; b2.textContent = fmtMoney(x[1]);
-      row.appendChild(a); row.appendChild(b2);
-      card.appendChild(row);
+      row.className = "ps-inline";
+      var f = document.createElement("div"); f.className = "form-row";
+      var fl = document.createElement("label"); fl.textContent = "From"; f.appendChild(fl);
+      var fi = document.createElement("input"); fi.type = "date"; fi.value = x.from || "";
+      fi.addEventListener("change", function(){ x.from = fi.value; });
+      f.appendChild(fi);
+      var g = document.createElement("div"); g.className = "form-row";
+      var gl = document.createElement("label"); gl.textContent = "New rate ($/h)"; g.appendChild(gl);
+      var gi = document.createElement("input"); gi.type = "number"; gi.min = "0"; gi.step = "0.01"; gi.inputMode = "decimal"; gi.value = x.rate || "";
+      gi.addEventListener("input", function(){ x.rate = parseFloat(gi.value) || 0; });
+      g.appendChild(gi);
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "ps-remove"; del.setAttribute("aria-label", "Remove pay rise"); del.textContent = "✕";
+      del.addEventListener("click", function(){ paySetupDraft.rises.splice(i, 1); renderPayRises(); });
+      row.appendChild(f); row.appendChild(g); row.appendChild(del);
+      wrap.appendChild(row);
     });
   }
-  function openPayRates(){
-    var r = payRates();
-    document.getElementById("payRate").value = r.rate || "";
-    document.getElementById("payOtMult").value = r.otMult;
-    document.getElementById("payExMult").value = r.exMult;
-    document.getElementById("payLeave").checked = r.leave;
-    document.getElementById("payOverlay").classList.add("show");
+  function workTypes(){ return state.types.filter(function(t){ return t.kind !== "personal"; }); }
+  function renderTypeRules(){
+    var wrap = document.getElementById("psTypeRules");
+    wrap.innerHTML = "";
+    var types = workTypes();
+    if (!types.length){ wrap.appendChild(hintEl("Add your shift types on the Shifts tab first.")); return; }
+    types.forEach(function(t){
+      var rule = paySetupDraft.typeRules[t.id] = paySetupDraft.typeRules[t.id] || {};
+      var box = document.createElement("div");
+      box.className = "ps-type";
+      var head = document.createElement("div");
+      head.className = "ps-type-head";
+      var dot = document.createElement("span"); dot.className = "ps-dot"; dot.style.background = t.color;
+      var nm = document.createElement("b"); nm.textContent = t.name;
+      var hrs = document.createElement("span"); hrs.className = "ps-type-hours"; hrs.textContent = fmtHours(t.hours || 0) + "h";
+      head.appendChild(dot); head.appendChild(nm); head.appendChild(hrs);
+      box.appendChild(head);
+      function check(label, on, set){
+        var l = document.createElement("label"); l.className = "remind-row";
+        var i = document.createElement("input"); i.type = "checkbox"; i.checked = on;
+        i.addEventListener("change", function(){ set(i.checked); });
+        var s = document.createElement("span"); s.textContent = label;
+        l.appendChild(i); l.appendChild(s); box.appendChild(l);
+      }
+      check("Weekend & public holiday penalties apply", rule.penalties !== false, function(v){ rule.penalties = v; });
+      check("Night shift (night penalty applies)", !!rule.night, function(v){ rule.night = v; });
+      var row = document.createElement("div"); row.className = "ps-inline";
+      var f = document.createElement("div"); f.className = "form-row";
+      var fl = document.createElement("label"); fl.textContent = "Shift allowance"; f.appendChild(fl);
+      var sel = document.createElement("select");
+      [["none", "None"], ["pct", "% of ordinary pay"], ["flat", "$ per shift"]].forEach(function(o){
+        var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1];
+        if ((rule.allowanceKind || "none") === o[0]) op.selected = true;
+        sel.appendChild(op);
+      });
+      f.appendChild(sel);
+      var g = document.createElement("div"); g.className = "form-row";
+      var gl = document.createElement("label"); gl.textContent = "Amount"; g.appendChild(gl);
+      var gi = document.createElement("input"); gi.type = "number"; gi.min = "0"; gi.step = "0.01"; gi.inputMode = "decimal";
+      gi.placeholder = "e.g. 31.5"; gi.value = rule.allowance || "";
+      gi.addEventListener("input", function(){ rule.allowance = parseFloat(gi.value) || 0; });
+      g.appendChild(gi);
+      function syncAmt(){ g.style.display = sel.value === "none" ? "none" : "block"; }
+      sel.addEventListener("change", function(){ rule.allowanceKind = sel.value; syncAmt(); });
+      syncAmt();
+      row.appendChild(f); row.appendChild(g);
+      box.appendChild(row);
+      wrap.appendChild(box);
+    });
   }
-  function closePayRates(){ document.getElementById("payOverlay").classList.remove("show"); }
-  document.getElementById("payRatesBtn").addEventListener("click", openPayRates);
-  document.getElementById("payClose").addEventListener("click", closePayRates);
-  document.getElementById("payCancel").addEventListener("click", closePayRates);
-  document.getElementById("payOverlay").addEventListener("click", function(e){ if (e.target === this) closePayRates(); });
-  document.getElementById("paySave").addEventListener("click", function(){
-    var rate = parseFloat(document.getElementById("payRate").value);
-    var ot = parseFloat(document.getElementById("payOtMult").value);
-    var ex = parseFloat(document.getElementById("payExMult").value);
-    if (!(rate > 0)){ toast("Enter your hourly rate"); return; }
-    state.settings = state.settings || {};
-    state.settings.hourlyRate = rate;
-    // 0 is allowed (e.g. excess taken as unpaid time in lieu); blank falls back to the default
-    state.settings.otMultiplier = (isFinite(ot) && ot >= 0) ? ot : 1.5;
-    state.settings.excessMultiplier = (isFinite(ex) && ex >= 0) ? ex : 1;
-    state.settings.payLeave = document.getElementById("payLeave").checked;
-    state.settings.updatedAt = Date.now();
-    closePayRates();
-    saveStore(); renderAll(); toast("Pay rates saved");
+  function renderAllowanceList(){
+    var wrap = document.getElementById("psAllowances");
+    wrap.innerHTML = "";
+    if (!paySetupDraft.allowances.length) wrap.appendChild(hintEl("None yet. Add things like a meal allowance or missed meal break."));
+    paySetupDraft.allowances.forEach(function(a, i){
+      var row = document.createElement("div");
+      row.className = "ps-allow";
+      var t = document.createElement("span");
+      t.textContent = a.name;
+      var v = document.createElement("b");
+      v.className = "num";
+      v.textContent = a.kind === "hours" ? fmtHours(a.amount) + "h at base rate" : fmtMoney(a.amount);
+      var del = document.createElement("button");
+      del.type = "button"; del.className = "ps-remove"; del.setAttribute("aria-label", "Remove " + a.name); del.textContent = "✕";
+      del.addEventListener("click", function(){ paySetupDraft.allowances.splice(i, 1); renderAllowanceList(); });
+      row.appendChild(t); row.appendChild(v); row.appendChild(del);
+      wrap.appendChild(row);
+    });
+  }
+  document.getElementById("psAddRise").addEventListener("click", function(){
+    paySetupDraft.rises.push({ from: ymd(new Date()), rate: 0 });
+    renderPayRises();
   });
+  document.querySelectorAll("#psCycleSeg button").forEach(function(b){
+    b.addEventListener("click", function(){
+      paySetupDraft.cycle = b.getAttribute("data-cycle");
+      document.querySelectorAll("#psCycleSeg button").forEach(function(x){ x.classList.toggle("active", x === b); });
+    });
+  });
+  document.getElementById("psOtTiered").addEventListener("change", function(){
+    document.getElementById("psTierRow").style.display = this.checked ? "flex" : "none";
+  });
+  document.getElementById("psAllowAdd").addEventListener("click", function(){
+    var name = document.getElementById("psAllowName").value.trim();
+    var kind = document.getElementById("psAllowKind").value;
+    var amount = parseFloat(document.getElementById("psAllowAmount").value);
+    if (!name){ toast("Give the allowance a name"); return; }
+    if (!(amount > 0)){ toast("Enter an amount"); return; }
+    paySetupDraft.allowances.push({ id: mkId(), name: name.slice(0, 40), kind: kind, amount: amount });
+    setVal("psAllowName", ""); setVal("psAllowAmount", "");
+    renderAllowanceList();
+  });
+  document.getElementById("paySetupBackBtn").addEventListener("click", closePaySetup);
+  document.getElementById("paySetupCancel").addEventListener("click", closePaySetup);
+  document.getElementById("paySetupSave").addEventListener("click", function(){
+    var c = paySetupDraft;
+    var rate = parseFloat(document.getElementById("psBaseRate").value);
+    if (!(rate > 0)){ toast("Enter your hourly rate"); document.getElementById("psBaseRate").focus(); return; }
+    c.baseRate = rate;
+    c.rises = c.rises.filter(function(x){ return x.from && x.rate > 0; });
+    c.periodStart = document.getElementById("psPeriodStart").value || "";
+    c.paydayOffset = Math.max(0, Math.min(31, Math.round(num(document.getElementById("psPayday").value, 0))));
+    c.otMult = Math.max(0, num(document.getElementById("psOtMult").value, 1.5));
+    c.otTiered = document.getElementById("psOtTiered").checked;
+    c.otTierHours = Math.max(0, num(document.getElementById("psOtTierHours").value, 3));
+    c.otMult2 = Math.max(0, num(document.getElementById("psOtMult2").value, 2));
+    c.exMult = Math.max(0, num(document.getElementById("psExMult").value, 1));
+    c.pen = {
+      sat: Math.max(0, num(document.getElementById("psPenSat").value, 0)),
+      sun: Math.max(0, num(document.getElementById("psPenSun").value, 0)),
+      ph: Math.max(0, num(document.getElementById("psPenPh").value, 0)),
+      night: Math.max(0, num(document.getElementById("psPenNight").value, 0))
+    };
+    c.payLeave = document.getElementById("psPayLeave").checked;
+    c.leaveLoading = Math.max(0, num(document.getElementById("psLeaveLoading").value, 0));
+    c.superPct = Math.max(0, num(document.getElementById("psSuper").value, 12));
+    c.showTax = document.getElementById("psShowTax").checked;
+    c.taxFree = document.getElementById("psTaxFree").checked;
+    var st = state.settings = state.settings || {};
+    st.pay = c;
+    // keep the older fields current for any device still on an older version
+    st.hourlyRate = c.baseRate; st.otMultiplier = c.otMult; st.excessMultiplier = c.exMult; st.payLeave = c.payLeave;
+    st.updatedAt = Date.now();
+    c.savedAt = st.updatedAt;
+    closePaySetup();
+    saveStore(); renderAll();
+    if (document.getElementById("payScreen").classList.contains("show")) renderPayScreen();
+    toast("Pay setup saved");
+  });
+  document.getElementById("payRatesBtn").addEventListener("click", function(){ openPaySetup(); });
+
+  /* ---- day sheet: public holiday + allowances ---- */
+  function renderPayTagsSection(key){
+    var section = document.getElementById("sheetPaySection");
+    if (!payIsSetUp()){ section.style.display = "none"; return; }
+    section.style.display = "block";
+    var cfg = payConfig();
+    var tagsWrap = document.getElementById("sheetPayTags");
+    var picker = document.getElementById("sheetPayPicker");
+    tagsWrap.innerHTML = ""; picker.innerHTML = "";
+    var tags = payTagsOn(key);
+    var allowById = {};
+    cfg.allowances.forEach(function(a){ allowById[a.id] = a; });
+    tags.forEach(function(tag){
+      var a = tag.kind === "allowance" ? (allowById[tag.allowanceId] || { name: "Removed allowance", kind: "flat", amount: 0 }) : null;
+      var el = document.createElement("span");
+      el.className = "shift-tag pay-tag";
+      var txt = document.createElement("span");
+      txt.textContent = tag.kind === "holiday" ? "Public holiday" : a.name + " · " + (a.kind === "hours" ? fmtHours(a.amount) + "h" : fmtMoney(a.amount));
+      el.appendChild(txt);
+      var x = document.createElement("button");
+      x.type = "button"; x.setAttribute("aria-label", "Remove " + txt.textContent); x.textContent = "✕";
+      x.addEventListener("click", function(){ removePayTag(key, tag.id); });
+      el.appendChild(x);
+      tagsWrap.appendChild(el);
+    });
+    if (!tags.some(function(t){ return t.kind === "holiday"; })){
+      var ph = document.createElement("button");
+      ph.type = "button"; ph.className = "leave-btn"; ph.textContent = "+ Public holiday";
+      ph.addEventListener("click", function(){ addPayTag(key, { kind: "holiday" }); });
+      picker.appendChild(ph);
+    }
+    cfg.allowances.forEach(function(a){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "leave-btn"; b.textContent = "+ " + a.name;
+      b.addEventListener("click", function(){ addPayTag(key, { kind: "allowance", allowanceId: a.id }); });
+      picker.appendChild(b);
+    });
+    if (!cfg.allowances.length){
+      var h = hintEl("Add allowances in Reports → Pay setup to tag them here.");
+      h.style.flexBasis = "100%";
+      picker.appendChild(h);
+    }
+  }
+  function addPayTag(key, tag){
+    tag.id = mkId(); tag.updatedAt = Date.now();
+    state.payTags = state.payTags || {};
+    (state.payTags[key] = state.payTags[key] || []).push(tag);
+    saveStore(); renderAll();
+    toast(tag.kind === "holiday" ? "Marked as a public holiday" : "Allowance added");
+  }
+  function removePayTag(key, id){
+    state.payTags[key] = (state.payTags[key] || []).filter(function(t){ return t.id !== id; });
+    if (!state.payTags[key].length) delete state.payTags[key];
+    tomb(id);
+    saveStore(); renderAll();
+  }
 
   function renderReports(){
     var range = periodRange();
@@ -4613,7 +5430,7 @@
     document.getElementById("repTotalHours").textContent = fmtHours(stats.totalHours);
     document.getElementById("repOTHours").textContent = fmtHours(stats.otHours);
     document.getElementById("repEXHours").textContent = fmtHours(stats.excessHours);
-    renderPayCard(stats);
+    renderPayCard();
     document.getElementById("repDaysWorked").textContent = stats.daysWorked;
     document.getElementById("repLeaveDays").textContent = stats.leaveDays;
 
@@ -4666,6 +5483,16 @@
         ["Busiest month", busiestLabel + (busiestKey ? " (" + fmtHours(busiestVal) + " h)" : "")],
         ["Leave days taken", stats.leaveDays]
       ];
+      if (payIsSetUp()){
+        var yPay = computePay(new Date(state.repYear, 0, 1), new Date(state.repYear + 1, 0, 1), 1);
+        var bestM = -1, bestG = 0;
+        for (var pm = 0; pm < 12; pm++){
+          var gm = computePay(new Date(state.repYear, pm, 1), new Date(state.repYear, pm + 1, 1), 12).gross;
+          if (gm > bestG){ bestG = gm; bestM = pm; }
+        }
+        rows2.push(["Estimated gross pay", fmtMoney(yPay.gross)]);
+        if (bestM >= 0) rows2.push(["Best paid month", MONTH_LABELS[bestM] + " (" + fmtMoneyShort(bestG) + ")"]);
+      }
       rows2.forEach(function(r, i){
         if (i>0){ var d=document.createElement("div"); d.className="row-divider"; yir.appendChild(d); }
         var row = document.createElement("div");

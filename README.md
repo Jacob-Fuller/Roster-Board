@@ -6,7 +6,20 @@ calendar, month/year analytics with comparisons, pay estimates, per-shift
 notes, and a calendar-grid PDF roster export. Plain HTML/CSS/JS — no build
 step. Optional accounts, cloud backup and roster sharing run on Supabase.
 
-## What's new (v60 – v61)
+## What's new (v60 – v62)
+
+- **v62:** Full **Estimated pay**: Reports shows a compact pay card; tapping it
+  opens a breakdown by pay period, month or year (ordinary, overtime, excess,
+  penalty rates, shift allowance, allowances, leave and leave loading, gross,
+  employer super, rough tax and take-home) plus pay by month. **Pay setup**
+  covers base rate with dated pay rises, weekly/fortnightly/monthly pay cycle
+  and payday, tiered overtime, Saturday/Sunday/public holiday/night penalties
+  (highest applies), per-shift-type penalties and shift allowance, your own
+  allowances tagged onto days, paid leave with annual leave loading, and super
+  and tax (2026–27 Australian resident rates). Public holidays and allowances
+  are tagged from the day sheet. Personal events now show as coloured banners
+  on the calendar; tap one for its details. Account → **Format calendar**
+  clears every dated entry (recoverable from backups when signed in).
 
 - **v61 (full audit):** Safer cloud sync — two devices saving at once can no
   longer wipe each other's changes (the cloud write only succeeds if nobody
@@ -815,6 +828,15 @@ JavaScript, no framework). Data model, in `localStorage` under the key
 - `roster` — `{weeks, pattern}`, where `pattern[weekIndex][dayIndex]` is an
   array of type ids for that day of the repeating cycle (`dayIndex` 0 = Monday)
 - `birthdays` — `[{id, name, day, month, year?}]`
+- `payTags` — keyed by date, array of `{id, kind: "holiday"}` (public
+  holiday) or `{id, kind: "allowance", allowanceId}`
+- `settings.pay` — the whole pay setup: `{baseRate, rises:[{from, rate}],
+  cycle, periodStart, paydayOffset, otMult, otTiered, otTierHours, otMult2,
+  exMult, pen:{sat, sun, ph, night} (%), typeRules:{typeId:{penalties, night,
+  allowanceKind:"none"|"pct"|"flat", allowance}}, allowances:[{id, name,
+  kind:"flat"|"hours", amount}], payLeave, leaveLoading, superPct, showTax,
+  taxFree, savedAt}`. `hourlyRate`, `otMultiplier`, `excessMultiplier` and
+  `payLeave` are still written for older app versions.
 - `settings` — `{hourlyRate, otMultiplier, excessMultiplier, payLeave,
   updatedAt}` for the pay estimate. Light/dark is stored per device under
   `rosterBoard.theme`, not synced.
