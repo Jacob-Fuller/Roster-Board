@@ -4869,9 +4869,12 @@
     }
     return { start: start, end: end };
   }
-  // True for every second pay period, counted from the period start date
+  // True for every second pay period, counted from the period start date.
+  // Shading snaps to whole Monday–Sunday rows: each week follows the period
+  // its Thursday falls in (the period holding most of that week).
   function payPeriodIsAlt(cfg, date){
     var n;
+    date = addDays(date, 3 - (date.getDay() + 6) % 7);
     if (cfg.cycle === "monthly"){
       var st = payPeriodFor(cfg, date).start;
       n = st.getFullYear() * 12 + st.getMonth();
