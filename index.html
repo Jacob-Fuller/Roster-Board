@@ -736,37 +736,14 @@
           <div class="form-row"><label for="psPenSun">Sunday %</label><input type="number" id="psPenSun" min="0" step="1" inputmode="decimal" placeholder="e.g. 100"></div>
         </div>
         <div class="ps-inline">
-          <div class="form-row"><label for="psPenPh">Public holiday %</label><input type="number" id="psPenPh" min="0" step="1" inputmode="decimal" placeholder="e.g. 150"></div>
           <div class="form-row"><label for="psPenNight">Night shift %</label><input type="number" id="psPenNight" min="0" step="1" inputmode="decimal" placeholder="e.g. 15"></div>
+          <div class="form-row"></div>
         </div>
       </details>
 
       <details class="card ps-card">
         <summary><h3>Shift types</h3><span class="ps-sum" id="psSumTypes"></span></summary>
         <div id="psTypeRules"></div>
-      </details>
-
-      <details class="card ps-card">
-        <summary><h3>Allowances</h3><span class="ps-sum" id="psSumAllow"></span></summary>
-        <div id="psAllowances"></div>
-        <div class="form-row">
-          <label for="psAllowName">New allowance</label>
-          <input type="text" id="psAllowName" maxlength="40" placeholder="e.g. Missed meal break">
-        </div>
-        <div class="ps-inline">
-          <div class="form-row">
-            <label for="psAllowKind">Paid as</label>
-            <select id="psAllowKind">
-              <option value="flat">Flat $ amount</option>
-              <option value="hours">Hours at base rate</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <label for="psAllowAmount">Amount</label>
-            <input type="number" id="psAllowAmount" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 18.50">
-          </div>
-        </div>
-        <button class="btn sm" id="psAllowAdd" type="button" style="margin-top:10px;">+ Add allowance</button>
       </details>
 
       <details class="card ps-card">
@@ -5345,9 +5322,8 @@
     document.getElementById("psTierRow").style.display = c.otTiered ? "flex" : "none";
     setVal("psExMult", c.exMult);
     setVal("psPenSat", c.pen.sat || ""); setVal("psPenSun", c.pen.sun || "");
-    setVal("psPenPh", c.pen.ph || ""); setVal("psPenNight", c.pen.night || "");
+    setVal("psPenNight", c.pen.night || "");
     renderTypeRules();
-    renderAllowanceList();
     document.getElementById("psPayLeave").checked = c.payLeave !== false;
     setVal("psLeaveLoading", c.leaveLoading || "");
     setVal("psSuper", c.superPct);
@@ -5367,14 +5343,12 @@
     put("psSumCycle", cyc.charAt(0).toUpperCase() + cyc.slice(1));
     var ot = (v("psOtMult") || "1.5") + "× OT · " + (v("psExMult") || "1") + "× excess";
     put("psSumOt", on("psOtTiered") ? ot + " · tiered" : ot);
-    var pens = [["psPenSat", "Sat"], ["psPenSun", "Sun"], ["psPenPh", "PH"], ["psPenNight", "Night"]]
+    var pens = [["psPenSat", "Sat"], ["psPenSun", "Sun"], ["psPenNight", "Night"]]
       .filter(function(x){ return parseFloat(v(x[0])) > 0; })
       .map(function(x){ return x[1] + " " + v(x[0]) + "%"; });
     put("psSumPen", pens.length ? pens.join(" · ") : "None");
     var n = workTypes().length;
     put("psSumTypes", n ? n + (n === 1 ? " type" : " types") : "None");
-    var a = paySetupDraft.allowances.length;
-    put("psSumAllow", a ? a + (a === 1 ? " allowance" : " allowances") : "None");
     var ll = parseFloat(v("psLeaveLoading"));
     put("psSumLeave", on("psPayLeave") ? (ll > 0 ? "Paid · " + ll + "% loading" : "Paid") : "Unpaid");
     put("psSumTax", (v("psSuper") || "12") + "% super" + (on("psShowTax") ? " · tax shown" : ""));
@@ -5406,7 +5380,7 @@
         var s = document.createElement("span"); s.textContent = label;
         l.appendChild(i); l.appendChild(s); box.appendChild(l);
       }
-      check("Weekend & public holiday penalties apply", rule.penalties !== false, function(v){ rule.penalties = v; });
+      check("Weekend penalties apply", rule.penalties !== false, function(v){ rule.penalties = v; });
       check("Night shift (night penalty applies)", !!rule.night, function(v){ rule.night = v; });
       var row = document.createElement("div"); row.className = "ps-inline";
       var f = document.createElement("div"); f.className = "form-row";
@@ -5432,25 +5406,6 @@
       wrap.appendChild(box);
     });
   }
-  function renderAllowanceList(){
-    var wrap = document.getElementById("psAllowances");
-    wrap.innerHTML = "";
-    if (!paySetupDraft.allowances.length) wrap.appendChild(hintEl("None yet."));
-    paySetupDraft.allowances.forEach(function(a, i){
-      var row = document.createElement("div");
-      row.className = "ps-allow";
-      var t = document.createElement("span");
-      t.textContent = a.name;
-      var v = document.createElement("b");
-      v.className = "num";
-      v.textContent = a.kind === "hours" ? fmtHours(a.amount) + "h at base rate" : fmtMoney(a.amount);
-      var del = document.createElement("button");
-      del.type = "button"; del.className = "ps-remove"; del.setAttribute("aria-label", "Remove " + a.name); del.textContent = "✕";
-      del.addEventListener("click", function(){ paySetupDraft.allowances.splice(i, 1); renderAllowanceList(); updatePaySummaries(); });
-      row.appendChild(t); row.appendChild(v); row.appendChild(del);
-      wrap.appendChild(row);
-    });
-  }
   document.querySelectorAll("#psCycleSeg button").forEach(function(b){
     b.addEventListener("click", function(){
       paySetupDraft.cycle = b.getAttribute("data-cycle");
@@ -5460,17 +5415,6 @@
   });
   document.getElementById("psOtTiered").addEventListener("change", function(){
     document.getElementById("psTierRow").style.display = this.checked ? "flex" : "none";
-  });
-  document.getElementById("psAllowAdd").addEventListener("click", function(){
-    var name = document.getElementById("psAllowName").value.trim();
-    var kind = document.getElementById("psAllowKind").value;
-    var amount = parseFloat(document.getElementById("psAllowAmount").value);
-    if (!name){ toast("Give the allowance a name"); return; }
-    if (!(amount > 0)){ toast("Enter an amount"); return; }
-    paySetupDraft.allowances.push({ id: mkId(), name: name.slice(0, 40), kind: kind, amount: amount });
-    setVal("psAllowName", ""); setVal("psAllowAmount", "");
-    renderAllowanceList();
-    updatePaySummaries();
   });
   document.getElementById("paySetupBackBtn").addEventListener("click", closePaySetup);
   document.getElementById("paySetupCancel").addEventListener("click", closePaySetup);
@@ -5489,7 +5433,7 @@
     c.pen = {
       sat: Math.max(0, num(document.getElementById("psPenSat").value, 0)),
       sun: Math.max(0, num(document.getElementById("psPenSun").value, 0)),
-      ph: Math.max(0, num(document.getElementById("psPenPh").value, 0)),
+      ph: 0,
       night: Math.max(0, num(document.getElementById("psPenNight").value, 0))
     };
     c.payLeave = document.getElementById("psPayLeave").checked;

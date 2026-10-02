@@ -44,7 +44,6 @@ REPORTS
 
 SAFE AND SHARED
 - Sign in to back up automatically and use Roster Board on all your devices
-- Recover from earlier backups if something goes missing
 - Share your work roster with a partner or colleague. Your personal events and
   pay are never shared
 
