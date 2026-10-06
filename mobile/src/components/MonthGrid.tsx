@@ -42,7 +42,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               daySwaps.forEach((r) => { if (r.kind === "on" && r.shiftEntryId) swappedIn[r.shiftEntryId] = true; });
               daySwaps.forEach((r) => {
                 const col = entryColor(r, typesById);
-                items.push(<Pill key={r.id} strip={r.kind === "off" ? "Swapped off" : "Swapped on"} stripBg={t.textDim} stripFg={t.bg}
+                items.push(<Pill key={r.id} strip={r.kind === "off" ? "Swap off" : "Swap on"} stripBg={t.textDim} stripFg={t.bg}
                   label={entryName(r, typesById)} bg={col.bg} fg={col.ink} />);
               });
               (data.shifts[key] || []).forEach((s) => {
@@ -52,7 +52,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                 const col = entryColor(s, typesById);
                 if (isCombo(s.typeId)) {
                   const bt = s.baseTypeId ? typesById[s.baseTypeId] : null;
-                  items.push(<Pill key={s.id} strip={isSplitEntry(s) ? "Excess + OT" : ty.name} stripBg={ty.color} stripFg={ty.ink}
+                  items.push(<Pill key={s.id} strip={isSplitEntry(s) ? "EX + OT" : ty.id === "overtime" ? "OT" : "Excess"} stripBg={ty.color} stripFg={ty.ink}
                     label={bt ? bt.name : ty.name} bg={col.bg} fg={col.ink} />);
                 } else {
                   items.push(<Pill key={s.id} label={ty.name + (s.tag ? " · " + s.tag : "")} bg={col.bg} fg={col.ink} />);
