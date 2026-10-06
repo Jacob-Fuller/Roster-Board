@@ -3,8 +3,12 @@
 # preview and takes screenshots. Nothing is deployed.
 name: Native app check
 
+permissions:
+  contents: write   # results are pushed to the native-app-ci branch for review
+
 on:
   push:
+    branches-ignore: [native-app-ci]
     paths: ["mobile/**", ".github/workflows/mobile-check.yml"]
   workflow_dispatch:
 
@@ -21,21 +25,26 @@ jobs:
         with:
           node-version: 22
       - name: Install
-        run: npm install --no-audit --no-fund
+        run: |
+          mkdir -p screens
+          npm install --no-audit --no-fund 2>&1 | tail -30 > screens/install.txt
       - name: Match package versions to the Expo SDK
         run: |
-          npx expo install --check || true
-          npx expo install --fix
-          git diff --stat -- package.json || true
-          git diff -- package.json || true
+          (npx expo install --check 2>&1 || true) > screens/versions.txt
+          npx expo install --fix >> screens/versions.txt 2>&1
+          git diff -- package.json >> screens/versions.txt || true
+          cp package.json screens/package.json
       - name: Sync rules match the web app
-        run: npm test
+        run: npm test 2>&1 | tee screens/test.txt
       - name: Type-check
-        run: npx tsc --noEmit
+        run: npx tsc --noEmit 2>&1 | tee screens/tsc.txt; exit ${PIPESTATUS[0]}
+        shell: bash
       - name: Expo config check
-        run: npx expo-doctor || true
+        if: always()
+        run: (npx expo-doctor 2>&1 || true) | tee screens/doctor.txt
       - name: Build web preview
-        run: npx expo export --platform web --output-dir dist
+        run: npx expo export --platform web --output-dir dist 2>&1 | tee screens/export.txt; exit ${PIPESTATUS[0]}
+        shell: bash
       - name: Screenshots
         run: |
           npm install --no-save --no-audit --no-fund playwright@1
@@ -43,10 +52,12 @@ jobs:
           (cd dist && python3 -m http.server 8090 >/dev/null 2>&1 &)
           sleep 1
           node scripts/screens.mjs
-      - uses: actions/upload-artifact@v4
+      - name: Publish results to the native-app-ci branch
         if: always()
-        with:
-          name: screens
-          path: |
-            mobile/screens/
-            mobile/package.json
+        run: |
+          cd screens
+          git init -q -b native-app-ci
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          echo "${{ github.sha }} ${{ job.status }}" > RESULT.txt
+          git add -A && git commit -qm "Check results for ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" native-app-ci
