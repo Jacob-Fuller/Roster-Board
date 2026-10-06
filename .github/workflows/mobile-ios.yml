@@ -1,0 +1,56 @@
+# Builds the native Roster Board app (mobile/) on GitHub's Macs and uploads it
+# to TestFlight. Runs when a commit message contains [testflight], or by hand
+# from Actions -> "Native app to TestFlight" -> Run workflow.
+name: Native app to TestFlight
+
+on:
+  push:
+    paths: ["mobile/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: false
+
+jobs:
+  ios:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[testflight]')
+    runs-on: macos-26
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - name: Install tools
+        run: |
+          npm install --no-audit --no-fund
+          npx expo install --fix
+          gem install fastlane -N
+      - name: Create the iOS project
+        run: npx expo prebuild --platform ios --clean
+      - name: Build and upload
+        run: fastlane beta
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: https://github.com/${{ github.repository }}.git
+          GH_TOKEN: ${{ github.token }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-build-logs
+          path: ~/Library/Logs/gym/

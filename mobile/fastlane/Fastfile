@@ -1,0 +1,73 @@
+# Roster Board native app (mobile/): build on GitHub's Macs and upload to TestFlight.
+# Uses the same App Store Connect key and signing certificate as the earlier
+# iPhone builds (fastlane-match branch). See .github/workflows/mobile-ios.yml.
+require "base64"
+
+default_platform(:ios)
+
+APP_ID = "net.rosterboard.app"
+
+platform :ios do
+  def asc_key
+    %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 MATCH_PASSWORD].each do |k|
+      UI.user_error!("Missing GitHub secret #{k}. See native/IOS-SETUP.md.") if ENV[k].to_s.strip.empty?
+    end
+    app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"].strip,
+      issuer_id: ENV["ASC_ISSUER_ID"].strip,
+      key_content: ENV["ASC_KEY_P8"],
+      in_house: false
+    )
+  end
+
+  desc "Build the native app and upload it to TestFlight"
+  lane :beta do
+    api_key = asc_key
+    setup_ci
+    match(
+      type: "appstore",
+      app_identifier: APP_ID,
+      git_url: ENV["MATCH_GIT_URL"],
+      git_branch: "fastlane-match",
+      git_basic_authorization: Base64.strict_encode64("x-access-token:#{ENV['GH_TOKEN']}"),
+      api_key: api_key,
+      readonly: true
+    )
+
+    # Expo names the Xcode project after the app ("RosterBoard").
+    project = Dir.glob("../ios/*.xcodeproj").first or UI.user_error!("No iOS project. Run expo prebuild first.")
+    workspace = Dir.glob("../ios/*.xcworkspace").first
+    scheme = File.basename(project, ".xcodeproj")
+    project = project.sub("../", "")
+    workspace = workspace&.sub("../", "")
+
+    team_id = ENV["sigh_#{APP_ID}_appstore_team-id"]
+    profile = ENV["sigh_#{APP_ID}_appstore_profile-name"]
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: project,
+      team_id: team_id,
+      bundle_identifier: APP_ID,
+      profile_name: profile,
+      code_sign_identity: "Apple Distribution",
+      targets: [scheme]
+    )
+
+    last = latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, initial_build_number: 0)
+    # Expo writes the build number straight into Info.plist.
+    set_info_plist_value(path: "ios/#{scheme}/Info.plist", key: "CFBundleVersion", value: (last.to_i + 1).to_s)
+
+    build_app(
+      workspace: workspace,
+      scheme: scheme,
+      configuration: "Release",
+      export_method: "app-store",
+      export_options: { provisioningProfiles: { APP_ID => profile } },
+      output_directory: "build",
+      clean: true
+    )
+
+    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+    UI.success("Uploaded build #{last.to_i + 1} to TestFlight.")
+  end
+end

@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.expo/
+ios/
+android/
+screens/
+build/
+*.ipa
+*.dSYM.zip
