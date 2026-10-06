@@ -6,6 +6,7 @@ import { MONTHS } from "../lib/model";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
+import { SharingSheet } from "./SharingSheet";
 
 function ago(ms: number) {
   if (!ms) return "never";
@@ -25,6 +26,7 @@ export function AccountScreen() {
   const [history, setHistory] = useState<any[] | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [bdaysOpen, setBdaysOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const { data } = useStore();
   const nB = data.birthdays.length;
 
@@ -84,6 +86,15 @@ export function AccountScreen() {
           </Card>
         )}
 
+        {auth === "signedIn" ? (
+          <>
+            <SectionHead title="Sharing" />
+            <Card style={{ paddingVertical: 2 }}>
+              <MenuRow title="Share your roster" sub="See each other's shifts. Personal events stay private." onPress={() => setShareOpen(true)} />
+            </Card>
+          </>
+        ) : null}
+
         <SectionHead title="Birthdays" />
         <Card style={{ paddingVertical: 2 }}>
           <MenuRow title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
@@ -115,6 +126,7 @@ export function AccountScreen() {
       </ScrollView>
 
       <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
+      <SharingSheet visible={shareOpen} onClose={() => setShareOpen(false)} />
       <Sheet visible={historyOpen} onClose={() => setHistoryOpen(false)} title="Earlier backups">
         <Dim style={{ marginBottom: 10 }}>Bringing a backup back adds its entries to your calendar. Nothing you have now is removed.</Dim>
         {history === null ? <Dim>Loading backups…</Dim> : !history.length ? <Dim>No earlier backups yet. They build up from now on.</Dim> : history.map((h, i) => {
