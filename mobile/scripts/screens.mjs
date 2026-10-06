@@ -89,6 +89,11 @@ try {
   await p.getByRole("tab", { name: /Account/ }).click();
   await p.waitForTimeout(500);
   await shot(p, "06-account");
+  await p.mouse.wheel(0, 1400); await p.waitForTimeout(400);
+  await shot(p, "06b-account-lower");
+  await p.mouse.wheel(0, -3000); await p.waitForTimeout(300);
+  await p.getByText("Not signed in").first().click(); await p.waitForTimeout(800);
+  await shot(p, "06c-account-detail");
   await p.context().close();
 
   p = await page("dark");

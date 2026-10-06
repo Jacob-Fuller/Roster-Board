@@ -52,20 +52,22 @@ export function SectionHead({ title, right }: { title: string; right?: React.Rea
 }
 
 /* ---------- controls ---------- */
-type BtnKind = "primary" | "ghost" | "danger";
+type BtnKind = "primary" | "ghost" | "danger" | "outline" | "outlineDanger";
 export function Button({ title, onPress, kind = "primary", disabled, style, small }: {
   title: string; onPress: () => void; kind?: BtnKind; disabled?: boolean; style?: StyleProp<ViewStyle>; small?: boolean;
 }) {
   const t = useTheme();
-  const bg = kind === "primary" ? t.accent : kind === "danger" ? t.danger : t.surface2;
-  const fg = kind === "primary" ? t.accentInk : kind === "danger" ? "#FFFFFF" : t.text;
+  const outline = kind === "outline" || kind === "outlineDanger";
+  const bg = kind === "primary" ? t.accent : kind === "danger" ? t.danger : outline ? t.surface : t.surface2;
+  const fg = kind === "primary" ? t.accentInk : kind === "danger" ? "#FFFFFF" : kind === "outlineDanger" ? t.danger : t.text;
+  const border = kind === "outlineDanger" ? t.danger : outline ? t.border : "transparent";
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [{
-        backgroundColor: bg, borderRadius: 12, paddingVertical: small ? 9 : 13, paddingHorizontal: small ? 12 : 16,
+        backgroundColor: bg, borderRadius: 12, borderWidth: outline ? 1.5 : 0, borderColor: border, paddingVertical: small ? 9 : 13, paddingHorizontal: small ? 12 : 16,
         alignItems: "center", justifyContent: "center", opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
       }, style]}
     >
