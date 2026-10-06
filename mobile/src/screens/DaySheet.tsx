@@ -212,7 +212,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
               { label: "Remove", danger: true, onPress: () => removeShift(s.id) },
             ]} />
         );
-      }) : <Dim style={{ marginBottom: 8 }}>No shifts logged.</Dim>}
+      }) : null}
 
       {swaps.length ? (
         <>
@@ -228,13 +228,12 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
         {data.types.map((ty) => <Chip key={ty.id} label={"+ " + ty.name} color={ty.color} ink={ty.ink} onPress={() => pickType(ty)} />)}
       </View>
-      {!data.types.length ? <Dim style={{ marginTop: 8 }}>Create your shift types in the Types tab.</Dim> : null}
 
       <SectionHead title="Leave" />
       {leave.length ? leave.map((l) => {
         const k = LEAVE_KINDS[l.kind] || LEAVE_KINDS.annual;
         return <Item key={l.id} color={k.color} title={k.label} sub={l.hours != null ? fmtHours(l.hours) + "h" : undefined} actions={[{ label: "Remove", danger: true, onPress: () => removeFrom("leave", l.id) }]} />;
-      }) : <Dim style={{ marginBottom: 6 }}>No leave logged for this day.</Dim>}
+      }) : null}
       <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
         {(["annual", "sick"] as const).map((k) => (
           <Chip key={k} label={"+ " + LEAVE_KINDS[k].label} color={LEAVE_KINDS[k].color} ink={LEAVE_KINDS[k].ink}
@@ -260,7 +259,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
             sub={n.allDay ? "All day" : n.time ? n.time + (n.remind ? " 🔔" : "") : undefined} onPress={() => startEdit(n)}
             actions={[{ label: "Remove", danger: true, onPress: () => { if (editing && editing.id === n.id) resetForm(); removeFrom("notes", n.id); } }]} />
         );
-      }) : <Dim style={{ marginBottom: 6 }}>No personal events for this day.</Dim>}
+      }) : null}
 
       {editing ? (
         <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: t.accentSoft, borderRadius: 10, padding: 10, marginTop: 10 }}>
@@ -384,11 +383,7 @@ function SplitEditor({ state, typesById, onClose }: {
   };
   return (
     <Popup visible={!!state} onClose={onClose}>
-      <H2 style={{ marginBottom: 6 }}>{bt ? bt.name : "Shift hours"}</H2>
-      <Text style={{ color: t.textDim, fontSize: 14, marginBottom: 12 }}>
-        {len ? "Split this " + fmtHours(len) + "h shift into excess hours first, then overtime. Leave one at 0 if it doesn't apply."
-          : "Split this shift into excess hours first, then overtime. Leave one at 0 if it doesn't apply."}
-      </Text>
+      <H2 style={{ marginBottom: 12 }}>{bt ? bt.name : "Shift hours"}</H2>
       <Field label="Excess hours" value={ex} onChangeText={setEx} onBlur={() => fill("ex")} keyboardType="decimal-pad" placeholder="0" />
       <Field label="Overtime hours" value={ot} onChangeText={setOt} onBlur={() => fill("ot")} keyboardType="decimal-pad" placeholder="0" />
       <Text style={{ color: matches ? t.good : t.textDim, fontWeight: "700", marginBottom: 12 }}>

@@ -146,9 +146,8 @@ export function TypesScreen() {
             ))}
           </Card>
         ) : (
-          <Card><Dim>No shift types yet. Create one for each shift you work, like Day or Night.</Dim></Card>
+          <Card><Dim>No shift types yet.</Dim></Card>
         )}
-        <Dim style={{ marginTop: 14 }}>{fullTime ? "Overtime is built in. Add it from any day on the calendar." : "Overtime and Excess Hours are built in. Add them from any day on the calendar."}</Dim>
       </ScrollView>
 
       <Sheet visible={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "New shift type" : "Edit shift type"}
@@ -178,7 +177,6 @@ export function TypesScreen() {
           </>
         ) : (
           <>
-            <Dim style={{ marginBottom: 8 }}>Personal entries show on your calendar without counting toward your hours or reports.</Dim>
             <ToggleRow label="Set a time" value={draft.timed} onChange={(v) => set({ timed: v })} />
             {draft.timed ? <TimeField label="Time" value={draft.time} onChange={(v) => set({ time: v })} /> : null}
             <Field label="Notes (optional)" value={draft.notes} onChangeText={(v) => set({ notes: v })} multiline style={{ minHeight: 64, textAlignVertical: "top" }} />

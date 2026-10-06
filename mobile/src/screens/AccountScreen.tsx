@@ -93,17 +93,14 @@ export function AccountScreen() {
             <SectionHead title="Invite a friend" />
             <Card><Button title="Share invite" onPress={shareInvite} /></Card>
             <SectionHead title="Share your roster" />
-            <Dim style={{ marginTop: -4, marginBottom: 8 }}>Personal events, notes and pay are never shared.</Dim>
             <Card style={{ paddingVertical: 2 }}>
-              <MenuRow title="Shared rosters" sub="Invite by email, requests and connections" onPress={() => setShareOpen(true)} />
+              <MenuRow title="Shared rosters" onPress={() => setShareOpen(true)} />
             </Card>
           </>
         ) : (
           <>
             <SectionHead title="Share your roster" />
-            <Dim style={{ marginTop: -4, marginBottom: 8 }}>Personal events, notes and pay are never shared.</Dim>
             <Card>
-              <Dim style={{ marginBottom: 12 }}>Sign in or create a free account to invite someone and share rosters.</Dim>
               <Button title="Sign in or create account" onPress={showSignIn} />
             </Card>
           </>
@@ -241,7 +238,6 @@ function AccountDetail({ visible, onClose }: { visible: boolean; onClose: () => 
       ) : (
         <>
           <Card>
-            <Dim style={{ marginBottom: 12 }}>Sign in to sync across devices and share rosters.</Dim>
             <Button title="Sign in or create account" onPress={() => { onClose(); showSignIn(); }} />
           </Card>
           <Button small kind="outlineDanger" style={{ marginTop: 16 }} title="Format calendar" onPress={formatCalendar} />

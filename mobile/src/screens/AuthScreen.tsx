@@ -61,7 +61,6 @@ export function AuthScreen() {
         <View style={{ alignItems: "center", marginBottom: 28 }}>
           <Image source={require("../../assets/icon.png")} style={{ width: 76, height: 76, borderRadius: 18, marginBottom: 14 }} />
           <H1>Roster Board</H1>
-          <Dim style={{ marginTop: 4 }}>{mode === "login" ? "Sign in to sync your roster across devices" : "Create a free account"}</Dim>
         </View>
         <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email"
           keyboardType="email-address" textContentType="emailAddress" placeholder="you@example.com" />

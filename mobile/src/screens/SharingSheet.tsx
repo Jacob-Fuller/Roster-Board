@@ -3,7 +3,7 @@ import { Modal, Pressable, Share, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
-import { Button, Dim, Divider, Field, H1, SectionHead, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Dim, Divider, Field, H1, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, startOfMonth, type ShiftType } from "../lib/model";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
@@ -15,7 +15,8 @@ type Shared = { email: string; data: any; typesById: { [id: string]: ShiftType }
 // leave are ever shared; personal entries, events and notes stay private.
 export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const t = useTheme();
-  const { user } = useStore();
+  const { user, data: mine, update } = useStore();
+  const shareEvents = !!(mine.settings && mine.settings.shareEvents);
   const { dialog, toast } = useUi();
   const [conns, setConns] = useState<Conn[] | null>(null);
   const [email, setEmail] = useState("");
@@ -77,13 +78,16 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
       const list = (data.shifts[k] || []).filter((s: any) => s && typesById[s.typeId]).map(({ tag: _tag, ...rest }: any) => rest);
       if (list.length) shifts[k] = list;
     });
-    setShared({ email: other(c), typesById, data: { shifts, leave: data.leave || {} } });
+    setShared({ email: other(c), typesById, data: { shifts, leave: data.leave || {}, notes: data.notes || {} } });
   }
   const shareApp = () => Share.share({ message: "I'm using Roster Board to manage my shifts and roster. Check it out: " + WEB_URL }).catch(() => {});
 
   return (
     <Sheet visible={visible} onClose={onClose} title="Share your roster">
-      <Dim>Connected people can see your work shifts and leave. Personal events, notes and pay are never shared.</Dim>
+      <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Personal events</Text>
+      <Segmented<"show" | "hide"> value={shareEvents ? "show" : "hide"}
+        onChange={(v) => update((d) => { d.settings = { ...d.settings, shareEvents: v === "show", updatedAt: Date.now() }; })}
+        options={[{ value: "show", label: "Show" }, { value: "hide", label: "Hide" }]} />
       <SectionHead title="Invite someone" />
       <Field value={email} onChangeText={setEmail} placeholder="Their Roster Board email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" onSubmitEditing={invite} />
       {err ? <Text style={{ color: t.danger, marginBottom: 10 }}>{err}</Text> : null}

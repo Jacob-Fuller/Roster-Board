@@ -150,8 +150,7 @@ export function ReportsScreen() {
         {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : <Card>
           {!payCard ? (
             <>
-              <Dim>Add your hourly rate to see estimated pay.</Dim>
-              <Button small title="Set my hourly rate" style={{ marginTop: 10 }} onPress={() => setSetupOpen(true)} />
+              <Button small title="Set my hourly rate" onPress={() => setSetupOpen(true)} />
             </>
           ) : (
             <>
