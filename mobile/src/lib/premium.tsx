@@ -6,24 +6,25 @@ import * as IAP from "expo-iap";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 
-export const PREMIUM_MONTHLY = "net.rosterboard.app.premium.monthly";
+export const PREMIUM_YEARLY = "net.rosterboard.app.premium.yearly";
 export const PREMIUM_LIFETIME = "net.rosterboard.app.premium.lifetime";
 export const FREE_TYPE_LIMIT = 3;
 const KEY = "rosterBoard.premium";
 
-// Purchases need Apple's Paid Apps Agreement to be active. Until it is, keep
-// everything unlocked so testing isn't blocked; set this to true for release.
-export const PREMIUM_ENFORCED = false;
+// Free users get the limited version; Premium unlocks the rest. Purchases only
+// work once Apple's Paid Apps Agreement is active and both products exist in
+// App Store Connect.
+export const PREMIUM_ENFORCED = true;
 
-type Status = { active: boolean; kind: "" | "monthly" | "lifetime"; until: number };
+type Status = { active: boolean; kind: "" | "yearly" | "lifetime"; until: number };
 type Ctx = {
   status: Status;
   locked: boolean;
-  prices: { monthly: string; lifetime: string };
+  prices: { yearly: string; lifetime: string };
   paywall: string | null;
   openPaywall: (reason?: string) => void;
   closePaywall: () => void;
-  buy: (kind: "monthly" | "lifetime") => Promise<void>;
+  buy: (kind: "yearly" | "lifetime") => Promise<void>;
   restore: () => Promise<boolean>;
   busy: boolean;
   error: string;
@@ -42,9 +43,9 @@ function statusFrom(purchases: any[]): Status {
   let next: Status = { active: false, kind: "", until: 0 };
   (purchases || []).forEach((p) => {
     if (p.productId === PREMIUM_LIFETIME) next = { active: true, kind: "lifetime", until: 0 };
-    else if (p.productId === PREMIUM_MONTHLY && next.kind !== "lifetime") {
+    else if (p.productId === PREMIUM_YEARLY && next.kind !== "lifetime") {
       const exp = p.expirationDateIOS ? +p.expirationDateIOS : 0;
-      if (!exp || exp > now) next = { active: true, kind: "monthly", until: exp || now + 86400000 };
+      if (!exp || exp > now) next = { active: true, kind: "yearly", until: exp || now + 86400000 };
     }
   });
   return next;
@@ -52,7 +53,7 @@ function statusFrom(purchases: any[]): Status {
 
 export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>({ active: false, kind: "", until: 0 });
-  const [prices, setPrices] = useState({ monthly: "$4.99 / month", lifetime: "$49.99" });
+  const [prices, setPrices] = useState({ yearly: "$9.99 / year", lifetime: "$49.99" });
   const [paywall, setPaywall] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -92,10 +93,10 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const loadPrices = useCallback(async () => {
     if (!supported || !connected.current) return;
     try {
-      const subsList = ((await IAP.fetchProducts({ skus: [PREMIUM_MONTHLY], type: "subs" })) as any[]) || [];
+      const subsList = ((await IAP.fetchProducts({ skus: [PREMIUM_YEARLY], type: "subs" })) as any[]) || [];
       const once = ((await IAP.fetchProducts({ skus: [PREMIUM_LIFETIME], type: "in-app" })) as any[]) || [];
       setPrices((p) => ({
-        monthly: subsList[0] && subsList[0].displayPrice ? subsList[0].displayPrice + " / month" : p.monthly,
+        yearly: subsList[0] && subsList[0].displayPrice ? subsList[0].displayPrice + " / year" : p.yearly,
         lifetime: once[0] && once[0].displayPrice ? once[0].displayPrice : p.lifetime,
       }));
     } catch {}
@@ -104,11 +105,11 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const openPaywall = useCallback((reason?: string) => { setError(""); setPaywall(reason || ""); loadPrices(); }, [loadPrices]);
   const closePaywall = useCallback(() => setPaywall(null), []);
 
-  const buy = useCallback(async (kind: "monthly" | "lifetime") => {
+  const buy = useCallback(async (kind: "yearly" | "lifetime") => {
     if (!supported || busy) return;
     setBusy(true); setError("");
     try {
-      if (kind === "monthly") await IAP.requestPurchase({ request: { apple: { sku: PREMIUM_MONTHLY } }, type: "subs" });
+      if (kind === "yearly") await IAP.requestPurchase({ request: { apple: { sku: PREMIUM_YEARLY } }, type: "subs" });
       else await IAP.requestPurchase({ request: { apple: { sku: PREMIUM_LIFETIME } }, type: "in-app" });
       // the purchase listener finishes the transaction and refreshes the status
     } catch (e: any) {
