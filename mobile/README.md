@@ -46,3 +46,15 @@ app's own code on random data.
 
     npm install
     npx expo start
+- A commit whose message contains `[android]` runs **Native app for Android**:
+  builds a test APK, opens it on an Android emulator, takes screenshots, and
+  publishes the APK and screenshots to the `android-builds` branch.
+
+## Android (Google Play) still to do
+
+- A Google Play Console developer account (one-off fee)
+- An upload key, stored as GitHub secrets, so the workflow can build a signed
+  release bundle (.aab) for Play
+- Premium on Android needs Google Play Billing products; until then Premium
+  is hidden on Android and everything is unlocked
+
