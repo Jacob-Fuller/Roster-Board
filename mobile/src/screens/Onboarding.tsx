@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useRef, useState } from "react";
 import { Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { Button, H1, useTheme } from "../components/ui";
 
 export const ONBOARDING_KEY = "rosterBoard.onboardingSeen";
@@ -31,6 +32,7 @@ export function Onboarding({ visible, onClose }: { visible: boolean; onClose: ()
   return (
     <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="fade" onRequestClose={close}>
       <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }}>
+        <StatusBar style={t.dark ? "light" : "dark"} />
         <View style={{ alignItems: "flex-end", paddingHorizontal: 20 }}>
           <Pressable accessibilityRole="button" onPress={close} hitSlop={10}><Text style={{ color: t.textDim, fontWeight: "700", fontSize: 15 }}>Skip</Text></Pressable>
         </View>

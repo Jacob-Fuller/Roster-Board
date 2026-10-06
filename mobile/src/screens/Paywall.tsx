@@ -2,6 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { Button, Card, Dim, H1, LinkText, useTheme, useUi } from "../components/ui";
 import { usePremium } from "../lib/premium";
 import { WEB_URL } from "../lib/supabase";
@@ -23,6 +24,7 @@ export function Paywall() {
   return (
     <Modal statusBarTranslucent navigationBarTranslucent visible={paywall !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={closePaywall}>
       <View style={{ flex: 1, backgroundColor: t.bg }}>
+        {Platform.OS === "android" ? <StatusBar style={t.dark ? "light" : "dark"} /> : null}
         <ScrollView contentContainerStyle={{ padding: 22, paddingTop: Platform.OS === "android" ? insets.top + 16 : 22, paddingBottom: insets.bottom + 24 }}>
           <View style={{ alignItems: "flex-end" }}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={closePaywall} hitSlop={10}

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, Share, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
 import { Button, Dim, Divider, Field, H1, SectionHead, Sheet, useTheme, useUi } from "../components/ui";
 import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, startOfMonth, type ShiftType } from "../lib/model";
@@ -143,6 +144,7 @@ function SharedRosterView({ shared, onClose }: { shared: Shared | null; onClose:
   return (
     <Modal statusBarTranslucent navigationBarTranslucent visible={!!shared} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+        <StatusBar style={t.dark ? "light" : "dark"} />
         <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 }}>
           <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={{ marginBottom: 8 }}>
             <Text style={{ color: t.accent, fontWeight: "700", fontSize: 15 }}>‹ Back</Text>

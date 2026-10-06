@@ -4,6 +4,7 @@ import {
   useColorScheme, type StyleProp, type TextStyle, type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
 import { useStore } from "../lib/store";
 import { dark, light, type Theme } from "../theme";
 
@@ -165,6 +166,7 @@ export function Sheet({ visible, onClose, title, children, footer }: {
   return (
     <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} transparent={Platform.OS === "web"}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: t.bg }}>
+        {Platform.OS === "android" ? <StatusBar style={t.dark ? "light" : "dark"} /> : null}
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: Platform.OS === "android" ? insets.top + 12 : 16, paddingBottom: 10, gap: 10 }}>
           <H2 style={{ flex: 1, fontSize: 20 }}>{title}</H2>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}
