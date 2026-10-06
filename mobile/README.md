@@ -33,3 +33,4 @@ pay tags, birthday editing, sharing, event reminders, Premium purchases.
 
     npm install
     npx expo start
+
