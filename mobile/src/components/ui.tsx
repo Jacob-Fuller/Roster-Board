@@ -15,16 +15,17 @@ export function useTheme(): Theme {
   return isDark ? dark : light;
 }
 
-export const SERIF = Platform.select({ ios: "Georgia", android: "serif", default: "Georgia, serif" });
+// Headings use Fraunces, the same typeface as the website (loaded in App.tsx).
+export const SERIF = "Fraunces_700Bold";
 
 /* ---------- text ---------- */
 export function H1({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
   const t = useTheme();
-  return <Text style={[{ fontFamily: SERIF, fontSize: 26, fontWeight: "700", color: t.text }, style]}>{children}</Text>;
+  return <Text style={[{ fontFamily: SERIF, fontSize: 26, color: t.text }, style]}>{children}</Text>;
 }
 export function H2({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
   const t = useTheme();
-  return <Text style={[{ fontFamily: SERIF, fontSize: 18, fontWeight: "700", color: t.text }, style]}>{children}</Text>;
+  return <Text style={[{ fontFamily: SERIF, fontSize: 18, color: t.text }, style]}>{children}</Text>;
 }
 export function Dim({ children, style, numberOfLines }: { children: React.ReactNode; style?: StyleProp<TextStyle>; numberOfLines?: number }) {
   const t = useTheme();

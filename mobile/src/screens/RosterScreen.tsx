@@ -7,6 +7,7 @@ import { WEEKDAYS_SHORT, ymd } from "../lib/model";
 import { applyRosterPattern, ensurePatternShape, patternHasContent } from "../lib/roster";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
+import { usePremium } from "../lib/premium";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 type Months = "3" | "6" | "12" | "24";
@@ -16,6 +17,7 @@ export function RosterScreen() {
   const insets = useSafeAreaInsets();
   const { data, update } = useStore();
   const { dialog, toast } = useUi();
+  const { locked, openPaywall } = usePremium();
   const typesById = useTypesById();
   const [cell, setCell] = useState<{ w: number; d: number } | null>(null);
   const [start, setStart] = useState(ymd(new Date()));
@@ -53,6 +55,7 @@ export function RosterScreen() {
   }
 
   function fill() {
+    if (locked) { openPaywall("Filling your calendar from a roster pattern is part of Premium."); return; }
     if (!patternHasContent(data)) { toast("Assign shifts to the pattern first"); return; }
     dialog({
       title: "Fill the calendar?",

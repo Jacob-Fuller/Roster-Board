@@ -5,6 +5,7 @@ import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
 import { Button, Card, Dim, Divider, Field, H1, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
+import { FREE_TYPE_LIMIT, usePremium } from "../lib/premium";
 import { PALETTE, addDays, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
 
 type Draft = {
@@ -24,13 +25,17 @@ export function TypesScreen() {
   const insets = useSafeAreaInsets();
   const { data, update } = useStore();
   const { dialog, toast } = useUi();
+  const { locked, openPaywall } = usePremium();
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [draft, setDraft] = useState<Draft>(blank());
   const types = data.types.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
 
   function open(ty?: ShiftType) {
-    if (!ty) { setDraft(blank()); setEditing("new"); return; }
+    if (!ty) {
+      if (locked && data.types.length >= FREE_TYPE_LIMIT) { openPaywall("The free version includes " + FREE_TYPE_LIMIT + " shift types. Premium gives you unlimited."); return; }
+      setDraft(blank()); setEditing("new"); return;
+    }
     setDraft({
       name: ty.name, color: ty.color, ink: ty.ink, kind: ty.kind === "personal" ? "personal" : "work",
       start: ty.startTime || "07:00", end: ty.endTime || "19:00",

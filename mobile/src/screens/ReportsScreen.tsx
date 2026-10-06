@@ -12,6 +12,8 @@ import { collectPeriodStats, type TypeRow } from "../lib/reports";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
 import { ExportSheet } from "./ExportSheet";
+import { LockCard } from "./Paywall";
+import { usePremium } from "../lib/premium";
 import { PaySetupSheet } from "./PaySetupSheet";
 
 type CardView = "weekly" | "fortnightly" | "monthly";
@@ -27,6 +29,7 @@ export function ReportsScreen() {
   const { data } = useStore();
   const typesById = useTypesById();
   const [mode, setMode] = useState<Mode>("month");
+  const { locked, openPaywall } = usePremium();
   const [month, setMonth] = useState(startOfMonth(new Date()));
   const [year, setYear] = useState(new Date().getFullYear());
   const [exportOpen, setExportOpen] = useState(false);
@@ -138,11 +141,11 @@ export function ReportsScreen() {
         <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
           <Stat label="Days worked" value={String(stats.daysWorked)} />
           <Stat label="Leave days" value={String(stats.leaveDays)} />
-          <Stat label="Est. pay" value={payCard ? fmtMoneyShort(payCard.p.gross) : "—"} />
+          <Stat label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} />
         </View>
 
         <SectionHead title="Estimated pay" right={<Button small kind="ghost" title="Pay setup" onPress={() => setSetupOpen(true)} />} />
-        <Card>
+        {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : <Card>
           {!payCard ? (
             <>
               <Dim>Add your hourly rate to see estimated pay.</Dim>
@@ -166,8 +169,14 @@ export function ReportsScreen() {
               </Pressable>
             </>
           )}
-        </Card>
+        </Card>}
 
+        {locked ? (
+          <>
+            <SectionHead title="By shift type" />
+            <LockCard text="Full reports are part of Premium: hours by shift type, weekday vs weekend, comparisons and year in review." />
+          </>
+        ) : <>
         <SectionHead title="By shift type" />
         <Card>
           {stats.totalHours ? rows.map((r, i) => (
@@ -209,7 +218,8 @@ export function ReportsScreen() {
             </Card>
           </>
         ) : null}
-        <Button small kind="ghost" style={{ marginTop: 22 }} title="PDF roster" onPress={() => setExportOpen(true)} />
+        </>}
+        <Button small kind="ghost" style={{ marginTop: 22 }} title="PDF roster" onPress={() => (locked ? openPaywall("PDF export is part of Premium.") : setExportOpen(true))} />
       </ScrollView>
       <ExportSheet visible={exportOpen} onClose={() => setExportOpen(false)} initialMode={mode} initialMonth={month} initialYear={year} />
       <PaySetupSheet visible={setupOpen && !payScreen} onClose={() => setSetupOpen(false)} />

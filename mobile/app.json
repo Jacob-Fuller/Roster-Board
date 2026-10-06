@@ -67,7 +67,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#0F2244"
         }
-      ]
+      ],
+      "expo-iap",
+      "expo-font"
     ]
   }
 }

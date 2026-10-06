@@ -1,4 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Fraunces_700Bold, useFonts } from "@expo-google-fonts/fraunces";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
@@ -6,7 +7,9 @@ import { Pressable, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { UiProvider, useTheme } from "./src/components/ui";
 import { syncReminders } from "./src/lib/reminders";
+import { PremiumProvider } from "./src/lib/premium";
 import { StoreProvider, useStore } from "./src/lib/store";
+import { Paywall } from "./src/screens/Paywall";
 import { AccountScreen } from "./src/screens/AccountScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { Onboarding, hasSeenOnboarding } from "./src/screens/Onboarding";
@@ -34,6 +37,8 @@ function Shell() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const { auth, data } = useStore();
+  const [fontsLoaded, fontError] = useFonts({ Fraunces_700Bold });
+  const fontsReady = fontsLoaded || !!fontError;
   useEffect(() => { if (auth !== "loading") syncReminders(data.notes); }, [auth, data.notes]);
   const [tab, setTab] = useState<Tab>("calendar");
   const [onboarding, setOnboarding] = useState(false);
@@ -41,16 +46,17 @@ function Shell() {
   useEffect(() => { if (ready) hasSeenOnboarding().then((seen) => { if (!seen) setOnboarding(true); }); }, [ready]);
 
   useEffect(() => {
-    if (auth !== "loading") SplashScreen.hideAsync().catch(() => {});
-  }, [auth]);
+    if (auth !== "loading" && fontsReady) SplashScreen.hideAsync().catch(() => {});
+  }, [auth, fontsReady]);
 
-  if (auth === "loading") return <View style={{ flex: 1, backgroundColor: "#0F2244" }} />;
+  if (auth === "loading" || !fontsReady) return <View style={{ flex: 1, backgroundColor: "#0F2244" }} />;
   if (auth === "signedOut") return (<><StatusBar style={t.dark ? "light" : "dark"} /><AuthScreen /></>);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <StatusBar style={t.dark ? "light" : "dark"} />
       <Onboarding visible={onboarding} onClose={() => setOnboarding(false)} />
+      <Paywall />
       <View style={{ flex: 1 }}>
         {React.createElement(SCREENS[tab])}
       </View>
@@ -78,7 +84,9 @@ export default function App() {
     <SafeAreaProvider>
       <StoreProvider>
         <UiProvider>
-          <Shell />
+          <PremiumProvider>
+            <Shell />
+          </PremiumProvider>
         </UiProvider>
       </StoreProvider>
     </SafeAreaProvider>

@@ -8,6 +8,8 @@ import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
 import { SharingSheet } from "./SharingSheet";
 import { Onboarding } from "./Onboarding";
+import { usePremium } from "../lib/premium";
+import { Platform } from "react-native";
 
 function ago(ms: number) {
   if (!ms) return "never";
@@ -29,6 +31,7 @@ export function AccountScreen() {
   const [bdaysOpen, setBdaysOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const premium = usePremium();
   const [pwOpen, setPwOpen] = useState(false);
   const [pw1, setPw1] = useState(""); const [pw2, setPw2] = useState(""); const [pwErr, setPwErr] = useState("");
   const name = (user && user.user_metadata && (user.user_metadata as any).full_name) || "";
@@ -125,6 +128,20 @@ export function AccountScreen() {
             <Button title="Sign in or create account" onPress={showSignIn} />
           </Card>
         )}
+
+        {Platform.OS === "ios" ? (
+          <>
+            <SectionHead title="Premium" />
+            <Card style={{ paddingVertical: 2 }}>
+              <MenuRow title="Roster Board Premium" right={!premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : "Monthly"}
+                onPress={() => (premium.status.active ? undefined : premium.openPaywall())} />
+              {!premium.status.active ? (<><Divider /><MenuRow title="Upgrade to Premium" onPress={() => premium.openPaywall()} /></>) : null}
+              {premium.status.kind === "monthly" ? (<><Divider /><MenuRow title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
+              <Divider />
+              <MenuRow title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
+            </Card>
+          </>
+        ) : null}
 
         {auth === "signedIn" ? (
           <>
