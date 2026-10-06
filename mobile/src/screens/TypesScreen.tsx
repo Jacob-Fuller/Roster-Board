@@ -6,7 +6,7 @@ import { TimeField } from "../components/TimeField";
 import { Button, Card, Dim, Divider, Field, H1, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
 import { FREE_TYPE_LIMIT, usePremium } from "../lib/premium";
-import { PALETTE, addDays, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
+import { PALETTE, addDays, employmentOf, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
 
 type Draft = {
   name: string; color: string; ink: string; kind: "work" | "personal";
@@ -26,6 +26,7 @@ export function TypesScreen() {
   const { data, update } = useStore();
   const { dialog, toast } = useUi();
   const { locked, openPaywall } = usePremium();
+  const fullTime = employmentOf(data.settings) === "full";
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [draft, setDraft] = useState<Draft>(blank());
   const types = data.types.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -147,7 +148,7 @@ export function TypesScreen() {
         ) : (
           <Card><Dim>No shift types yet. Create one for each shift you work, like Day or Night.</Dim></Card>
         )}
-        <Dim style={{ marginTop: 14 }}>Overtime and Excess Hours are built in. Add them from any day on the calendar.</Dim>
+        <Dim style={{ marginTop: 14 }}>{fullTime ? "Overtime is built in. Add it from any day on the calendar." : "Overtime and Excess Hours are built in. Add them from any day on the calendar."}</Dim>
       </ScrollView>
 
       <Sheet visible={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "New shift type" : "Edit shift type"}
@@ -173,7 +174,7 @@ export function TypesScreen() {
             <TimeField label="Ends" value={draft.end} onChange={(v) => set({ end: v })} />
             <Dim style={{ marginBottom: 8 }}>{fmtHours(hours)} hours</Dim>
             <ToggleRow label="Can have overtime" value={draft.overtimeEligible} onChange={(v) => set({ overtimeEligible: v })} />
-            <ToggleRow label="Can have excess hours" value={draft.excessEligible} onChange={(v) => set({ excessEligible: v })} />
+            {!fullTime ? <ToggleRow label="Can have excess hours" value={draft.excessEligible} onChange={(v) => set({ excessEligible: v })} /> : null}
           </>
         ) : (
           <>

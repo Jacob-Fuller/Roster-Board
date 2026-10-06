@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { Button, Card, Dim, Divider, Field, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
-import { fmtHours } from "../lib/model";
+import { employmentOf, fmtHours } from "../lib/model";
 import {
   payFormFromConfig, paySetupDraft, paySummaries, savePaySetup, workTypes,
   type PayConfig, type PayCycle, type PayForm, type PayTypeRule,
@@ -16,6 +16,7 @@ const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
 
 export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const { data, update } = useStore();
+  const fullTime = employmentOf(data.settings) === "full";
   const { toast } = useUi();
   const [draft, setDraft] = useState<PayConfig | null>(null);
   const [form, setForm] = useState<PayForm | null>(null);
@@ -73,10 +74,10 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         <DateField label="Pay period start date" value={form.periodStart} onChange={(v) => set("periodStart", v)} />
       </Section>
 
-      <Section title="Overtime & excess" summary={sum.ot}>
+      <Section title={fullTime ? "Overtime" : "Overtime & excess"} summary={fullTime ? sum.ot.replace(/ · [^·]*excess$/, "") : sum.ot}>
         <View style={{ flexDirection: "row", gap: 10 }}>
           <View style={{ flex: 1 }}><Field label="Overtime rate ×" value={form.otMult} onChangeText={(v) => set("otMult", v)} keyboardType={dec} placeholder="1.5" /></View>
-          <View style={{ flex: 1 }}><Field label="Excess rate ×" value={form.exMult} onChangeText={(v) => set("exMult", v)} keyboardType={dec} placeholder="1" /></View>
+          {fullTime ? <View style={{ flex: 1 }} /> : <View style={{ flex: 1 }}><Field label="Excess rate ×" value={form.exMult} onChangeText={(v) => set("exMult", v)} keyboardType={dec} placeholder="1" /></View>}
         </View>
         <ToggleRow label="Tiered overtime" value={form.otTiered} onChange={(v) => set("otTiered", v)} />
         {form.otTiered ? (

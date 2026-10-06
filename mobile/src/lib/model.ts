@@ -178,3 +178,9 @@ export function entryColor(e: Rec, typesById: { [id: string]: ShiftType }) {
   const t = typesById[e.typeId];
   return t ? { bg: t.color, ink: t.ink } : { bg: "#9C9585", ink: "#FFFFFF" };
 }
+
+/* ---------- employment type ---------- */
+// Full-time workers don't log excess hours, so excess options are hidden for them.
+// Stored with the synced settings; unset means part time (everything shown).
+export type Employment = "full" | "part";
+export const employmentOf = (settings: any): Employment => (settings && settings.employment === "full" ? "full" : "part");

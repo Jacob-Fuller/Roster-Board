@@ -5,7 +5,7 @@ import { TimeField } from "../components/TimeField";
 import { Button, Chip, Dim, Divider, Field, H2, SectionHead, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import {
   EVENT_CATS, EVENT_CAT_ORDER, EXCESS_ID, EXCESS_TYPE, LEAVE_KINDS, MONTHS, OVERTIME_ID, OVERTIME_TYPE, WEEKDAYS_FULL,
-  birthdaysOnDate, entryColor, entryExcessHours, entryName, entryOTHours, fmtHours, isCombo, isSplitEntry, mkId, parseYmd,
+  birthdaysOnDate, employmentOf, entryColor, entryExcessHours, entryName, entryOTHours, fmtHours, isCombo, isSplitEntry, mkId, parseYmd,
   type Rec, type ShiftEntry, type ShiftType, type Snapshot,
 } from "../lib/model";
 import { payTagLabel, payAllowances, payTagsOn } from "../lib/pay";
@@ -27,6 +27,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const { data, update } = useStore();
   const { dialog, toast } = useUi();
   const typesById = useTypesById();
+  const fullTime = employmentOf(data.settings) === "full";
   // event form
   const [editing, setEditing] = useState<{ id: string; date: string } | null>(null);
   const [text, setText] = useState("");
@@ -66,7 +67,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     toast("Shift added");
   };
   const pickType = (ty: ShiftType) => {
-    if (ty.overtimeEligible !== false || ty.excessEligible !== false) setChooser(ty);
+    if (ty.overtimeEligible !== false || (!fullTime && ty.excessEligible !== false)) setChooser(ty);
     else addShift(ty.id, null, null, ty.kind === "personal" ? ty.notes : null);
   };
   const askHours = (titleText: string, msg: string, then: (h: number) => void) => dialog({
@@ -202,7 +203,9 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         return (
           <Item key={s.id} color={col.bg} title={entryName(s, typesById)} sub={detail}
             actions={[
-              combo ? { label: "Hours", onPress: () => setSplit({
+              combo && fullTime && !entryExcessHours(s) ? { label: "Hours", onPress: () => askHours("Overtime – " + (s.baseTypeId && typesById[s.baseTypeId] ? typesById[s.baseTypeId].name : "shift"), "How many hours of overtime?", (h) => {
+                update((d) => { const e: any = (d.shifts[key] || []).find((x) => x.id === s.id); if (e) { e.hours = h; e.updatedAt = Date.now(); } }); toast("Hours updated");
+              }) } : combo ? { label: "Hours", onPress: () => setSplit({
                 baseTypeId: s.baseTypeId, ot: String(entryOTHours(s) || ""), ex: String(entryExcessHours(s) || ""), label: "Save",
                 onSave: (ot, ex) => { update((d) => { const e = (d.shifts[key] || []).find((x) => x.id === s.id); if (e) applySplit(e, ot, ex); }); toast("Hours updated"); },
               }) } : { label: "Swap", onPress: () => setSwap({ shift: s }) },
@@ -285,7 +288,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       ) : null}
       <Button title={editing ? "Save" : "Add"} onPress={saveEvent} />
 
-      <KindChooser type={chooser} onClose={() => setChooser(null)} onPick={(kind) => {
+      <KindChooser type={chooser} fullTime={fullTime} onClose={() => setChooser(null)} onPick={(kind) => {
         const ty = chooser!;
         setChooser(null);
         if (kind === "normal") addShift(ty.id);
@@ -336,13 +339,13 @@ function Popup({ visible, onClose, children }: { visible: boolean; onClose: () =
   );
 }
 
-function KindChooser({ type, onClose, onPick }: { type: ShiftType | null; onClose: () => void; onPick: (k: "normal" | "ot" | "ex" | "split") => void }) {
+function KindChooser({ type, fullTime, onClose, onPick }: { type: ShiftType | null; fullTime: boolean; onClose: () => void; onPick: (k: "normal" | "ot" | "ex" | "split") => void }) {
   const opts: { k: "normal" | "ot" | "ex" | "split"; tag: string; bg: string; ink: string }[] = [];
   if (type) {
     opts.push({ k: "normal", tag: "", bg: type.color, ink: type.ink });
     if (type.overtimeEligible !== false) opts.push({ k: "ot", tag: "Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
-    if (type.excessEligible !== false) opts.push({ k: "ex", tag: "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
-    if (type.overtimeEligible !== false && type.excessEligible !== false) opts.push({ k: "split", tag: "Excess + Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
+    if (!fullTime && type.excessEligible !== false) opts.push({ k: "ex", tag: "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
+    if (!fullTime && type.overtimeEligible !== false && type.excessEligible !== false) opts.push({ k: "split", tag: "Excess + Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
   }
   return (
     <Popup visible={!!type} onClose={onClose}>

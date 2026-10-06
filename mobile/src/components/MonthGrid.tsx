@@ -64,10 +64,11 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               });
               ((data.notes && data.notes[key]) || []).forEach((n) => {
                 const cat = EVENT_CATS[n.category || "other"] || EVENT_CATS.other;
-                items.push(<Pill key={n.id} label={n.text} bg={cat.color + "40"} fg={t.text} bar={cat.color} />);
+                items.push(<Pill key={n.id} strip={cat.label} stripBg={cat.color} stripFg={cat.ink} label={n.text} bg={cat.color + "38"} fg={t.text} />);
               });
               if (data.birthdays) birthdaysOnDate(data.birthdays, c.date).forEach((b) =>
-                items.push(<Pill key={"b" + b.id} label={"🎂 " + (b.name || "").trim().split(/\s+/)[0]} bg={t.surface2} fg={t.text} />));
+                items.push(<Pill key={"b" + b.id} strip="🎂 Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
+                  label={(b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} />));
               const max = rows > 5 ? 2 : 3;
               const ph = ((data.payTags && data.payTags[key]) || []).some((x) => x.kind === "holiday");
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
@@ -84,9 +85,9 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                     <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accent : t.text }}>{c.date.getDate()}</Text>
                     {ph ? <Text accessibilityLabel="Public holiday" style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
                   </View>
-                  <View style={{ gap: 2 }}>
+                  <View style={{ gap: 3 }}>
                     {items.slice(0, max)}
-                    {items.length > max ? <Text style={{ fontSize: 9, color: t.textDim, marginLeft: 2 }}>+{items.length - max} more</Text> : null}
+                    {items.length > max ? <Text style={{ fontSize: 9, color: t.textDim, textAlign: "center" }}>+{items.length - max} more</Text> : null}
                   </View>
                 </Pressable>
               );
@@ -98,21 +99,26 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
   );
 }
 
-// Long names shrink to fit the day cell instead of being cut off (like the web app).
-const fitSize = (label: string) => (label.length > 8 ? Math.max(7, (9.5 * 8) / label.length) : 9.5);
+const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
 
-function Pill({ label, bg, fg, bar, strip, stripBg, stripFg }: { label: string; bg: string; fg: string; bar?: string; strip?: string; stripBg?: string; stripFg?: string }) {
-  if (strip) {
-    return (
-      <View style={{ borderRadius: 4, overflow: "hidden" }}>
-        <Text numberOfLines={1} style={{ backgroundColor: stripBg, color: stripFg, fontSize: 7.5, fontWeight: "800", paddingHorizontal: 3 }}>{strip.toUpperCase()}</Text>
-        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ backgroundColor: bg, color: fg, fontSize: fitSize(label), fontWeight: "700", paddingHorizontal: 3, paddingVertical: 1 }}>{label}</Text>
-      </View>
-    );
-  }
+// Every banner is the same height; text is centred. Long names shrink to fit
+// the day cell instead of being cut off.
+const BANNER_H = 28, STRIP_H = 10;
+const fitSize = (label: string, base: number) => (label.length > 8 ? Math.max(7.5, (base * 8) / label.length) : base);
+
+function Pill({ label, bg, fg, strip, stripBg, stripFg }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string }) {
   return (
-    <View style={{ backgroundColor: bg, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, borderLeftWidth: bar ? 3 : 0, borderLeftColor: bar }}>
-      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ color: fg, fontSize: fitSize(label), fontWeight: "700" }}>{label}</Text>
+    <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
+      {strip ? (
+        <View style={{ height: STRIP_H, backgroundColor: stripBg, justifyContent: "center" }}>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}
+            style={{ color: stripFg, fontSize: fitSize(strip, 7.5), lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
+        </View>
+      ) : null}
+      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3 }}>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}
+          style={{ color: fg, fontSize: fitSize(label, 10.5), fontWeight: "700", textAlign: "center" }}>{label}</Text>
+      </View>
     </View>
   );
 }

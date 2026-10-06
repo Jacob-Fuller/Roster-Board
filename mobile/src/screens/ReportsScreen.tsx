@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card, Dim, Divider, H1, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
-import { EXCESS_ID, MONTHS, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
+import { EXCESS_ID, MONTHS, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
 import {
   computePay, fmtMoney, fmtMoneyShort, payCardRange, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
   type PayResult,
@@ -56,8 +56,10 @@ export function ReportsScreen() {
 
   const step = (n: number) => { if (mode === "month") setMonth(addMonths(month, n)); else setYear(year + n); };
 
+  const fullTime = employmentOf(data.settings) === "full";
   const byType = { ...stats.byType };
-  if (!byType[EXCESS_ID]) byType[EXCESS_ID] = { name: "Excess", color: "#F7B3CE", count: 0, hours: 0, rank: 1 };
+  if (fullTime && byType[EXCESS_ID] && !byType[EXCESS_ID].hours) delete byType[EXCESS_ID];
+  if (!fullTime && !byType[EXCESS_ID]) byType[EXCESS_ID] = { name: "Excess", color: "#F7B3CE", count: 0, hours: 0, rank: 1 };
   if (!byType[OVERTIME_ID]) byType[OVERTIME_ID] = { name: OVERTIME_TYPE.name, color: OVERTIME_TYPE.color, count: 0, hours: 0, rank: 2 };
   const rows: TypeRow[] = Object.values(byType).sort((a, b) => b.hours - a.hours || a.rank - b.rank);
   const maxType = Math.max(1, ...rows.map((r) => r.hours));
@@ -113,7 +115,7 @@ export function ReportsScreen() {
   const reviewRows: [string, string][] = [
     ["Total hours worked", fmtHours(stats.totalHours) + " h"],
     ["Total overtime", fmtHours(stats.otHours) + " h"],
-    ["Total excess hours", fmtHours(stats.excessHours) + " h"],
+    ...(fullTime && !stats.excessHours ? [] : [["Total excess hours", fmtHours(stats.excessHours) + " h"] as [string, string]]),
     ["Busiest month", busiest ? MONTHS[+String(busiest).split("-")[1] - 1] + " (" + fmtHours(busiestVal) + " h)" : "—"],
     ["Leave days taken", String(stats.leaveDays)],
   ];
@@ -136,10 +138,10 @@ export function ReportsScreen() {
         <View style={{ flexDirection: "row", gap: 8 }}>
           <Stat label="Hours" value={fmtHours(stats.totalHours)} />
           <Stat label="Overtime" value={fmtHours(stats.otHours)} />
-          <Stat label="Excess" value={fmtHours(stats.excessHours)} />
+          {fullTime ? <Stat label="Days worked" value={String(stats.daysWorked)} /> : <Stat label="Excess" value={fmtHours(stats.excessHours)} />}
         </View>
         <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-          <Stat label="Days worked" value={String(stats.daysWorked)} />
+          {fullTime ? null : <Stat label="Days worked" value={String(stats.daysWorked)} />}
           <Stat label="Leave days" value={String(stats.leaveDays)} />
           <Stat label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} />
         </View>

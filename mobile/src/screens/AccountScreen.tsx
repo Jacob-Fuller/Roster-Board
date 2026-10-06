@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card, Dim, Divider, Field, H1, MenuRow, SectionHead, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
-import { MONTHS } from "../lib/model";
+import { MONTHS, employmentOf, type Employment } from "../lib/model";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
@@ -24,7 +24,7 @@ export function AccountScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const sys = useColorScheme();
-  const { auth, user, sync, syncNow, showSignIn, prefs, setPrefs, signOut, deleteAccount, restoreBackup } = useStore();
+  const { auth, user, sync, showSignIn, data, update, prefs, setPrefs, signOut, deleteAccount, restoreBackup } = useStore();
   const { dialog, toast } = useUi();
   const [history, setHistory] = useState<any[] | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -63,16 +63,9 @@ export function AccountScreen() {
       Linking.openURL("mailto:contact@rosterboard.net?subject=" + encodeURIComponent("Roster Board feedback") + "&body=" + encodeURIComponent(text)).catch(() => toast("Couldn't open your email app"));
     } });
   }
-  const { data } = useStore();
   const nB = data.birthdays.length;
 
   const themeValue = prefs.theme === "system" ? (sys === "dark" ? "dark" : "light") : prefs.theme;
-  const statusText =
-    sync.state === "syncing" ? "Backing up…" :
-    sync.state === "authLost" ? "Signed out on this device. Sign in again to back up." :
-    sync.state === "failed" || sync.dirty ? "Not backed up yet. Retrying when online." :
-    "Backed up " + ago(sync.lastSync);
-  const statusColor = sync.state === "authLost" || sync.state === "failed" ? t.danger : t.textDim;
 
   async function openHistory() {
     if (!user) return;
@@ -110,10 +103,7 @@ export function AccountScreen() {
           <Card>
             {name ? <Text style={{ color: t.text, fontSize: 16, fontWeight: "700" }}>{name}</Text> : null}
             <Text style={{ color: name ? t.textDim : t.text, fontSize: name ? 14 : 16, fontWeight: name ? "400" : "700" }}>{user.email}</Text>
-            <Text style={{ color: statusColor, fontSize: 13, marginTop: 4 }}>{statusText}</Text>
-            <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
-              <Button small kind="ghost" title="Sync now" onPress={() => { syncNow(); }} />
-            </View>
+            <View style={{ height: 8 }} />
             <Divider />
             <MenuRow title="Name" right={name || "Add"} onPress={changeName} />
             <Divider />
@@ -155,6 +145,13 @@ export function AccountScreen() {
         <SectionHead title="Birthdays" />
         <Card style={{ paddingVertical: 2 }}>
           <MenuRow title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
+        </Card>
+
+        <SectionHead title="Employment" />
+        <Card>
+          <Segmented<Employment> value={employmentOf(data.settings)}
+            onChange={(v) => update((d) => { d.settings = { ...d.settings, employment: v, updatedAt: Date.now() }; })}
+            options={[{ value: "full", label: "Full time" }, { value: "part", label: "Part time" }]} />
         </Card>
 
         <SectionHead title="Appearance" />
