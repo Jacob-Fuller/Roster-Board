@@ -16,7 +16,8 @@ const types = [
 ];
 const shifts = {};
 [1, 2, 5, 6, 9, 10, 13, 14, 17, 18, 21, 22, 25, 26].forEach((n, i) => { shifts[day(n)] = [{ id: "s" + n, typeId: i % 4 < 2 ? "t-day" : "t-night" }]; });
-shifts[day(6)].push({ id: "ot1", typeId: "overtime", hours: 2 });
+shifts[day(6)].push({ id: "ot1", typeId: "overtime", hours: 2, baseTypeId: "t-night" });
+shifts[day(9)].push({ id: "sp1", typeId: "overtime", hours: 4, excessHours: 8, baseTypeId: "t-day" });
 shifts[day(3)] = [{ id: "g1", typeId: "t-gym" }];
 const data = {
   types, shifts,
@@ -30,7 +31,7 @@ const data = {
 const errors = [];
 const browser = await chromium.launch();
 async function page(theme, seed = true) {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: theme });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: theme === "dark" ? "dark" : "light" });
   const p = await ctx.newPage();
   p.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   p.on("console", (m) => { if (m.type() === "error") errors.push("console: " + m.text()); });
@@ -38,7 +39,8 @@ async function page(theme, seed = true) {
     if (!seed) return;
     localStorage.setItem("rosterBoard.v2", d);
     localStorage.setItem("rosterBoard.localOnly", "1");
-    localStorage.setItem("rosterBoard.prefs", JSON.stringify({ theme, hideEvents: false, hideBirthdays: false }));
+    if (theme !== "onboarding") localStorage.setItem("rosterBoard.onboardingSeen", "1");
+    localStorage.setItem("rosterBoard.prefs", JSON.stringify({ theme: theme === "dark" ? "dark" : "light", hideEvents: false, hideBirthdays: false }));
   }, [JSON.stringify(data), seed, theme]);
   await p.goto(URL);
   await p.waitForTimeout(2500);
@@ -51,11 +53,18 @@ try {
   await shot(p, "01-sign-in");
   await p.context().close();
 
+  p = await page("onboarding");
+  await shot(p, "01b-welcome");
+  await p.context().close();
+
   p = await page("light");
   await shot(p, "02-calendar-light");
   await p.getByLabel(now.toDateString(), { exact: true }).first().click();
   await p.waitForTimeout(800);
   await shot(p, "03-day-sheet");
+  await p.mouse.wheel(0, 1500);
+  await p.waitForTimeout(400);
+  await shot(p, "03b-day-sheet-lower");
   await p.getByLabel("Close").first().click();
   await p.waitForTimeout(500);
   await p.getByRole("tab", { name: /Types/ }).click();
