@@ -98,18 +98,21 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
   );
 }
 
+// Long names shrink to fit the day cell instead of being cut off (like the web app).
+const fitSize = (label: string) => (label.length > 8 ? Math.max(7, (9.5 * 8) / label.length) : 9.5);
+
 function Pill({ label, bg, fg, bar, strip, stripBg, stripFg }: { label: string; bg: string; fg: string; bar?: string; strip?: string; stripBg?: string; stripFg?: string }) {
   if (strip) {
     return (
       <View style={{ borderRadius: 4, overflow: "hidden" }}>
         <Text numberOfLines={1} style={{ backgroundColor: stripBg, color: stripFg, fontSize: 7.5, fontWeight: "800", paddingHorizontal: 3 }}>{strip.toUpperCase()}</Text>
-        <Text numberOfLines={1} style={{ backgroundColor: bg, color: fg, fontSize: 9.5, fontWeight: "700", paddingHorizontal: 3, paddingVertical: 1 }}>{label}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ backgroundColor: bg, color: fg, fontSize: fitSize(label), fontWeight: "700", paddingHorizontal: 3, paddingVertical: 1 }}>{label}</Text>
       </View>
     );
   }
   return (
     <View style={{ backgroundColor: bg, borderRadius: 4, paddingHorizontal: 3, paddingVertical: 1, borderLeftWidth: bar ? 3 : 0, borderLeftColor: bar }}>
-      <Text numberOfLines={1} style={{ color: fg, fontSize: 9.5, fontWeight: "700" }}>{label}</Text>
+      <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ color: fg, fontSize: fitSize(label), fontWeight: "700" }}>{label}</Text>
     </View>
   );
 }
