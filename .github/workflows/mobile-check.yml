@@ -59,6 +59,7 @@ jobs:
           (cd dist && python3 -m http.server 8090 >/dev/null 2>&1 &)
           sleep 1
           node scripts/screens.mjs
+          node scripts/appstore.mjs 2>&1 | tee screens/appstore-log.txt || true
       - name: Publish results to the native-app-ci branch
         if: always()
         run: |
