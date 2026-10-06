@@ -156,7 +156,7 @@ export function effectiveHours(e: ShiftEntry, typesById: { [id: string]: ShiftTy
   const t = typesById[e.typeId];
   return t ? t.hours || 0 : 0;
 }
-export function entryName(e: ShiftEntry, typesById: { [id: string]: ShiftType }) {
+export function entryName(e: Rec, typesById: { [id: string]: ShiftType }) {
   const t = typesById[e.typeId];
   if (!t) return "Deleted type";
   if (!t.isBuiltin) return t.name;

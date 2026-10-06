@@ -9,6 +9,7 @@ import { syncReminders } from "./src/lib/reminders";
 import { StoreProvider, useStore } from "./src/lib/store";
 import { AccountScreen } from "./src/screens/AccountScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
+import { Onboarding, hasSeenOnboarding } from "./src/screens/Onboarding";
 import { CalendarScreen } from "./src/screens/CalendarScreen";
 import { ReportsScreen } from "./src/screens/ReportsScreen";
 import { RosterScreen } from "./src/screens/RosterScreen";
@@ -35,6 +36,9 @@ function Shell() {
   const { auth, data } = useStore();
   useEffect(() => { if (auth !== "loading") syncReminders(data.notes); }, [auth, data.notes]);
   const [tab, setTab] = useState<Tab>("calendar");
+  const [onboarding, setOnboarding] = useState(false);
+  const ready = auth === "signedIn" || auth === "localOnly";
+  useEffect(() => { if (ready) hasSeenOnboarding().then((seen) => { if (!seen) setOnboarding(true); }); }, [ready]);
 
   useEffect(() => {
     if (auth !== "loading") SplashScreen.hideAsync().catch(() => {});
@@ -46,6 +50,7 @@ function Shell() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <StatusBar style={t.dark ? "light" : "dark"} />
+      <Onboarding visible={onboarding} onClose={() => setOnboarding(false)} />
       <View style={{ flex: 1 }}>
         {React.createElement(SCREENS[tab])}
       </View>

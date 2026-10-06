@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Linking, Pressable, ScrollView, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Card, Dim, Divider, H1, MenuRow, SectionHead, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, Divider, Field, H1, MenuRow, SectionHead, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import { MONTHS } from "../lib/model";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
 import { SharingSheet } from "./SharingSheet";
+import { Onboarding } from "./Onboarding";
 
 function ago(ms: number) {
   if (!ms) return "never";
@@ -27,6 +28,38 @@ export function AccountScreen() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [bdaysOpen, setBdaysOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pw1, setPw1] = useState(""); const [pw2, setPw2] = useState(""); const [pwErr, setPwErr] = useState("");
+  const name = (user && user.user_metadata && (user.user_metadata as any).full_name) || "";
+  function changeName() {
+    dialog({ title: "Your name", input: { value: name, placeholder: "Your name" }, confirm: "Save", onConfirm: async (v) => {
+      const n = v.trim(); if (!n) { toast("Enter a name."); return; }
+      const r = await sb.auth.updateUser({ data: { full_name: n } });
+      toast(r.error ? r.error.message : "Name updated");
+    } });
+  }
+  function changeEmail() {
+    dialog({ title: "Change email", message: "We'll send a confirmation link to the new address.", input: { placeholder: "new@example.com", keyboard: "email-address" }, confirm: "Change", onConfirm: async (v) => {
+      const e = v.trim(); if (!e) { toast("Enter a new email."); return; }
+      const r = await sb.auth.updateUser({ email: e }, { emailRedirectTo: WEB_URL });
+      toast(r.error ? r.error.message : "Check your email (new address, and your old one if asked) to confirm");
+    } });
+  }
+  async function changePassword() {
+    if (!pw1 || pw1.length < 6) { setPwErr("Password must be at least 6 characters."); return; }
+    if (pw1 !== pw2) { setPwErr("Passwords don't match."); return; }
+    setPwErr("");
+    const r = await sb.auth.updateUser({ password: pw1 });
+    if (r.error) { setPwErr(r.error.message); return; }
+    setPw1(""); setPw2(""); setPwOpen(false); toast("Password updated");
+  }
+  function feedback() {
+    dialog({ title: "Send feedback", message: "Got a suggestion or found a problem? Write it below. This opens an email to us with your message filled in, ready to send.", input: { placeholder: "Your feedback..." }, confirm: "Continue", onConfirm: (v) => {
+      const text = v.trim(); if (!text) { toast("Write your feedback first"); return; }
+      Linking.openURL("mailto:contact@rosterboard.net?subject=" + encodeURIComponent("Roster Board feedback") + "&body=" + encodeURIComponent(text)).catch(() => toast("Couldn't open your email app"));
+    } });
+  }
   const { data } = useStore();
   const nB = data.birthdays.length;
 
@@ -72,11 +105,18 @@ export function AccountScreen() {
 
         {auth === "signedIn" && user ? (
           <Card>
-            <Text style={{ color: t.text, fontSize: 16, fontWeight: "700" }}>{user.email}</Text>
+            {name ? <Text style={{ color: t.text, fontSize: 16, fontWeight: "700" }}>{name}</Text> : null}
+            <Text style={{ color: name ? t.textDim : t.text, fontSize: name ? 14 : 16, fontWeight: name ? "400" : "700" }}>{user.email}</Text>
             <Text style={{ color: statusColor, fontSize: 13, marginTop: 4 }}>{statusText}</Text>
             <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
               <Button small kind="ghost" title="Sync now" onPress={() => { syncNow(); }} />
             </View>
+            <Divider />
+            <MenuRow title="Name" right={name || "Add"} onPress={changeName} />
+            <Divider />
+            <MenuRow title="Email" onPress={changeEmail} />
+            <Divider />
+            <MenuRow title="Password" onPress={() => { setPwErr(""); setPwOpen(true); }} />
           </Card>
         ) : (
           <Card>
@@ -111,6 +151,10 @@ export function AccountScreen() {
         <SectionHead title="More" />
         <Card style={{ paddingVertical: 2 }}>
           {auth === "signedIn" ? (<><MenuRow title="Recover from an earlier backup" onPress={openHistory} /><Divider /></>) : null}
+          <MenuRow title="Help" onPress={() => setHelpOpen(true)} />
+          <Divider />
+          <MenuRow title="Send feedback" onPress={feedback} />
+          <Divider />
           <MenuRow title="Privacy policy" onPress={() => Linking.openURL(WEB_URL + "privacy.html")} />
           <Divider />
           <MenuRow title="Contact support" sub="contact@rosterboard.net" onPress={() => Linking.openURL("mailto:contact@rosterboard.net?subject=Roster%20Board")} />
@@ -127,6 +171,12 @@ export function AccountScreen() {
 
       <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
       <SharingSheet visible={shareOpen} onClose={() => setShareOpen(false)} />
+      <Onboarding visible={helpOpen} onClose={() => setHelpOpen(false)} />
+      <Sheet visible={pwOpen} onClose={() => setPwOpen(false)} title="Change password" footer={<Button title="Update password" onPress={changePassword} />}>
+        <Field label="New password" value={pw1} onChangeText={setPw1} secureTextEntry textContentType="newPassword" autoComplete="new-password" />
+        <Field label="Confirm new password" value={pw2} onChangeText={setPw2} secureTextEntry textContentType="newPassword" autoComplete="new-password" />
+        {pwErr ? <Text style={{ color: t.danger }}>{pwErr}</Text> : null}
+      </Sheet>
       <Sheet visible={historyOpen} onClose={() => setHistoryOpen(false)} title="Earlier backups">
         <Dim style={{ marginBottom: 10 }}>Bringing a backup back adds its entries to your calendar. Nothing you have now is removed.</Dim>
         {history === null ? <Dim>Loading backups…</Dim> : !history.length ? <Dim>No earlier backups yet. They build up from now on.</Dim> : history.map((h, i) => {
