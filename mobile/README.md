@@ -14,11 +14,16 @@ iPhone and Android with the same login.
 - Calendar month view with shifts, overtime, leave, personal events and birthdays
 - Day editing: add/remove shifts, overtime, excess hours, leave and events
 - Shift types: create, edit, delete (work or personal, phone time pickers)
-- Account: sync status, light/dark, hide events/birthdays, privacy, support,
-  sign out, delete account
+- Roster pattern: rotation of up to 52 weeks, one-time fill onto the calendar
+  (`npm test` checks it against the web app's own fill)
+- Reports: month/year totals, by shift type, weekdays vs weekends, comparison,
+  year in review
+- Account: sync status, sharing (invite, accept, view a shared roster), birthdays,
+  light/dark, hide events/birthdays, earlier backups, privacy, support, sign out,
+  delete account
 
-Still to bring across from the web app: Roster pattern, Reports and pay, swaps,
-pay tags, birthday editing, sharing, event reminders, Premium purchases.
+Still to bring across from the web app: pay estimate, shift swaps, pay tags,
+shift notes, event reminders, PDF export, Premium purchases.
 
 ## Building (no Mac needed)
 
@@ -33,4 +38,3 @@ pay tags, birthday editing, sharing, event reminders, Premium purchases.
 
     npm install
     npx expo start
-
