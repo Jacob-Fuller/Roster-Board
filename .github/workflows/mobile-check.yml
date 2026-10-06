@@ -34,6 +34,13 @@ jobs:
           npx expo install --fix >> screens/versions.txt 2>&1
           git diff -- package.json >> screens/versions.txt || true
           cp package.json screens/package.json
+      - name: Record library interfaces
+        run: |
+          mkdir -p screens/lib-types
+          cp -r node_modules/expo-iap/build/*.d.ts screens/lib-types/ 2>/dev/null || true
+          cp node_modules/expo-iap/package.json screens/lib-types/expo-iap-package.json 2>/dev/null || true
+          (cat node_modules/expo-iap/README.md 2>/dev/null | head -400) > screens/lib-types/README.md || true
+          ls node_modules/@expo-google-fonts/fraunces/ > screens/lib-types/fraunces-files.txt 2>/dev/null || true
       - name: Sync rules match the web app
         run: npm test 2>&1 | tee screens/test.txt
       - name: Type-check
