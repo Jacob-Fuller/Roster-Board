@@ -67,8 +67,8 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                 items.push(<Pill key={n.id} strip={cat.label} stripBg={cat.color} stripFg={cat.ink} label={n.text} bg={cat.color + "38"} fg={t.text} />);
               });
               if (data.birthdays) birthdaysOnDate(data.birthdays, c.date).forEach((b) =>
-                items.push(<Pill key={"b" + b.id} strip="🎂 Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
-                  label={(b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} />));
+                items.push(<Pill key={"b" + b.id} strip="Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
+                  label={"🎂 " + (b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} />));
               const max = rows > 5 ? 2 : 3;
               const ph = ((data.payTags && data.payTags[key]) || []).some((x) => x.kind === "holiday");
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
@@ -104,7 +104,7 @@ const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
 // Every banner is the same height; text is centred. Long names shrink to fit
 // the day cell instead of being cut off.
 const BANNER_H = 28, STRIP_H = 10;
-const fitSize = (label: string, base: number) => (label.length > 8 ? Math.max(7.5, (base * 8) / label.length) : base);
+const fitSize = (label: string, base: number, min = 7.5) => (label.length > 8 ? Math.max(min, (base * 8) / label.length) : base);
 
 function Pill({ label, bg, fg, strip, stripBg, stripFg }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string }) {
   return (
@@ -112,7 +112,7 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg }: { label: string; bg: s
       {strip ? (
         <View style={{ height: STRIP_H, backgroundColor: stripBg, justifyContent: "center" }}>
           <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}
-            style={{ color: stripFg, fontSize: fitSize(strip, 7.5), lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
+            style={{ color: stripFg, fontSize: fitSize(strip, 7.5, 5.5), lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
         </View>
       ) : null}
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3 }}>
