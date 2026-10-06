@@ -37,7 +37,10 @@ jobs:
           npx expo install --fix
           gem install fastlane -N
       - name: Create the iOS project
-        run: npx expo prebuild --platform ios --clean
+        run: |
+          npx expo prebuild --platform ios --clean
+          # Reminders are local notifications only; no push entitlement is needed
+          for f in ios/*/*.entitlements; do /usr/libexec/PlistBuddy -c "Delete :aps-environment" "$f" 2>/dev/null || true; done
       - name: Build and upload
         run: fastlane beta
         env:

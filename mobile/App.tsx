@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { UiProvider, useTheme } from "./src/components/ui";
+import { syncReminders } from "./src/lib/reminders";
 import { StoreProvider, useStore } from "./src/lib/store";
 import { AccountScreen } from "./src/screens/AccountScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
@@ -31,7 +32,8 @@ const SCREENS: { [k in Tab]: () => React.JSX.Element } = {
 function Shell() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const { auth } = useStore();
+  const { auth, data } = useStore();
+  useEffect(() => { if (auth !== "loading") syncReminders(data.notes); }, [auth, data.notes]);
   const [tab, setTab] = useState<Tab>("calendar");
 
   useEffect(() => {

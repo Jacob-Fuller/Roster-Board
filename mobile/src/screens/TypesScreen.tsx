@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
 import { Button, Card, Dim, Divider, Field, H1, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
-import { PALETTE, calcDuration, fmtHours, mkId, typeLabel, type ShiftType } from "../lib/model";
+import { PALETTE, addDays, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
 
 type Draft = {
   name: string; color: string; ink: string; kind: "work" | "personal";
   start: string; end: string; overtimeEligible: boolean; excessEligible: boolean;
   allDay: boolean; timed: boolean; time: string;
+  notes: string; useRange: boolean; rangeStart: string; rangeEnd: string;
 };
 const blank = (): Draft => ({
   name: "", color: PALETTE[0].hex, ink: PALETTE[0].ink, kind: "work", start: "07:00", end: "19:00",
   overtimeEligible: true, excessEligible: true, allDay: true, timed: false, time: "09:00",
+  notes: "", useRange: false, rangeStart: ymd(new Date()), rangeEnd: ymd(new Date()),
 });
 
 export function TypesScreen() {
@@ -33,6 +36,7 @@ export function TypesScreen() {
       start: ty.startTime || "07:00", end: ty.endTime || "19:00",
       overtimeEligible: ty.overtimeEligible !== false, excessEligible: ty.excessEligible !== false,
       allDay: !!ty.allDay, timed: !ty.allDay && !!ty.time, time: ty.time || "09:00",
+      notes: ty.notes || "", useRange: false, rangeStart: ymd(new Date()), rangeEnd: ymd(new Date()),
     });
     setEditing(ty.id);
   }
@@ -50,17 +54,31 @@ export function TypesScreen() {
       excessEligible: personal ? false : draft.excessEligible,
       time: personal && draft.timed ? draft.time : null,
       allDay: personal ? !draft.timed : false,
+      notes: personal ? draft.notes.trim() || null : null,
     };
     const id = editing;
+    // Personal entries can be put on every day of a date range in one go (same as the web).
+    const range = personal && draft.useRange && draft.rangeEnd >= draft.rangeStart ? [draft.rangeStart, draft.rangeEnd] : null;
+    let added = 0;
     update((d) => {
+      let typeId = id as string;
       if (id && id !== "new") {
         const i = d.types.findIndex((x) => x.id === id);
         if (i >= 0) d.types[i] = { ...d.types[i], ...fields, updatedAt: Date.now() };
       } else {
-        d.types.push({ id: mkId(), ...fields, notes: null, order: d.types.length } as ShiftType);
+        typeId = mkId();
+        d.types.push({ id: typeId, ...fields, order: d.types.length } as ShiftType);
+      }
+      if (range) {
+        for (let day = parseYmd(range[0]); day <= parseYmd(range[1]); day = addDays(day, 1)) {
+          const e: any = { id: mkId(), typeId };
+          if (fields.notes) e.tag = fields.notes;
+          (d.shifts[ymd(day)] = d.shifts[ymd(day)] || []).push(e);
+          added++;
+        }
       }
     });
-    toast(id === "new" ? "Type created" : "Type updated");
+    toast(range ? added + " day" + (added === 1 ? "" : "s") + " added to your calendar" : id === "new" ? "Type created" : "Type updated");
     setEditing(null);
   }
 
@@ -157,6 +175,14 @@ export function TypesScreen() {
             <Dim style={{ marginBottom: 8 }}>Personal entries show on your calendar without counting toward your hours or reports.</Dim>
             <ToggleRow label="Set a time" value={draft.timed} onChange={(v) => set({ timed: v })} />
             {draft.timed ? <TimeField label="Time" value={draft.time} onChange={(v) => set({ time: v })} /> : null}
+            <Field label="Notes (optional)" value={draft.notes} onChangeText={(v) => set({ notes: v })} multiline style={{ minHeight: 64, textAlignVertical: "top" }} />
+            <ToggleRow label="Add to a range of dates" value={draft.useRange} onChange={(v) => set({ useRange: v })} />
+            {draft.useRange ? (
+              <>
+                <DateField label="Start date" value={draft.rangeStart} onChange={(v) => set({ rangeStart: v })} />
+                <DateField label="End date" value={draft.rangeEnd} onChange={(v) => set({ rangeEnd: v })} />
+              </>
+            ) : null}
           </>
         )}
       </Sheet>

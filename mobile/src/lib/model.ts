@@ -168,3 +168,13 @@ export function entryName(e: ShiftEntry, typesById: { [id: string]: ShiftType })
 export const isCombo = (typeId: string) => typeId === OVERTIME_ID || typeId === EXCESS_ID;
 export const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 export const mondayIndex = (jsDay: number) => (jsDay + 6) % 7;
+export const isSplitEntry = (e: Rec) => e.typeId === OVERTIME_ID && e.excessHours > 0;
+// Overtime/excess entries take their base shift's colour.
+export function entryColor(e: Rec, typesById: { [id: string]: ShiftType }) {
+  if (isCombo(e.typeId) && e.baseTypeId) {
+    const bt = typesById[e.baseTypeId];
+    if (bt) return { bg: bt.color, ink: bt.ink };
+  }
+  const t = typesById[e.typeId];
+  return t ? { bg: t.color, ink: t.ink } : { bg: "#9C9585", ink: "#FFFFFF" };
+}
