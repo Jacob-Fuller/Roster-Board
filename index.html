@@ -1317,6 +1317,14 @@
             <button data-theme-choice="light">Light</button>
             <button data-theme-choice="dark">Dark</button>
           </div>
+          <label class="remind-row" style="margin-top:12px;">
+            <input type="checkbox" id="hideEventsToggle">
+            <span>Hide personal events on the calendar</span>
+          </label>
+          <label class="remind-row">
+            <input type="checkbox" id="hideBirthdaysToggle">
+            <span>Hide birthdays on the calendar</span>
+          </label>
         </div>
 
         <div id="shareRosterSignedOut" style="display:none;">
@@ -3029,6 +3037,20 @@
     });
   });
 
+  // Hide personal events / birthdays from the month calendar. Per device, like the
+  // theme; the entries themselves are untouched and still show when a day is opened.
+  function calHidden(what){
+    try { return localStorage.getItem("rosterBoard.hide." + what) === "1"; } catch(e){ return false; }
+  }
+  [["hideEventsToggle", "events"], ["hideBirthdaysToggle", "birthdays"]].forEach(function(pair){
+    var box = document.getElementById(pair[0]);
+    box.checked = calHidden(pair[1]);
+    box.addEventListener("change", function(){
+      try { localStorage.setItem("rosterBoard.hide." + pair[1], box.checked ? "1" : "0"); } catch(e){}
+      renderCalendar();
+    });
+  });
+
   /* ---------------- about / help ---------------- */
   document.getElementById("helpBtn").addEventListener("click", function(){
     showOnboarding();
@@ -3337,7 +3359,9 @@
   /* ---------------- render: calendar ---------------- */
   function renderCalendar(){
     renderCalendarGrid("calGrid", state.calMonth, {
-      shifts: state.shifts, leave: state.leave, swaps: state.swaps, notes: state.notes, typesById: state.typesById, birthdays: state.birthdays, payTags: state.payTags
+      shifts: state.shifts, leave: state.leave, swaps: state.swaps, typesById: state.typesById, payTags: state.payTags,
+      notes: calHidden("events") ? {} : state.notes,
+      birthdays: calHidden("birthdays") ? [] : state.birthdays
     }, { onDayClick: handleCalendarDayClick, bulkSelectedDates: state.bulkMode ? state.bulkSelectedDates : null, payShade: true });
     renderHeader();
   }
