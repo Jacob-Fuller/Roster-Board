@@ -11,8 +11,20 @@ if (Platform.OS !== "web") {
   });
 }
 
+// Android groups notifications into channels that people can control in Settings.
+const CHANNEL = "reminders";
+let channelReady: Promise<unknown> | null = null;
+function ensureChannel() {
+  if (Platform.OS !== "android") return Promise.resolve();
+  if (!channelReady) channelReady = Notifications.setNotificationChannelAsync(CHANNEL, {
+    name: "Event reminders", importance: Notifications.AndroidImportance.HIGH,
+  }).catch(() => {});
+  return channelReady;
+}
+
 export async function askReminderPermission(): Promise<boolean> {
   if (Platform.OS === "web") return false;
+  await ensureChannel();
   const cur = await Notifications.getPermissionsAsync();
   if (cur.granted) return true;
   const r = await Notifications.requestPermissionsAsync();
@@ -27,6 +39,7 @@ export function syncReminders(notes: Buckets<EventEntry>) {
     try {
       const perm = await Notifications.getPermissionsAsync();
       if (!perm.granted) return;
+      await ensureChannel();
       const now = Date.now();
       const upcoming: { at: Date; n: EventEntry }[] = [];
       Object.keys(notes || {}).forEach((k) => (notes[k] || []).forEach((n) => {
@@ -41,7 +54,7 @@ export function syncReminders(notes: Buckets<EventEntry>) {
         await Notifications.scheduleNotificationAsync({
           identifier: u.n.id,
           content: { title: u.n.text, body: u.n.time },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: u.at },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: u.at, channelId: CHANNEL },
         });
       }
     } catch {}

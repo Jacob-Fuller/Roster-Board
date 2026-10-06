@@ -29,7 +29,7 @@ export function Onboarding({ visible, onClose }: { visible: boolean; onClose: ()
   const close = () => { AsyncStorage.setItem(ONBOARDING_KEY, "1").catch(() => {}); setIdx(0); onClose(); };
 
   return (
-    <Modal visible={visible} animationType="fade" onRequestClose={close}>
+    <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="fade" onRequestClose={close}>
       <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top + 12, paddingBottom: insets.bottom + 16 }}>
         <View style={{ alignItems: "flex-end", paddingHorizontal: 20 }}>
           <Pressable accessibilityRole="button" onPress={close} hitSlop={10}><Text style={{ color: t.textDim, fontWeight: "700", fontSize: 15 }}>Skip</Text></Pressable>

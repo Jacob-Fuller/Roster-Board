@@ -163,16 +163,16 @@ export function Sheet({ visible, onClose, title, children, footer }: {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} transparent={Platform.OS === "web"}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: t.bg }}>
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: 16, paddingBottom: 10, gap: 10 }}>
+    <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} transparent={Platform.OS === "web"}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: t.bg }}>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: Platform.OS === "android" ? insets.top + 12 : 16, paddingBottom: 10, gap: 10 }}>
           <H2 style={{ flex: 1, fontSize: 20 }}>{title}</H2>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}
             style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center" }}>
             <Text style={{ color: t.textDim, fontSize: 15, fontWeight: "700" }}>✕</Text>
           </Pressable>
         </View>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: footer ? 24 : 24 + (Platform.OS === "android" ? insets.bottom : 0) }} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
         {footer ? <View style={{ paddingHorizontal: 18, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 14), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border }}>{footer}</View> : null}
@@ -212,8 +212,8 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   return (
     <UiContext.Provider value={{ dialog, toast }}>
       {children}
-      <Modal visible={!!opts} transparent animationType="fade" onRequestClose={close}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 28 }}>
+      <Modal statusBarTranslucent navigationBarTranslucent visible={!!opts} transparent animationType="fade" onRequestClose={close}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 28 }}>
           {opts ? (
             <View style={{ backgroundColor: t.surface, borderRadius: 18, padding: 18 }}>
               <H2 style={{ marginBottom: opts.message ? 6 : 12 }}>{opts.title}</H2>

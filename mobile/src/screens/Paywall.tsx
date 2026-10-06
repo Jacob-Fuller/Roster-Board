@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
-import { Linking, Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card, Dim, H1, LinkText, useTheme, useUi } from "../components/ui";
 import { usePremium } from "../lib/premium";
@@ -21,9 +21,9 @@ export function Paywall() {
   const { toast } = useUi();
   const { paywall, closePaywall, prices, buy, restore, busy, error } = usePremium();
   return (
-    <Modal visible={paywall !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={closePaywall}>
+    <Modal statusBarTranslucent navigationBarTranslucent visible={paywall !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={closePaywall}>
       <View style={{ flex: 1, backgroundColor: t.bg }}>
-        <ScrollView contentContainerStyle={{ padding: 22, paddingBottom: insets.bottom + 24 }}>
+        <ScrollView contentContainerStyle={{ padding: 22, paddingTop: Platform.OS === "android" ? insets.top + 16 : 22, paddingBottom: insets.bottom + 24 }}>
           <View style={{ alignItems: "flex-end" }}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={closePaywall} hitSlop={10}
               style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center" }}>

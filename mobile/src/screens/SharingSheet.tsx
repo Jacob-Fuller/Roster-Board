@@ -141,7 +141,7 @@ function SharedRosterView({ shared, onClose }: { shared: Shared | null; onClose:
   const [month, setMonth] = useState(startOfMonth(new Date()));
   const data = useMemo(() => (shared ? shared.data : { shifts: {}, leave: {} }), [shared]);
   return (
-    <Modal visible={!!shared} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <Modal statusBarTranslucent navigationBarTranslucent visible={!!shared} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top, paddingBottom: insets.bottom }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 }}>
           <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={{ marginBottom: 8 }}>
