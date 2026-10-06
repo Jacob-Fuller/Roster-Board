@@ -142,7 +142,7 @@ function Bar({ name, color, value, max, text }: { name: string; color: string; v
         <Text style={{ color: t.textDim, fontSize: 13, fontVariant: ["tabular-nums"] }}>{text}</Text>
       </View>
       <View style={{ height: 8, borderRadius: 4, backgroundColor: t.surface2, overflow: "hidden" }}>
-        <View style={{ width: (value > 0 ? Math.max(4, (value / max) * 100) : 0) + "%", height: "100%", backgroundColor: color, borderRadius: 4 }} />
+        <View style={{ width: `${value > 0 ? Math.max(4, (value / max) * 100) : 0}%`, height: "100%", backgroundColor: color, borderRadius: 4 }} />
       </View>
     </View>
   );

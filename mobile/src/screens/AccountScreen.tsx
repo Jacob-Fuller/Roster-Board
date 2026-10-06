@@ -5,6 +5,7 @@ import { Button, Card, Dim, Divider, H1, MenuRow, SectionHead, Segmented, Sheet,
 import { MONTHS } from "../lib/model";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
+import { BirthdaysSheet } from "./BirthdaysSheet";
 
 function ago(ms: number) {
   if (!ms) return "never";
@@ -23,6 +24,9 @@ export function AccountScreen() {
   const { dialog, toast } = useUi();
   const [history, setHistory] = useState<any[] | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [bdaysOpen, setBdaysOpen] = useState(false);
+  const { data } = useStore();
+  const nB = data.birthdays.length;
 
   const themeValue = prefs.theme === "system" ? (sys === "dark" ? "dark" : "light") : prefs.theme;
   const statusText =
@@ -80,6 +84,11 @@ export function AccountScreen() {
           </Card>
         )}
 
+        <SectionHead title="Birthdays" />
+        <Card style={{ paddingVertical: 2 }}>
+          <MenuRow title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
+        </Card>
+
         <SectionHead title="Appearance" />
         <Card>
           <Segmented options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} value={themeValue} onChange={(v) => setPrefs({ theme: v })} />
@@ -105,6 +114,7 @@ export function AccountScreen() {
         </Card>
       </ScrollView>
 
+      <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
       <Sheet visible={historyOpen} onClose={() => setHistoryOpen(false)} title="Earlier backups">
         <Dim style={{ marginBottom: 10 }}>Bringing a backup back adds its entries to your calendar. Nothing you have now is removed.</Dim>
         {history === null ? <Dim>Loading backups…</Dim> : !history.length ? <Dim>No earlier backups yet. They build up from now on.</Dim> : history.map((h, i) => {
