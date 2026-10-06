@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
@@ -8,16 +9,24 @@ import { StoreProvider, useStore } from "./src/lib/store";
 import { AccountScreen } from "./src/screens/AccountScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { CalendarScreen } from "./src/screens/CalendarScreen";
+import { ReportsScreen } from "./src/screens/ReportsScreen";
+import { RosterScreen } from "./src/screens/RosterScreen";
 import { TypesScreen } from "./src/screens/TypesScreen";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-type Tab = "calendar" | "types" | "account";
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "calendar", label: "Calendar", icon: "▦" },
-  { id: "types", label: "Types", icon: "◑" },
-  { id: "account", label: "Account", icon: "◉" },
+type Tab = "calendar" | "roster" | "reports" | "types" | "account";
+type Icon = React.ComponentProps<typeof Ionicons>["name"];
+const TABS: { id: Tab; label: string; icon: Icon; iconOn: Icon }[] = [
+  { id: "calendar", label: "Calendar", icon: "calendar-outline", iconOn: "calendar" },
+  { id: "roster", label: "Roster", icon: "repeat-outline", iconOn: "repeat" },
+  { id: "reports", label: "Reports", icon: "stats-chart-outline", iconOn: "stats-chart" },
+  { id: "types", label: "Types", icon: "color-palette-outline", iconOn: "color-palette" },
+  { id: "account", label: "Account", icon: "person-circle-outline", iconOn: "person-circle" },
 ];
+const SCREENS: { [k in Tab]: () => React.JSX.Element } = {
+  calendar: CalendarScreen, roster: RosterScreen, reports: ReportsScreen, types: TypesScreen, account: AccountScreen,
+};
 
 function Shell() {
   const t = useTheme();
@@ -36,7 +45,7 @@ function Shell() {
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <StatusBar style={t.dark ? "light" : "dark"} />
       <View style={{ flex: 1 }}>
-        {tab === "calendar" ? <CalendarScreen /> : tab === "types" ? <TypesScreen /> : <AccountScreen />}
+        {React.createElement(SCREENS[tab])}
       </View>
       <View accessibilityRole="tablist" style={{
         flexDirection: "row", borderTopWidth: 0.5, borderTopColor: t.border, backgroundColor: t.surface,
@@ -47,7 +56,7 @@ function Shell() {
           return (
             <Pressable key={x.id} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => setTab(x.id)}
               style={{ flex: 1, alignItems: "center", gap: 2 }}>
-              <Text style={{ fontSize: 20, color: on ? t.accent : t.textFaint }}>{x.icon}</Text>
+              <Ionicons name={on ? x.iconOn : x.icon} size={23} color={on ? t.accent : t.textFaint} />
               <Text style={{ fontSize: 11, fontWeight: "700", color: on ? t.accent : t.textFaint }}>{x.label}</Text>
             </Pressable>
           );

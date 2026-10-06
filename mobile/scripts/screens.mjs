@@ -24,7 +24,7 @@ const data = {
   leave: { [day(28)]: [{ id: "l1", kind: "annual", hours: 12 }] },
   swaps: {}, payTags: {},
   birthdays: [{ id: "b1", name: "Kathryn Smith", day: now.getDate(), month: now.getMonth() + 1 }],
-  roster: { weeks: 1, pattern: [[[], [], [], [], [], [], []]], updatedAt: 0 }, settings: { hourlyRate: 0 }, tombstones: {},
+  roster: { weeks: 2, pattern: [[["t-day"], ["t-day"], [], [], ["t-night"], ["t-night"], []], [[], [], ["t-day"], ["t-day"], [], [], ["t-night"]]], updatedAt: 1 }, settings: { hourlyRate: 0 }, tombstones: {},
 };
 
 const errors = [];
@@ -66,6 +66,17 @@ try {
   await shot(p, "05-new-type");
   await p.getByLabel("Close").first().click();
   await p.waitForTimeout(500);
+  await p.getByRole("tab", { name: /Roster/ }).click();
+  await p.waitForTimeout(500);
+  await shot(p, "09-roster");
+  await p.getByRole("tab", { name: /Reports/ }).click();
+  await p.waitForTimeout(500);
+  await shot(p, "10-reports");
+  await p.getByText("Year", { exact: true }).click();
+  await p.waitForTimeout(400);
+  await p.mouse.wheel(0, 2000);
+  await p.waitForTimeout(400);
+  await shot(p, "11-reports-year");
   await p.getByRole("tab", { name: /Account/ }).click();
   await p.waitForTimeout(500);
   await shot(p, "06-account");

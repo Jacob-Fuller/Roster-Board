@@ -4,7 +4,7 @@ import { TimeField } from "../components/TimeField";
 import { Button, Chip, Dim, Divider, Field, SectionHead, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
 import {
-  EVENT_CATS, EVENT_CAT_ORDER, EXCESS_TYPE, LEAVE_KINDS, MONTHS, OVERTIME_TYPE, WEEKDAYS_FULL, birthdaysOnDate, fmtHours, mkId,
+  EVENT_CATS, EVENT_CAT_ORDER, EXCESS_TYPE, LEAVE_KINDS, MONTHS, OVERTIME_TYPE, WEEKDAYS_FULL, birthdaysOnDate, effectiveHours, entryName, fmtHours, mkId,
   parseYmd, typeLabel,
 } from "../lib/model";
 import { useTypesById } from "./CalendarScreen";
@@ -78,9 +78,9 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       <SectionHead title="Shifts" />
       {shifts.length ? shifts.map((s) => {
         const ty = typesById[s.typeId];
-        const hours = s.hours != null ? s.hours : ty ? ty.hours || 0 : 0;
+        const hours = effectiveHours(s, typesById);
         return (
-          <Row key={s.id} color={ty ? ty.color : t.textFaint} title={ty ? ty.name : "Deleted type"}
+          <Row key={s.id} color={ty ? ty.color : t.textFaint} title={entryName(s, typesById)}
             sub={[ty && ty.kind !== "personal" ? fmtHours(hours) + "h" : ty ? typeLabel(ty) : "", s.tag].filter(Boolean).join(" · ")}
             onRemove={() => removeFrom("shifts", s.id)} />
         );

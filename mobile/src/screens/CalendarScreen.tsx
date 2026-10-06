@@ -5,7 +5,7 @@ import { H1, useTheme } from "../components/ui";
 import { useStore } from "../lib/store";
 import {
   EVENT_CATS, EXCESS_TYPE, LEAVE_KINDS, MONTHS, OVERTIME_TYPE, WEEKDAYS_SHORT, addMonths, birthdaysOnDate, buildMonthCells,
-  fmtHours, isSameDay, startOfMonth, ymd, type ShiftType,
+  effectiveHours, fmtHours, isSameDay, startOfMonth, ymd, type ShiftType,
 } from "../lib/model";
 import { DaySheet } from "./DaySheet";
 
@@ -37,7 +37,7 @@ export function CalendarScreen() {
       (data.shifts[ymd(c.date)] || []).forEach((s) => {
         const ty = typesById[s.typeId];
         if (!ty || ty.kind === "personal") return;
-        hours += s.hours != null ? s.hours : ty.hours || 0;
+        hours += effectiveHours(s, typesById);
         if (!ty.isBuiltin) shifts++;
       });
     });
@@ -81,7 +81,7 @@ export function CalendarScreen() {
               dayShifts.forEach((s) => {
                 const ty = typesById[s.typeId];
                 if (!ty) return;
-                const label = ty.isBuiltin ? (ty.id === "overtime" ? "OT" : "XS") + (s.hours != null ? " " + fmtHours(s.hours) : "") : ty.name;
+                const label = ty.isBuiltin ? (ty.id === "overtime" ? (s.excessHours > 0 ? "XS+OT" : "OT") : "XS") + " " + fmtHours(effectiveHours(s, typesById)) : ty.name;
                 items.push(<Pill key={s.id} label={label} bg={ty.color} fg={ty.ink} />);
               });
               leave.forEach((l) => {

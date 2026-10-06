@@ -141,3 +141,30 @@ export function typeLabel(t: ShiftType) {
   if (t.startTime && t.endTime) return t.startTime + "–" + t.endTime + " · " + fmtHours(t.hours || 0) + "h";
   return fmtHours(t.hours || 0) + "h";
 }
+
+/* ---------- hours (same rules as the web app) ---------- */
+// Overtime entries can also carry excess hours ("Excess + Overtime" split).
+export const entryOTHours = (e: ShiftEntry) => (e.typeId === OVERTIME_ID ? e.hours || 0 : 0);
+export function entryExcessHours(e: ShiftEntry) {
+  if (e.typeId === EXCESS_ID) return e.hours || 0;
+  if (e.typeId === OVERTIME_ID) return e.excessHours || 0;
+  return 0;
+}
+export function effectiveHours(e: ShiftEntry, typesById: { [id: string]: ShiftType }) {
+  if (e.typeId === OVERTIME_ID && e.excessHours > 0) return (e.hours || 0) + e.excessHours;
+  if (e.hours != null) return e.hours;
+  const t = typesById[e.typeId];
+  return t ? t.hours || 0 : 0;
+}
+export function entryName(e: ShiftEntry, typesById: { [id: string]: ShiftType }) {
+  const t = typesById[e.typeId];
+  if (!t) return "Deleted type";
+  if (!t.isBuiltin) return t.name;
+  const split = e.typeId === OVERTIME_ID && e.excessHours > 0;
+  const name = split ? "Excess + Overtime" : t.name;
+  const base = e.baseTypeId && typesById[e.baseTypeId];
+  return base ? name + " – " + base.name : name;
+}
+export const isCombo = (typeId: string) => typeId === OVERTIME_ID || typeId === EXCESS_ID;
+export const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+export const mondayIndex = (jsDay: number) => (jsDay + 6) % 7;
