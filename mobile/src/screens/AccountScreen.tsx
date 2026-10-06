@@ -133,7 +133,7 @@ export function AccountScreen() {
           <>
             <SectionHead title="Premium" />
             <Card style={{ paddingVertical: 2 }}>
-              <MenuRow title="Roster Board Premium" right={!premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : "Yearly"}
+              <MenuRow title="Roster Board Premium" right={!premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Yearly"}
                 onPress={() => (premium.status.active ? undefined : premium.openPaywall())} />
               {!premium.status.active ? (<><Divider /><MenuRow title="Upgrade to Premium" onPress={() => premium.openPaywall()} /></>) : null}
               {premium.status.kind === "yearly" ? (<><Divider /><MenuRow title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
