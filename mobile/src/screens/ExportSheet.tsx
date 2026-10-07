@@ -47,7 +47,7 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
   const pageH = (previewW * PDF_PAGE.height) / PDF_PAGE.width;
   const previewH = mode === "month" ? pageH + 4 : Math.min(screenH * 0.55, pageH * 12);
   const previewHtml = useMemo(() => (visible ? buildRosterHtml(data, months).replace("</style>",
-    "body{background:#E4E2DD}.page{margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.25)}</style>") : ""), [visible, data, months]);
+    "body{background:#E4E2DD}.page{background:#fff;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.25)}</style>") : ""), [visible, data, months]);
 
   const label = mode === "month" ? MONTHS[month.getMonth()] + " " + month.getFullYear() : String(year);
   const step = (n: number) => { if (mode === "month") setMonth(addMonths(month, n)); else setYear(year + n); };
