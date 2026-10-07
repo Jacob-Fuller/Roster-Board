@@ -172,8 +172,8 @@ export function TypesScreen() {
             <TimeField label="Starts" value={draft.start} onChange={(v) => set({ start: v })} />
             <TimeField label="Ends" value={draft.end} onChange={(v) => set({ end: v })} />
             <Dim style={{ marginBottom: 8 }}>{fmtHours(hours)} hours</Dim>
-            <ToggleRow label="Can have overtime" value={draft.overtimeEligible} onChange={(v) => set({ overtimeEligible: v })} />
-            {!fullTime ? <ToggleRow label="Can have excess hours" value={draft.excessEligible} onChange={(v) => set({ excessEligible: v })} /> : null}
+            <ToggleRow label="Overtime" value={draft.overtimeEligible} onChange={(v) => set({ overtimeEligible: v })} />
+            {!fullTime ? <ToggleRow label="Excess" value={draft.excessEligible} onChange={(v) => set({ excessEligible: v })} /> : null}
           </>
         ) : (
           <>
