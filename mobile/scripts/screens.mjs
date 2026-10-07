@@ -86,6 +86,9 @@ try {
   await p.mouse.wheel(0, 2000);
   await p.waitForTimeout(400);
   await shot(p, "11-reports-year");
+  await p.getByText("PDF roster", { exact: true }).click(); await p.waitForTimeout(1200);
+  await shot(p, "12-pdf-preview");
+  await p.getByLabel("Close").first().click(); await p.waitForTimeout(500);
   await p.getByRole("tab", { name: /Account/ }).click();
   await p.waitForTimeout(500);
   await shot(p, "06-account");

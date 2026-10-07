@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import React, { useEffect, useMemo, useState } from "react";
+import { Platform, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { WebView } from "react-native-webview";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import { Button, Dim, Segmented, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { MONTHS, addMonths, startOfMonth } from "../lib/model";
 import { PDF_PAGE, buildRosterHtml, nothingToExport, rosterFileName } from "../lib/pdf";
 import { useStore } from "../lib/store";
@@ -36,15 +37,24 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
+  const months = useMemo(() => {
+    if (mode === "month") return [month];
+    return Array.from({ length: 12 }, (_, mi) => new Date(year, mi, 1));
+  }, [mode, month, year]);
+  // Live preview of exactly what will be exported.
+  const { width: screenW, height: screenH } = useWindowDimensions();
+  const previewW = screenW - 36;
+  const pageH = (previewW * PDF_PAGE.height) / PDF_PAGE.width;
+  const previewH = mode === "month" ? pageH + 4 : Math.min(screenH * 0.55, pageH * 12);
+  const previewHtml = useMemo(() => (visible ? buildRosterHtml(data, months).replace("</style>",
+    "body{background:#E4E2DD}.page{margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.25)}</style>") : ""), [visible, data, months]);
+
   const label = mode === "month" ? MONTHS[month.getMonth()] + " " + month.getFullYear() : String(year);
   const step = (n: number) => { if (mode === "month") setMonth(addMonths(month, n)); else setYear(year + n); };
 
   const exportPdf = async () => {
     if (busy) return;
     if (nothingToExport(data)) { toast("Nothing to export yet"); return; }
-    const months: Date[] = [];
-    if (mode === "year") for (let mi = 0; mi < 12; mi++) months.push(new Date(year, mi, 1));
-    else months.push(month);
     const html = buildRosterHtml(data, months);
     setBusy(true);
     try {
@@ -53,7 +63,11 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
       } else {
         const { uri } = await Print.printToFileAsync({ html, width: PDF_PAGE.width, height: PDF_PAGE.height });
         if (!(await Sharing.isAvailableAsync())) { toast("Sharing isn't available on this device"); return; }
+        // iOS can't show the share sheet on top of this panel, so close it first.
+        onClose();
+        await new Promise((r) => setTimeout(r, 600));
         await Sharing.shareAsync(uri, { mimeType: "application/pdf", UTI: "com.adobe.pdf", dialogTitle: rosterFileName(months) });
+        return;
       }
       onClose();
     } catch {
@@ -72,11 +86,12 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
         <Text style={{ color: t.text, fontSize: 17, fontWeight: "700" }}>{label}</Text>
         <Nav label="›" a11y="Next" onPress={() => step(1)} />
       </View>
-      <Dim>
-        {mode === "month"
-          ? "One A4 landscape page with this month's shifts and leave."
-          : "Twelve A4 landscape pages, one for each month of the year."}
-      </Dim>
+      <View style={{ height: previewH, borderRadius: 8, overflow: "hidden", backgroundColor: "#E4E2DD" }}>
+        {Platform.OS === "web"
+          ? React.createElement("iframe", { srcDoc: previewHtml, title: "PDF preview", style: { width: "100%", height: "100%", border: 0 } })
+          : <WebView originWhitelist={["*"]} source={{ html: previewHtml }} style={{ flex: 1, backgroundColor: "#E4E2DD" }}
+              scrollEnabled={mode === "year"} showsVerticalScrollIndicator={false} />}
+      </View>
     </Sheet>
   );
 }
