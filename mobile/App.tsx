@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { UiProvider, useTheme } from "./src/components/ui";
-import { syncReminders } from "./src/lib/reminders";
+import { askIfRemindersNeedIt, syncReminders } from "./src/lib/reminders";
 import { PremiumProvider } from "./src/lib/premium";
 import { StoreProvider, useStore } from "./src/lib/store";
 import { Paywall } from "./src/screens/Paywall";
@@ -40,6 +40,11 @@ function Shell() {
   const [fontsLoaded, fontError] = useFonts({ Fraunces_700Bold });
   const fontsReady = fontsLoaded || !!fontError;
   useEffect(() => { if (auth !== "loading") syncReminders(data.notes); }, [auth, data.notes]);
+  useEffect(() => {
+    if (auth === "loading") return;
+    askIfRemindersNeedIt(data.notes).then(() => syncReminders(data.notes));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]);
   const [tab, setTab] = useState<Tab>("calendar");
   const [onboarding, setOnboarding] = useState(false);
   const ready = auth === "signedIn" || auth === "localOnly";

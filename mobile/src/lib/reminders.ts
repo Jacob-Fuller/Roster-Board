@@ -27,8 +27,25 @@ export async function askReminderPermission(): Promise<boolean> {
   await ensureChannel();
   const cur = await Notifications.getPermissionsAsync();
   if (cur.granted) return true;
-  const r = await Notifications.requestPermissionsAsync();
+  if (!cur.canAskAgain) return false;
+  const r = await Notifications.requestPermissionsAsync({ ios: { allowAlert: true, allowSound: true, allowBadge: false } });
   return r.granted;
+}
+
+// Reminders can also be set on the website, so when there are upcoming ones
+// and the phone has never been asked, ask once so they can be delivered here.
+export async function askIfRemindersNeedIt(notes: Buckets<EventEntry>) {
+  if (Platform.OS === "web") return;
+  const now = Date.now();
+  const any = Object.keys(notes || {}).some((k) => (notes[k] || []).some((n) => {
+    if (!n.remind || !n.time || n.allDay) return false;
+    const [h, m] = n.time.split(":").map((x) => +x);
+    const d = parseYmd(k); d.setHours(h, m, 0, 0);
+    return d.getTime() > now;
+  }));
+  if (!any) return;
+  const cur = await Notifications.getPermissionsAsync().catch(() => null);
+  if (cur && !cur.granted && cur.canAskAgain) await askReminderPermission().catch(() => false);
 }
 
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -53,7 +70,8 @@ export function syncReminders(notes: Buckets<EventEntry>) {
       for (const u of upcoming.slice(0, 60)) {
         await Notifications.scheduleNotificationAsync({
           identifier: u.n.id,
-          content: { title: u.n.text, body: u.n.time },
+          // sound "default" so it actually rings; without it iOS delivers it silently
+          content: { title: u.n.text, body: u.n.time, sound: "default", interruptionLevel: "active" },
           trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: u.at, channelId: CHANNEL },
         });
       }
