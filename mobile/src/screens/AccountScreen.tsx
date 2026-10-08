@@ -20,7 +20,6 @@ export function AccountScreen() {
   const sys = useColorScheme();
   const { auth, user, showSignIn, data, update, prefs, setPrefs } = useStore();
   const { dialog, toast } = useUi();
-  const premium = usePremium();
   const [acctOpen, setAcctOpen] = useState(false);
   const [bdaysOpen, setBdaysOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
@@ -48,20 +47,6 @@ export function AccountScreen() {
         <Card style={{ paddingVertical: 2 }}>
           <MenuRow title="Account" sub={signedIn ? name || user!.email || "" : "Not signed in"} onPress={() => setAcctOpen(true)} />
         </Card>
-
-        {Platform.OS === "ios" ? (
-          <>
-            <SectionHead title="Premium" />
-            <Card style={{ paddingVertical: 2 }}>
-              <MenuRow title="Roster Board Premium" right={!premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Yearly"}
-                onPress={() => (premium.status.active ? undefined : premium.openPaywall())} />
-              {!premium.status.active ? (<><Divider /><MenuRow title="Unlock Premium" onPress={() => premium.openPaywall()} /></>) : null}
-              {premium.status.kind === "yearly" ? (<><Divider /><MenuRow title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
-              <Divider />
-              <MenuRow title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
-            </Card>
-          </>
-        ) : null}
 
         <SectionHead title="Birthdays" />
         <Card style={{ paddingVertical: 2 }}>
@@ -229,6 +214,8 @@ function AccountDetail({ visible, onClose }: { visible: boolean; onClose: () => 
             <Button small kind="outline" title="Update password" onPress={savePassword} />
           </Card>
 
+          <PremiumSection />
+
           <View style={{ gap: 10, marginTop: 24 }}>
             <Button small kind="outline" title="Sign out" onPress={confirmSignOut} />
             <Button small kind="outlineDanger" title="Format calendar" onPress={formatCalendar} />
@@ -240,9 +227,30 @@ function AccountDetail({ visible, onClose }: { visible: boolean; onClose: () => 
           <Card>
             <Button title="Sign in or create account" onPress={() => { onClose(); showSignIn(); }} />
           </Card>
+          <PremiumSection />
           <Button small kind="outlineDanger" style={{ marginTop: 16 }} title="Format calendar" onPress={formatCalendar} />
         </>
       )}
     </Sheet>
+  );
+}
+
+// Premium status, upgrade, manage and restore (Apple purchases, iPhone only).
+function PremiumSection() {
+  const premium = usePremium();
+  const { toast } = useUi();
+  if (Platform.OS !== "ios") return null;
+  return (
+    <>
+      <SectionHead title="Premium" />
+      <Card style={{ paddingVertical: 2 }}>
+        <MenuRow title="Roster Board Premium" right={!premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Yearly"}
+          onPress={() => (premium.status.active ? undefined : premium.openPaywall())} />
+        {!premium.status.active ? (<><Divider /><MenuRow title="Unlock Premium" onPress={() => premium.openPaywall()} /></>) : null}
+        {premium.status.kind === "yearly" ? (<><Divider /><MenuRow title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
+        <Divider />
+        <MenuRow title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
+      </Card>
+    </>
   );
 }
