@@ -111,7 +111,7 @@ const LONGEST_TITLE = "EXCESS + OVERTIME";
 function titleSize(gridW: number) {
   if (!gridW) return 5;
   const inner = (gridW - 12) / 7 - 3 - 6 - 4 - 2; // cell margin, padding, strip padding, border
-  return Math.max(4, Math.min(7.5, inner / (LONGEST_TITLE.length * 0.66)));
+  return Math.max(4, Math.min(7.5, inner / (LONGEST_TITLE.length * 0.74)));
 }
 
 function Pill({ label, bg, fg, strip, stripBg, stripFg, ts }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; ts: number }) {
@@ -119,7 +119,7 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts }: { label: string; b
     <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
         <View style={{ height: STRIP_H, backgroundColor: stripBg, justifyContent: "center" }}>
-          <Text numberOfLines={1} ellipsizeMode="clip"
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}
             style={{ color: stripFg, fontSize: ts, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
         </View>
       ) : null}
