@@ -1954,6 +1954,7 @@
     }
     document.getElementById("miniModalConfirm").textContent = opts.confirmLabel || "Save";
     document.getElementById("miniModalCancel").textContent = opts.cancelLabel || "Cancel";
+    document.getElementById("miniModalCancel").style.display = opts.hideCancel ? "none" : "";
     var overlay = document.getElementById("miniModalOverlay");
     overlay.classList.add("show");
     function cleanup(){
@@ -4629,9 +4630,15 @@
       meta.appendChild(hrs);
       row.appendChild(meta);
       var actions = document.createElement("div"); actions.className="actions";
-      var editBtn = document.createElement("button"); editBtn.className="ghost-btn"; editBtn.textContent="Edit";
-      editBtn.addEventListener("click", function(){ openBirthdaySheet(b.id); });
-      actions.appendChild(editBtn);
+      // birthdays synced from a phone's contacts mirror the contact, so they're changed there
+      if (b.source === "contacts") {
+        var from = document.createElement("span"); from.className="hrs"; from.textContent="Contacts";
+        actions.appendChild(from);
+      } else {
+        var editBtn = document.createElement("button"); editBtn.className="ghost-btn"; editBtn.textContent="Edit";
+        editBtn.addEventListener("click", function(){ openBirthdaySheet(b.id); });
+        actions.appendChild(editBtn);
+      }
       row.appendChild(actions);
       list.appendChild(row);
     });
@@ -4646,8 +4653,8 @@
     openMiniModal({
       title: "🎂 " + b.name,
       message: lines.join("\n"),
-      showInput: false, confirmLabel: "Edit", cancelLabel: "Close",
-      onConfirm: function(){ openBirthdaySheet(b.id); }
+      showInput: false, confirmLabel: full.source === "contacts" ? "Close" : "Edit", cancelLabel: "Close", hideCancel: full.source === "contacts",
+      onConfirm: function(){ if (full.source !== "contacts") openBirthdaySheet(b.id); }
     });
   }
   function openBirthdaySheet(id){

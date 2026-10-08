@@ -1,8 +1,10 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { Button, Dim, Divider, Field, Sheet, useTheme, useUi } from "../components/ui";
 import { MONTHS, mkId, type Birthday } from "../lib/model";
 import { useStore } from "../lib/store";
+import { isFromContacts } from "../lib/contactBirthdays";
 
 type Draft = { id: string | null; name: string; day: string; month: number; year: string };
 
@@ -81,8 +83,10 @@ export function BirthdaysSheet({ visible, onClose }: { visible: boolean; onClose
       ) : sorted.length ? sorted.map((b, i) => (
         <View key={b.id}>
           {i ? <Divider /> : null}
-          <Pressable accessibilityRole="button" onPress={() => open(b)} style={{ paddingVertical: 12, flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>🎂 {b.name}</Text>
+          {/* birthdays from contacts mirror the phone, so they're changed in Contacts, not here */}
+          <Pressable accessibilityRole="button" disabled={isFromContacts(b)} onPress={() => open(b)} style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={{ flex: 1, color: t.text, fontSize: 15, fontWeight: "600" }}>🎂 {b.name}</Text>
+            {isFromContacts(b) ? <Ionicons name="person-circle-outline" size={16} color={t.textFaint} accessibilityLabel="From contacts" /> : null}
             <Dim>{b.day} {MONTHS[b.month - 1].slice(0, 3)}{b.year ? " " + b.year : ""}</Dim>
           </Pressable>
         </View>

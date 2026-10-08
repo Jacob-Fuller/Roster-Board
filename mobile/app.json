@@ -53,7 +53,10 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F2244"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.WRITE_CONTACTS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -69,7 +72,13 @@
         }
       ],
       "expo-iap",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Roster Board shows your contacts' birthdays on your calendar."
+        }
+      ]
     ]
   }
 }

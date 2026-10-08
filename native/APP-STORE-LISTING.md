@@ -76,8 +76,9 @@ Data collected, all **linked to the user**, all used only for **App Functionalit
 | Identifiers | User ID | Supabase account ID |
 | Financial Info | Other Financial Info | Hourly rate and pay settings for estimates |
 | User Content | Other User Content | Shifts, leave, events and birthdays synced to the account |
+| Contacts | Contacts | Names and birthdays of phone contacts that have a birthday, shown on the calendar and synced to the account (only with the user's permission; nothing else from contacts is read) |
 
-Not collected: location, contacts, health, browsing history, purchases, usage data, diagnostics, advertising data. Reminders are local notifications, so no push token is collected.
+Not collected: location, health, browsing history, purchases, usage data, diagnostics, advertising data. Reminders are local notifications, so no push token is collected.
 
 If someone uses the app without an account, nothing leaves the device, but the answers above still apply because signing in is offered.
 
