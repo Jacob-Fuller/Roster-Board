@@ -38,7 +38,11 @@ export function ReportsScreen() {
   // Weekly / Fortnightly / Monthly choice on the pay card, remembered on this device (like the web).
   const [savedView, setSavedView] = useState("");
   useEffect(() => { AsyncStorage.getItem(PAY_CARD_VIEW_KEY).then((v) => setSavedView(v || "")).catch(() => {}); }, []);
-  const chooseView = (v: CardView) => { setSavedView(v); AsyncStorage.setItem(PAY_CARD_VIEW_KEY, v).catch(() => {}); };
+  const chooseView = (v: CardView) => { setSavedView(v); setCardOffset(0); AsyncStorage.setItem(PAY_CARD_VIEW_KEY, v).catch(() => {}); };
+  // Periods stepped away from the current one with the ‹ › arrows. Not saved,
+  // so the card always opens on the current week/fortnight.
+  const [cardOffset, setCardOffset] = useState(0);
+  useEffect(() => { setCardOffset(0); }, [month, mode]);
 
   const { label, stats, prev } = useMemo(() => {
     const range = mode === "month"
@@ -85,14 +89,15 @@ export function ReportsScreen() {
       if (view !== "monthly") {
         const now = new Date();
         const ref = now >= month && now < addMonths(month, 1) ? now : month;
-        range = payCardRange(cfg, view, ref);
+        const base = payCardRange(cfg, view, ref), len = view === "weekly" ? 7 : 14;
+        range = { start: addDays(base.start, cardOffset * len), end: addDays(base.end, cardOffset * len) };
         const last = addDays(range.end, -1);
         rangeLabel = shortDate(range.start) + " – " + shortDate(last);
       }
     }
     const factor = mode === "year" ? 1 : view === "weekly" ? 52 : view === "fortnightly" ? 26 : 12;
     return { view, range, rangeLabel, p: computePay(data, typesById, range.start, range.end, factor) };
-  }, [paySetUp, data, typesById, mode, month, year, savedView]);
+  }, [paySetUp, data, typesById, mode, month, year, savedView, cardOffset]);
 
   const openBreakdown = () => {
     if (!payCard) return;
@@ -160,11 +165,21 @@ export function ReportsScreen() {
                     options={[{ value: "weekly", label: "Weekly" }, { value: "fortnightly", label: "Fortnightly" }, { value: "monthly", label: "Monthly" }]} />
                 </View>
               ) : null}
+              {payCard.rangeLabel ? (
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <Nav label="‹" a11y="Previous period" onPress={() => setCardOffset((o) => o - 1)} />
+                  <Pressable accessibilityRole="button" accessibilityLabel="Back to current period" disabled={!cardOffset} onPress={() => setCardOffset(0)} style={{ alignItems: "center" }}>
+                    <Text style={{ color: t.text, fontSize: 15, fontWeight: "700" }}>{payCard.rangeLabel}</Text>
+                    {cardOffset ? <Text style={{ color: t.accent, fontSize: 12, fontWeight: "600" }}>Back to current</Text> : null}
+                  </Pressable>
+                  <Nav label="›" a11y="Next period" onPress={() => setCardOffset((o) => o + 1)} />
+                </View>
+              ) : null}
               <Pressable accessibilityRole="button" onPress={openBreakdown}
                 style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 10, opacity: pressed ? 0.7 : 1 })}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: t.text, fontSize: 26, fontWeight: "800", fontVariant: ["tabular-nums"] }}>{fmtMoney(payCard.p.gross)}</Text>
-                  <Dim>{(payCard.rangeLabel ? payCard.rangeLabel + " · " : "") + "Gross" + (payCard.p.showTax ? " · about " + fmtMoney(payCard.p.net) + " take-home" : "")}</Dim>
+                  <Dim>{"Gross" + (payCard.p.showTax ? " · about " + fmtMoney(payCard.p.net) + " take-home" : "")}</Dim>
                 </View>
                 <Text style={{ color: t.accent, fontWeight: "700", fontSize: 14 }}>Breakdown ›</Text>
               </Pressable>

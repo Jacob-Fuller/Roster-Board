@@ -44,14 +44,14 @@ export function Paywall() {
             ))}
           </View>
           <Plan title="Lifetime" sub="One payment, yours forever" price={prices.lifetime} onPress={() => buy("lifetime")} disabled={busy} primary />
-          <Plan title="Yearly" sub="Cancel anytime" price={prices.yearly} onPress={() => buy("yearly")} disabled={busy} />
+          <Plan title="Monthly" sub="Cancel anytime" price={prices.monthly} onPress={() => buy("monthly")} disabled={busy} />
           {error ? <Text style={{ color: t.danger, marginTop: 8, textAlign: "center" }}>{error}</Text> : null}
           <Button kind="ghost" style={{ marginTop: 12 }} title="Restore purchases" onPress={async () => {
             const ok = await restore();
             toast(ok ? "Purchases restored" : "No purchases found for this Apple ID");
           }} />
           <Dim style={{ marginTop: 16, lineHeight: 19, fontSize: 12 }}>
-            The yearly plan is an auto-renewing subscription charged to your Apple ID. It renews each year unless cancelled at least 24 hours before the end of the current period. Manage or cancel it in your Apple ID settings. Lifetime is a one-off purchase.
+            The monthly plan is an auto-renewing subscription charged to your Apple ID. It renews each month unless cancelled at least 24 hours before the end of the current period. Manage or cancel it in your Apple ID settings. Lifetime is a one-off purchase.
           </Dim>
           <View style={{ flexDirection: "row", justifyContent: "center", gap: 18, marginTop: 12 }}>
             <LinkText title="Terms of Use" onPress={() => Linking.openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")} />

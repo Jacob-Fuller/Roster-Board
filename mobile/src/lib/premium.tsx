@@ -8,7 +8,7 @@ import { Platform } from "react-native";
 import { useStore } from "./store";
 import { sb } from "./supabase";
 
-export const PREMIUM_YEARLY = "net.rosterboard.app.premium.yearly";
+export const PREMIUM_MONTHLY = "net.rosterboard.app.premium.monthly";
 export const PREMIUM_LIFETIME = "net.rosterboard.app.premium.lifetime";
 export const FREE_TYPE_LIMIT = 3;
 const KEY = "rosterBoard.premium";
@@ -18,15 +18,15 @@ const KEY = "rosterBoard.premium";
 // App Store Connect.
 export const PREMIUM_ENFORCED = true;
 
-type Status = { active: boolean; kind: "" | "yearly" | "lifetime" | "complimentary"; until: number };
+type Status = { active: boolean; kind: "" | "monthly" | "lifetime" | "complimentary"; until: number };
 type Ctx = {
   status: Status;
   locked: boolean;
-  prices: { yearly: string; lifetime: string };
+  prices: { monthly: string; lifetime: string };
   paywall: string | null;
   openPaywall: (reason?: string) => void;
   closePaywall: () => void;
-  buy: (kind: "yearly" | "lifetime") => Promise<void>;
+  buy: (kind: "monthly" | "lifetime") => Promise<void>;
   restore: () => Promise<boolean>;
   busy: boolean;
   error: string;
@@ -45,9 +45,9 @@ function statusFrom(purchases: any[]): Status {
   let next: Status = { active: false, kind: "", until: 0 };
   (purchases || []).forEach((p) => {
     if (p.productId === PREMIUM_LIFETIME) next = { active: true, kind: "lifetime", until: 0 };
-    else if (p.productId === PREMIUM_YEARLY && next.kind !== "lifetime") {
+    else if (p.productId === PREMIUM_MONTHLY && next.kind !== "lifetime") {
       const exp = p.expirationDateIOS ? +p.expirationDateIOS : 0;
-      if (!exp || exp > now) next = { active: true, kind: "yearly", until: exp || now + 86400000 };
+      if (!exp || exp > now) next = { active: true, kind: "monthly", until: exp || now + 86400000 };
     }
   });
   return next;
@@ -55,7 +55,7 @@ function statusFrom(purchases: any[]): Status {
 
 export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>({ active: false, kind: "", until: 0 });
-  const [prices, setPrices] = useState({ yearly: "$9.99 / year", lifetime: "$49.99" });
+  const [prices, setPrices] = useState({ monthly: "$4.99 / month", lifetime: "$24.99" });
   const [paywall, setPaywall] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -110,10 +110,10 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const loadPrices = useCallback(async () => {
     if (!supported || !connected.current) return;
     try {
-      const subsList = ((await IAP.fetchProducts({ skus: [PREMIUM_YEARLY], type: "subs" })) as any[]) || [];
+      const subsList = ((await IAP.fetchProducts({ skus: [PREMIUM_MONTHLY], type: "subs" })) as any[]) || [];
       const once = ((await IAP.fetchProducts({ skus: [PREMIUM_LIFETIME], type: "in-app" })) as any[]) || [];
       setPrices((p) => ({
-        yearly: subsList[0] && subsList[0].displayPrice ? subsList[0].displayPrice + " / year" : p.yearly,
+        monthly: subsList[0] && subsList[0].displayPrice ? subsList[0].displayPrice + " / month" : p.monthly,
         lifetime: once[0] && once[0].displayPrice ? once[0].displayPrice : p.lifetime,
       }));
     } catch {}
@@ -122,11 +122,11 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const openPaywall = useCallback((reason?: string) => { setError(""); setPaywall(reason || ""); loadPrices(); }, [loadPrices]);
   const closePaywall = useCallback(() => setPaywall(null), []);
 
-  const buy = useCallback(async (kind: "yearly" | "lifetime") => {
+  const buy = useCallback(async (kind: "monthly" | "lifetime") => {
     if (!supported || busy) return;
     setBusy(true); setError("");
     try {
-      if (kind === "yearly") await IAP.requestPurchase({ request: { apple: { sku: PREMIUM_YEARLY } }, type: "subs" });
+      if (kind === "monthly") await IAP.requestPurchase({ request: { apple: { sku: PREMIUM_MONTHLY } }, type: "subs" });
       else await IAP.requestPurchase({ request: { apple: { sku: PREMIUM_LIFETIME } }, type: "in-app" });
       // the purchase listener finishes the transaction and refreshes the status
     } catch (e: any) {

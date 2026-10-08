@@ -86,6 +86,6 @@ If someone uses the app without an account, nothing leaves the device, but the a
 | Product | Type | Product ID | Price |
 |---|---|---|---|
 | Premium Monthly | Auto-renewable subscription (group "Roster Board Premium") | `net.rosterboard.app.premium.monthly` | A$4.99 / month |
-| Premium Lifetime | Non-consumable | `net.rosterboard.app.premium.lifetime` | A$49.99 |
+| Premium Lifetime | Non-consumable | `net.rosterboard.app.premium.lifetime` | A$24.99 |
 
 Purchases need Apple's Paid Apps agreement, with banking and tax details, active in App Store Connect → Business.

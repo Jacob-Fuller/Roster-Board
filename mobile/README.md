@@ -16,7 +16,7 @@ Everything the website has:
 - Roster pattern (up to 52 weeks) and one-time calendar fill
 - Reports, estimated pay (setup, breakdown, year in review) and PDF roster export
 - Sharing, birthdays, light/dark, hide events/birthdays, welcome slides, help, feedback
-- Premium through Apple: $9.99/year or $49.99 lifetime, with restore. Free users
+- Premium through Apple: $4.99/month or $24.99 lifetime, with restore. Free users
   get 3 shift types and no roster fill, pay estimate, full reports or PDF export.
 
 `npm test` checks the sync merge, roster fill and pay estimate against the web
@@ -27,8 +27,8 @@ app's own code on random data.
 - Screenshots (6.9" iPhone, 1290×2796): `appstore-screenshots/`
 - Before submitting: the Paid Apps Agreement must be active and both products
   set up in App Store Connect and attached to the version:
-  `net.rosterboard.app.premium.yearly` (auto-renewable subscription, 1 year, $9.99)
-  and `net.rosterboard.app.premium.lifetime` (non-consumable, $49.99)
+  `net.rosterboard.app.premium.monthly` (auto-renewable subscription, 1 month, $4.99)
+  and `net.rosterboard.app.premium.lifetime` (non-consumable, $24.99)
 - App Review: a demo account with sample shifts, entered under Sign-In Information
 - App Privacy: Contact Info → Email Address and Name; User Content → Other User
   Content (the roster). All used for App Functionality, linked to the user, not
