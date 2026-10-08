@@ -78,7 +78,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               });
               if (data.birthdays) birthdaysOnDate(data.birthdays, c.date).forEach((b) =>
                 items.push(<Pill ts={ts} key={"b" + b.id} strip="Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
-                  label={"🎂 " + (b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} fixed />));
+                  label={(b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} party />));
               const max = rows > 5 ? 2 : 3;
               const ph = ((data.payTags && data.payTags[key]) || []).some((x) => x.kind === "holiday");
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
@@ -133,7 +133,32 @@ function bannerSizes(gridW: number, w100: { [k in keyof typeof SAMPLES]?: number
   return { label: fit("label", content - 6 - 1, 12), title: fit("title", content - 4 - 1, 8), combo: fit("combo", content - 4 - 1, 8) };
 }
 
-function Pill({ label, bg, fg, strip, stripBg, stripFg, ts }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; ts: Sizes }) {
+// Party bunting and confetti for birthdays.
+const PARTY = ["#FF6B9A", "#FFC93C", "#4CC9F0", "#7BD389", "#FF8C42", "#B983FF"];
+function Bunting() {
+  return (
+    <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, flexDirection: "row", justifyContent: "space-evenly" }}>
+      {PARTY.map((c) => (
+        <View key={c} style={{ width: 0, height: 0, borderLeftWidth: 3, borderRightWidth: 3, borderTopWidth: 4, borderLeftColor: "transparent", borderRightColor: "transparent", borderTopColor: c }} />
+      ))}
+    </View>
+  );
+}
+const CONFETTI: { l?: number; r?: number; b: number; c: string; rot: string }[] = [
+  { l: 3, b: 3, c: PARTY[1], rot: "20deg" }, { l: 7, b: 6, c: PARTY[2], rot: "-30deg" },
+  { r: 3, b: 3, c: PARTY[3], rot: "-20deg" }, { r: 7, b: 6, c: PARTY[0], rot: "35deg" },
+];
+function Confetti() {
+  return (
+    <>
+      {CONFETTI.map((d, i) => (
+        <View key={i} pointerEvents="none" style={{ position: "absolute", left: d.l, right: d.r, bottom: d.b, width: 3, height: 1.5, borderRadius: 1, backgroundColor: d.c, transform: [{ rotate: d.rot }] }} />
+      ))}
+    </>
+  );
+}
+
+function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; party?: boolean; ts: Sizes }) {
   return (
     <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
@@ -142,7 +167,8 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts }: { label: string; b
             style={{ color: stripFg, fontSize: strip === COMBO ? ts.combo : ts.title, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
         </View>
       ) : null}
-      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3 }}>
+      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3, paddingTop: party ? 3 : 0 }}>
+        {party ? <><Bunting /><Confetti /></> : null}
         <Text numberOfLines={1} ellipsizeMode="tail"
           style={{ color: fg, fontSize: ts.label, fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
