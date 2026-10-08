@@ -64,11 +64,11 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               });
               ((data.notes && data.notes[key]) || []).forEach((n) => {
                 const cat = EVENT_CATS[n.category || "other"] || EVENT_CATS.other;
-                items.push(<Pill key={n.id} strip={cat.label} stripBg={cat.color} stripFg={cat.ink} label={n.text} bg={cat.color + "38"} fg={t.text} />);
+                items.push(<Pill key={n.id} strip={cat.label} stripBg={cat.color} stripFg={cat.ink} label={n.text} bg={cat.color + "38"} fg={t.text} fixed />);
               });
               if (data.birthdays) birthdaysOnDate(data.birthdays, c.date).forEach((b) =>
                 items.push(<Pill key={"b" + b.id} strip="Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
-                  label={"🎂 " + (b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} />));
+                  label={"🎂 " + (b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} fixed />));
               const max = rows > 5 ? 2 : 3;
               const ph = ((data.payTags && data.payTags[key]) || []).some((x) => x.kind === "holiday");
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
@@ -106,7 +106,8 @@ const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
 const BANNER_H = 28, STRIP_H = 10;
 const fitSize = (label: string, base: number, min = 7.5) => (label.length > 8 ? Math.max(min, (base * 8) / label.length) : base);
 
-function Pill({ label, bg, fg, strip, stripBg, stripFg }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string }) {
+// fixed: personal events and birthdays keep one text size and are cut off with "…" instead of shrinking.
+function Pill({ label, bg, fg, strip, stripBg, stripFg, fixed }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean }) {
   return (
     <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
@@ -116,8 +117,8 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg }: { label: string; bg: s
         </View>
       ) : null}
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3 }}>
-        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}
-          style={{ color: fg, fontSize: fitSize(label, 10.5), fontWeight: "700", textAlign: "center" }}>{label}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit={!fixed} minimumFontScale={0.7} ellipsizeMode="tail"
+          style={{ color: fg, fontSize: fixed ? 9.5 : fitSize(label, 10.5), fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
     </View>
   );
