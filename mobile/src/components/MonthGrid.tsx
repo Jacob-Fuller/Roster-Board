@@ -19,7 +19,9 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
 }) {
   const t = useTheme();
   const [gridW, setGridW] = useState(0);
-  const ts = titleSize(gridW);
+  // widths of the sample words at size 100, measured on this phone's font
+  const [w100, setW100] = useState<{ [k in keyof typeof SAMPLES]?: number }>({});
+  const ts = useMemo(() => bannerSizes(gridW, w100), [gridW, w100]);
   const cells = useMemo(() => buildMonthCells(month), [month]);
   // alternate pay periods are shaded, like the web app (only once pay is set up)
   const shade = useMemo(() => (data.settings && payIsSetUp(data.settings) ? payConfig(data.settings) : null), [data.settings]);
@@ -27,6 +29,12 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
   const today = new Date();
   return (
     <View style={{ flex: 1 }}>
+      <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: 4000, opacity: 0 }}>
+        {(Object.keys(SAMPLES) as (keyof typeof SAMPLES)[]).map((k) => (
+          <Text key={k} onLayout={(e) => { const w = e.nativeEvent.layout.width; setW100((m) => (m[k] === w ? m : { ...m, [k]: w })); }}
+            style={{ alignSelf: "flex-start", fontSize: 100, fontWeight: SAMPLES[k].weight }}>{SAMPLES[k].text}</Text>
+        ))}
+      </View>
       <View style={{ flexDirection: "row", paddingHorizontal: 6 }}>
         {WEEKDAYS_SHORT.map((d) => (
           <Text key={d} style={{ flex: 1, textAlign: "center", fontSize: 11, fontWeight: "700", color: t.textFaint, letterSpacing: 0.5, paddingBottom: 6 }}>{d.toUpperCase()}</Text>
@@ -54,7 +62,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                 const col = entryColor(s, typesById);
                 if (isCombo(s.typeId)) {
                   const bt = s.baseTypeId ? typesById[s.baseTypeId] : null;
-                  items.push(<Pill ts={ts} key={s.id} strip={isSplitEntry(s) ? "Excess + Overtime" : ty.id === "overtime" ? "Overtime" : "Excess"} stripBg={ty.color} stripFg={ty.ink}
+                  items.push(<Pill ts={ts} key={s.id} strip={isSplitEntry(s) ? COMBO : ty.id === "overtime" ? "Overtime" : "Excess"} stripBg={ty.color} stripFg={ty.ink}
                     label={bt ? bt.name : ty.name} bg={col.bg} fg={col.ink} />);
                 } else {
                   items.push(<Pill ts={ts} key={s.id} label={ty.name + (s.tag ? " · " + s.tag : "")} bg={col.bg} fg={col.ink} />);
@@ -103,29 +111,40 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
 
 const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
 
-// Every banner is the same height and every banner uses one text size: the
-// labels match personal events, and the titles all use the size that fits the
-// longest one ("EXCESS + OVERTIME") in a day cell. Too-long labels end in "…".
-const BANNER_H = 28, STRIP_H = 10, LABEL_SIZE = 9.5;
-const LONGEST_TITLE = "EXCESS + OVERTIME";
-function titleSize(gridW: number) {
-  if (!gridW) return 5;
-  const inner = (gridW - 12) / 7 - 3 - 6 - 4 - 2; // cell margin, padding, strip padding, border
-  return Math.max(4, Math.min(7.5, inner / (LONGEST_TITLE.length * 0.74)));
+// Every banner is the same height. All descriptions share one size: the largest
+// that fits "Psychologist" in a day cell. All titles share one size: the largest
+// that fits "APPOINTMENT"; "EXCESS + OVERTIME" is the one exception and gets the
+// largest size that fits it. Sizes come from measuring the words on the phone.
+const BANNER_H = 28, STRIP_H = 10;
+const COMBO = "Excess + Overtime";
+const SAMPLES = {
+  label: { text: "Psychologist", weight: "700" as const, est: 6.3 },
+  title: { text: "APPOINTMENT", weight: "800" as const, est: 7.6 },
+  combo: { text: COMBO.toUpperCase(), weight: "800" as const, est: 11.6 },
+};
+type Sizes = { label: number; title: number; combo: number };
+function bannerSizes(gridW: number, w100: { [k in keyof typeof SAMPLES]?: number }): Sizes {
+  if (!gridW) return { label: 7, title: 5.5, combo: 4 };
+  const content = (gridW - 12) / 7 - 3 - 6 - 4; // cell margin, padding, thickest border
+  const fit = (k: keyof typeof SAMPLES, room: number, max: number) => {
+    const em = w100[k] ? w100[k]! / 100 : SAMPLES[k].est;
+    return Math.max(3.5, Math.min(max, Math.floor((room / em) * 10) / 10));
+  };
+  return { label: fit("label", content - 6 - 1, 12), title: fit("title", content - 4 - 1, 8), combo: fit("combo", content - 4 - 1, 8) };
 }
 
-function Pill({ label, bg, fg, strip, stripBg, stripFg, ts }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; ts: number }) {
+function Pill({ label, bg, fg, strip, stripBg, stripFg, ts }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; ts: Sizes }) {
   return (
     <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
         <View style={{ height: STRIP_H, backgroundColor: stripBg, justifyContent: "center" }}>
-          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}
-            style={{ color: stripFg, fontSize: ts, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
+          <Text numberOfLines={1} ellipsizeMode="clip"
+            style={{ color: stripFg, fontSize: strip === COMBO ? ts.combo : ts.title, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
         </View>
       ) : null}
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3 }}>
         <Text numberOfLines={1} ellipsizeMode="tail"
-          style={{ color: fg, fontSize: LABEL_SIZE, fontWeight: "700", textAlign: "center" }}>{label}</Text>
+          style={{ color: fg, fontSize: ts.label, fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
     </View>
   );
