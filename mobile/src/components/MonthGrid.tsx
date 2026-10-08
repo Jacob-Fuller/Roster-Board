@@ -52,7 +52,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                 const col = entryColor(s, typesById);
                 if (isCombo(s.typeId)) {
                   const bt = s.baseTypeId ? typesById[s.baseTypeId] : null;
-                  items.push(<Pill key={s.id} strip={isSplitEntry(s) ? "EX + OT" : ty.id === "overtime" ? "OT" : "Excess"} stripBg={ty.color} stripFg={ty.ink}
+                  items.push(<Pill key={s.id} strip={isSplitEntry(s) ? "Excess + Overtime" : ty.id === "overtime" ? "Overtime" : "Excess"} stripBg={ty.color} stripFg={ty.ink}
                     label={bt ? bt.name : ty.name} bg={col.bg} fg={col.ink} />);
                 } else {
                   items.push(<Pill key={s.id} label={ty.name + (s.tag ? " · " + s.tag : "")} bg={col.bg} fg={col.ink} />);
