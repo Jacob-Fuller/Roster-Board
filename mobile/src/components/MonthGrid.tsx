@@ -130,3 +130,25 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts }: { label: string; b
     </View>
   );
 }
+
+
+export function MonthNav({ month, onChange }: { month: Date; onChange: (d: Date) => void }) {
+  const t = useTheme();
+  const btn = (label: string, a11y: string, n: number) => (
+    <Pressable accessibilityRole="button" accessibilityLabel={a11y} hitSlop={6}
+      onPress={() => onChange(new Date(month.getFullYear(), month.getMonth() + n, 1))}
+      style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center" }}>
+      <Text style={{ color: t.text, fontSize: 22, fontWeight: "600", marginTop: -2 }}>{label}</Text>
+    </Pressable>
+  );
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      {btn("‹", "Previous month", -1)}
+      <Pressable accessibilityRole="button" onPress={() => { const n = new Date(); onChange(new Date(n.getFullYear(), n.getMonth(), 1)); }}
+        style={{ paddingHorizontal: 12, height: 36, borderRadius: 18, backgroundColor: t.surface2, justifyContent: "center" }}>
+        <Text style={{ color: t.text, fontWeight: "700", fontSize: 13 }}>Today</Text>
+      </Pressable>
+      {btn("›", "Next month", 1)}
+    </View>
+  );
+}
