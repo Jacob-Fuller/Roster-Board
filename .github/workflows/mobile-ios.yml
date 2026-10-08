@@ -36,6 +36,8 @@ jobs:
           npm install --no-audit --no-fund
           npx expo install --fix
           gem install fastlane -N
+      - name: Type-check (stops a broken build reaching testers)
+        run: npx tsc --noEmit
       - name: Create the iOS project
         run: |
           npx expo prebuild --platform ios --clean
