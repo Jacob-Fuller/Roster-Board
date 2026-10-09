@@ -255,6 +255,19 @@
   .onboarding-dots span.active{background:var(--accent); width:16px; border-radius:3px;}
   .onboarding-footer .btn{max-width:360px;}
 
+  .help-body{max-width:480px; width:100%; margin:0 auto;}
+  .help-group{font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin:22px 4px 8px;}
+  .help-group:first-child{margin-top:4px;}
+  .help-card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden;}
+  .help-card details + details, .help-card details + .help-link{border-top:1px solid var(--border);}
+  .help-card summary{list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; font-weight:600; font-size:.92rem; cursor:pointer;}
+  .help-card summary::-webkit-details-marker{display:none;}
+  .help-card summary::after{content:"\203A"; color:var(--text-faint); font-size:1.1rem; line-height:1; transition:transform .15s ease;}
+  .help-card details[open] summary::after{transform:rotate(90deg);}
+  .help-card details p{margin:-4px 16px 14px; color:var(--text-dim); font-size:.86rem; line-height:1.55;}
+  .help-link{display:flex; align-items:center; justify-content:space-between; width:100%; padding:14px 16px; background:none; border:none; color:var(--text); font-size:.92rem; font-weight:600; text-align:left; text-decoration:none;}
+  .help-link::after{content:"\203A"; color:var(--text-faint); font-size:1.1rem; line-height:1;}
+
   .privacy-screen{
     position:fixed; inset:0; z-index:320; display:none; flex-direction:column; background:var(--bg);
   }
@@ -652,6 +665,124 @@
     </div>
   </div>
 
+  <!-- Help -->
+  <div class="privacy-screen" id="helpOverlay">
+    <div class="privacy-head">
+      <button class="icon-btn" id="helpBackBtn" aria-label="Back">&#8249;</button>
+      <h2>Help</h2>
+      <span></span>
+    </div>
+    <div class="privacy-body">
+      <div class="help-body">
+        <div class="help-group">Getting started</div>
+        <div class="help-card">
+          <details>
+            <summary>Create your shift types</summary>
+            <p>On the Shifts tab, tap + New. Give it a name, colour and start and end time, and the hours are worked out for you. Choose Personal for entries that shouldn't count toward hours, like reminders.</p>
+          </details>
+          <details>
+            <summary>Build your roster</summary>
+            <p>On the Roster tab, set your rotation length in weeks and fill in each day. Pick a start date and how long to repeat it, then tap Fill calendar from pattern.</p>
+          </details>
+          <details>
+            <summary>Changing your roster later</summary>
+            <p>Filling again replaces regular shifts on those dates. Days you've changed by hand, such as overtime, swaps, notes or leave, are kept.</p>
+          </details>
+        </div>
+        <div class="help-group">Calendar</div>
+        <div class="help-card">
+          <details>
+            <summary>Add a shift</summary>
+            <p>Tap any day, then tap a shift type. To remove it, tap ✕ on the shift.</p>
+          </details>
+          <details>
+            <summary>Overtime and excess hours</summary>
+            <p>Tap a shift type on a day and choose Overtime, Excess Hours or both, then enter the hours. Tap ⏱ on the shift to change them. Turn these options on or off for each shift type in its settings.</p>
+          </details>
+          <details>
+            <summary>Swap a shift</summary>
+            <p>Tap ⇄ on a shift, choose the date it's moving to, what you're working instead and who you're swapping with. Both days show the swap, and it can be undone from either day.</p>
+          </details>
+          <details>
+            <summary>Leave</summary>
+            <p>Tap a day, then + Annual Leave or + Sick Leave and enter the hours. Leave shows on the calendar and in your reports.</p>
+          </details>
+          <details>
+            <summary>Personal events</summary>
+            <p>Tap a day and add an event under Personal events, with an optional time and category. Turn on Remind me to get a notification at that time.</p>
+          </details>
+          <details>
+            <summary>Birthdays</summary>
+            <p>Add them from Birthdays on the Account tab. They show on the calendar every year. You can hide them, or personal events, under Appearance.</p>
+          </details>
+        </div>
+        <div class="help-group">Reports and pay</div>
+        <div class="help-card">
+          <details>
+            <summary>Reports</summary>
+            <p>See hours, days worked, overtime, excess hours and leave for any month or year, plus a breakdown by shift type, weekday vs weekend, and a comparison with the previous period. Year view adds a year in review.</p>
+          </details>
+          <details>
+            <summary>Pay estimates</summary>
+            <p>Tap Pay setup on the Reports tab and enter your hourly rate, pay period, and any penalty, overtime and leave loading rates. Pay is then estimated from your logged hours. It's a guide only, not a payslip.</p>
+          </details>
+          <details>
+            <summary>Export a PDF</summary>
+            <p>Tap PDF roster at the bottom of the Reports tab to create a printable monthly roster you can save or send.</p>
+          </details>
+        </div>
+        <div class="help-group">Sharing</div>
+        <div class="help-card">
+          <details>
+            <summary>Share your roster</summary>
+            <p>Sign in, then enter someone's email under Share your roster on the Account tab. Once they accept, you can each see the other's roster.</p>
+          </details>
+          <details>
+            <summary>What's shared</summary>
+            <p>Work shifts, overtime, leave and swaps. Personal events, personal shift types, notes, birthdays and pay are never shared.</p>
+          </details>
+          <details>
+            <summary>View or remove a connection</summary>
+            <p>Your connections are listed under Connected. Tap a name to view their roster, or ✕ to stop sharing.</p>
+          </details>
+        </div>
+        <div class="help-group">Account and sync</div>
+        <div class="help-card">
+          <details>
+            <summary>Syncing between devices</summary>
+            <p>Signed in, your data backs up automatically and stays in sync across your devices. Without an account, it's stored only on this device.</p>
+          </details>
+          <details>
+            <summary>Format calendar</summary>
+            <p>Clears every shift, event, leave entry and swap. Your shift types, roster pattern, birthdays and pay setup are kept. This can't be undone.</p>
+          </details>
+          <details>
+            <summary>Delete your account</summary>
+            <p>Account → Delete account permanently removes your account and cloud backup.</p>
+          </details>
+        </div>
+        <div id="helpPremiumGroup">
+        <div class="help-group">Premium</div>
+        <div class="help-card">
+          <details>
+            <summary>What Premium includes</summary>
+            <p>Unlimited shift types, filling your calendar from a roster pattern, pay estimates, full reports and PDF export. Free includes 3 shift types, the calendar, leave, events, sharing and report totals.</p>
+          </details>
+          <details>
+            <summary>Restore a purchase</summary>
+            <p>On a new device, go to Account → Premium → Restore purchases, using the same Apple ID.</p>
+          </details>
+        </div>
+        </div>
+        <div class="help-group">More</div>
+        <div class="help-card">
+          <button class="help-link" id="helpIntroBtn" type="button">Show intro again</button>
+          <a class="help-link" href="mailto:contact@rosterboard.net" style="border-top:1px solid var(--border);">Contact us</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Estimated pay: full breakdown -->
   <div class="full-screen" id="payScreen">
     <div class="privacy-head">
@@ -713,6 +844,10 @@
           <label for="psPeriodStart">Pay period start date</label>
           <input type="date" id="psPeriodStart">
         </div>
+        <label class="remind-row" style="margin-top:12px;">
+          <input type="checkbox" id="psExtrasLate">
+          <span>Overtime, excess and allowances paid a period late</span>
+        </label>
       </details>
 
       <details class="card ps-card">
@@ -728,6 +863,10 @@
           </div>
         </div>
         <label class="remind-row" style="margin-top:12px;">
+          <input type="checkbox" id="psExAllowance">
+          <span>Shift allowance on excess hours</span>
+        </label>
+        <label class="remind-row">
           <input type="checkbox" id="psOtTiered">
           <span>Tiered overtime</span>
         </label>
@@ -777,6 +916,14 @@
         <div class="form-row">
           <label for="psSuper">Employer super %</label>
           <input type="number" id="psSuper" min="0" step="0.5" inputmode="decimal" placeholder="12">
+        </div>
+        <label class="remind-row" style="margin-top:12px;">
+          <input type="checkbox" id="psExSuper">
+          <span>Super on excess hours</span>
+        </label>
+        <div class="form-row">
+          <label for="psOwnSuper">Your super contribution %</label>
+          <input type="number" id="psOwnSuper" min="0" step="0.5" inputmode="decimal" placeholder="0">
         </div>
         <label class="remind-row" style="margin-top:12px;">
           <input type="checkbox" id="psShowTax" checked>
@@ -3052,9 +3199,17 @@
   });
 
   /* ---------------- about / help ---------------- */
-  document.getElementById("helpBtn").addEventListener("click", function(){
-    showOnboarding();
-  });
+  function showHelp(){
+    document.getElementById("helpPremiumGroup").style.display = purchasesPlugin() ? "" : "none";
+    var body = document.querySelector("#helpOverlay .privacy-body");
+    body.scrollTop = 0;
+    document.querySelectorAll("#helpOverlay details[open]").forEach(function(d){ d.open = false; });
+    document.getElementById("helpOverlay").classList.add("show");
+  }
+  function hideHelp(){ document.getElementById("helpOverlay").classList.remove("show"); }
+  document.getElementById("helpBtn").addEventListener("click", showHelp);
+  document.getElementById("helpBackBtn").addEventListener("click", hideHelp);
+  document.getElementById("helpIntroBtn").addEventListener("click", function(){ hideHelp(); showOnboarding(); });
   document.getElementById("feedbackBtn").addEventListener("click", function(){
     openMiniModal({
       title: "Send feedback",
@@ -4991,7 +5146,8 @@
     typeRules: {},
     allowances: [],
     payLeave: true, leaveLoading: 0,
-    superPct: 12, showTax: true, taxFree: true
+    superPct: 12, showTax: true, taxFree: true,
+    exAllowance: false, exSuper: false, ownSuperPct: 0, extrasLate: false
   };
   function num(v, d){ v = parseFloat(v); return isFinite(v) ? v : d; }
   function payConfig(){
@@ -5071,6 +5227,11 @@
     }
     return ((n % 2) + 2) % 2 === 1;
   }
+  // The same moment one pay period earlier.
+  function payLag(cfg, date){
+    if (cfg.cycle === "monthly") return monthDayClamped(date.getFullYear(), date.getMonth() - 1, date.getDate());
+    return addDays(date, -cycleDays(cfg));
+  }
   function shiftPayPeriod(cfg, period, dir){
     return payPeriodFor(cfg, dir > 0 ? period.end : addDays(period.start, -1));
   }
@@ -5106,22 +5267,37 @@
     var r = {
       ordinaryHours: 0, otHours: 0, excessHours: 0, leaveHours: 0,
       ordinary: 0, overtime: 0, excess: 0, penalties: 0, shiftAllowance: 0, allowances: 0, leave: 0, leaveLoading: 0,
-      allowanceLines: {}, penaltyLines: {}, gross: 0, superAmt: 0, tax: 0, net: 0, configured: cfg.baseRate > 0
+      allowanceLines: {}, penaltyLines: {}, gross: 0, superAmt: 0, ownSuper: 0, tax: 0, net: 0, configured: cfg.baseRate > 0
     };
     if (!r.configured) return r;
     var sKey = ymd(start), eKey = ymd(end);
     function inRange(k){ return k >= sKey && k < eKey; }
+    // Overtime, excess and allowances can be paid one pay period late: they
+    // then come from the period before [start, end).
+    var xsKey = sKey, xeKey = eKey;
+    if (cfg.extrasLate){ xsKey = ymd(payLag(cfg, start)); xeKey = ymd(payLag(cfg, end)); }
+    function inExtras(k){ return k >= xsKey && k < xeKey; }
+    var exAllowance = 0;
+    function excessAllowance(baseTypeId, hours, rate){
+      if (!cfg.exAllowance) return;
+      var br = cfg.typeRules[baseTypeId] || {};
+      if (br.allowanceKind !== "pct") return;
+      var amt = hours * rate * num(br.allowance, 0) / 100;
+      r.shiftAllowance += amt; exAllowance += amt;
+    }
     var allowById = {};
     cfg.allowances.forEach(function(a){ allowById[a.id] = a; });
 
     Object.keys(state.shifts || {}).forEach(function(k){
-      if (!inRange(k)) return;
+      var cur = inRange(k), ext = inExtras(k);
+      if (!cur && !ext) return;
       var rate = rateOn(cfg, k);
       var d = parseYmd(k), wd = d.getDay();
       (state.shifts[k] || []).forEach(function(s){
         var t = state.typesById[s.typeId];
         if (!t || t.kind === "personal") return;
         if (s.typeId === OVERTIME_ID){
+          if (!ext) return;
           var ot = entryOTHours(s);
           var first = cfg.otTiered ? Math.min(ot, Math.max(0, num(cfg.otTierHours, 0))) : ot;
           r.otHours += ot;
@@ -5129,18 +5305,26 @@
           var exPart = entryExcessHours(s);
           r.excessHours += exPart;
           r.excess += exPart * rate * num(cfg.exMult, 1);
+          excessAllowance(s.baseTypeId, exPart, rate);
           return;
         }
         if (s.typeId === EXCESS_ID){
+          if (!ext) return;
           var ex = entryExcessHours(s) || effectiveHours(s);
           r.excessHours += ex;
           r.excess += ex * rate * num(cfg.exMult, 1);
+          excessAllowance(s.baseTypeId, ex, rate);
           return;
         }
         var h = effectiveHours(s);
+        var rule = cfg.typeRules[s.typeId] || {};
+        if (ext){
+          if (rule.allowanceKind === "pct") r.shiftAllowance += h * rate * num(rule.allowance, 0) / 100;
+          else if (rule.allowanceKind === "flat") r.shiftAllowance += num(rule.allowance, 0);
+        }
+        if (!cur) return;
         r.ordinaryHours += h;
         r.ordinary += h * rate;
-        var rule = cfg.typeRules[s.typeId] || {};
         // When more than one penalty applies, the highest one is paid.
         var best = 0, bestName = "";
         function consider(pct, name){ pct = num(pct, 0); if (pct > best){ best = pct; bestName = name; } }
@@ -5155,8 +5339,6 @@
           r.penalties += pAmt;
           r.penaltyLines[bestName] = (r.penaltyLines[bestName] || 0) + pAmt;
         }
-        if (rule.allowanceKind === "pct") r.shiftAllowance += h * rate * num(rule.allowance, 0) / 100;
-        else if (rule.allowanceKind === "flat") r.shiftAllowance += num(rule.allowance, 0);
       });
     });
 
@@ -5174,7 +5356,7 @@
     });
 
     Object.keys(state.payTags || {}).forEach(function(k){
-      if (!inRange(k)) return;
+      if (!inExtras(k)) return;
       var rate = rateOn(cfg, k);
       (state.payTags[k] || []).forEach(function(tag){
         if (tag.kind !== "allowance") return;
@@ -5187,11 +5369,16 @@
     });
 
     r.gross = r.ordinary + r.overtime + r.excess + r.penalties + r.shiftAllowance + r.allowances + r.leave + r.leaveLoading;
-    // Super is paid by the employer on ordinary-time earnings (not overtime).
-    r.superAmt = (r.ordinary + r.penalties + r.shiftAllowance + r.leave + r.leaveLoading) * num(cfg.superPct, 0) / 100;
+    // Super is paid by the employer on ordinary-time earnings (not overtime),
+    // plus excess hours when the employer counts them.
+    var superBase = r.ordinary + r.penalties + r.shiftAllowance + r.leave + r.leaveLoading;
+    if (cfg.exSuper) superBase += r.excess; else superBase -= exAllowance;
+    r.superAmt = superBase * num(cfg.superPct, 0) / 100;
+    // the user's own contribution comes out after tax
+    r.ownSuper = superBase * num(cfg.ownSuperPct, 0) / 100;
     var f = annualFactor || 1;
     r.tax = cfg.showTax ? annualTaxEstimate(r.gross * f, cfg.taxFree) / f : 0;
-    r.net = r.gross - r.tax;
+    r.net = r.gross - r.tax - r.ownSuper;
     r.showTax = !!cfg.showTax;
     return r;
   }
@@ -5363,6 +5550,7 @@
     payLine(box, "Gross", p.gross, "total");
     if (p.showTax){
       payLine(box, "Estimated tax", "−" + fmtMoney(p.tax), "", "incl. Medicare levy");
+      if (p.ownSuper) payLine(box, "Your super contribution", "−" + fmtMoney(p.ownSuper), "", fmtHours(cfg.ownSuperPct) + "%");
       payLine(box, "Estimated take-home", p.net, "total");
     }
     if (cfg.superPct > 0) payLine(box, "Super (paid by employer)", p.superAmt, "muted", fmtHours(cfg.superPct) + "%");
@@ -5426,6 +5614,10 @@
     document.getElementById("psPayLeave").checked = c.payLeave !== false;
     setVal("psLeaveLoading", c.leaveLoading || "");
     setVal("psSuper", c.superPct);
+    document.getElementById("psExtrasLate").checked = !!c.extrasLate;
+    document.getElementById("psExAllowance").checked = !!c.exAllowance;
+    document.getElementById("psExSuper").checked = !!c.exSuper;
+    setVal("psOwnSuper", c.ownSuperPct || "");
     document.getElementById("psShowTax").checked = !!c.showTax;
     document.getElementById("psTaxFree").checked = c.taxFree !== false;
     updatePaySummaries();
@@ -5439,7 +5631,7 @@
     var rate = parseFloat(v("psBaseRate"));
     put("psSumRate", rate > 0 ? fmtMoney(rate) + "/h" : "Not set");
     var cyc = paySetupDraft.cycle || "fortnightly";
-    put("psSumCycle", cyc.charAt(0).toUpperCase() + cyc.slice(1));
+    put("psSumCycle", cyc.charAt(0).toUpperCase() + cyc.slice(1) + (on("psExtrasLate") ? " · extras late" : ""));
     var ot = (v("psOtMult") || "1.5") + "× OT · " + (v("psExMult") || "1") + "× excess";
     put("psSumOt", on("psOtTiered") ? ot + " · tiered" : ot);
     var pens = [["psPenSat", "Sat"], ["psPenSun", "Sun"], ["psPenNight", "Night"]]
@@ -5450,7 +5642,8 @@
     put("psSumTypes", n ? n + (n === 1 ? " type" : " types") : "None");
     var ll = parseFloat(v("psLeaveLoading"));
     put("psSumLeave", on("psPayLeave") ? (ll > 0 ? "Paid · " + ll + "% loading" : "Paid") : "Unpaid");
-    put("psSumTax", (v("psSuper") || "12") + "% super" + (on("psShowTax") ? " · tax shown" : ""));
+    var own = parseFloat(v("psOwnSuper"));
+    put("psSumTax", (v("psSuper") || "12") + "% super" + (own > 0 ? " · " + own + "% yours" : "") + (on("psShowTax") ? " · tax shown" : ""));
   }
   ["input", "change"].forEach(function(ev){
     document.getElementById("paySetupScreen").addEventListener(ev, updatePaySummaries);
@@ -5538,6 +5731,10 @@
     c.payLeave = document.getElementById("psPayLeave").checked;
     c.leaveLoading = Math.max(0, num(document.getElementById("psLeaveLoading").value, 0));
     c.superPct = Math.max(0, num(document.getElementById("psSuper").value, 12));
+    c.extrasLate = document.getElementById("psExtrasLate").checked;
+    c.exAllowance = document.getElementById("psExAllowance").checked;
+    c.exSuper = document.getElementById("psExSuper").checked;
+    c.ownSuperPct = Math.max(0, num(document.getElementById("psOwnSuper").value, 0));
     c.showTax = document.getElementById("psShowTax").checked;
     c.taxFree = document.getElementById("psTaxFree").checked;
     var st = state.settings = state.settings || {};
