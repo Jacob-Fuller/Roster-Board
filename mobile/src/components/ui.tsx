@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
   useColorScheme, type StyleProp, type TextStyle, type ViewStyle,
@@ -165,6 +165,15 @@ export function Sheet({ visible, onClose, title, children, footer }: {
 }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const layer = useContext(LayerContext);
+  const id = useRef(Math.random().toString(36).slice(2)).current;
+  useEffect(() => {
+    if (!visible) return;
+    layer.push(id);
+    return () => layer.pop(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+  const onTop = visible && layer.top === id;
   return (
     <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} transparent={Platform.OS === "web"}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: t.bg }}>
@@ -181,6 +190,8 @@ export function Sheet({ visible, onClose, title, children, footer }: {
         </ScrollView>
         {footer ? <View style={{ paddingHorizontal: 18, paddingTop: 10, paddingBottom: Math.max(insets.bottom, 14), borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.border }}>{footer}</View> : null}
       </KeyboardAvoidingView>
+      {/* iOS can't show a second pop-up over an open sheet, so the sheet on top shows dialogs and messages itself */}
+      {onTop ? <Overlays /> : null}
     </Modal>
   );
 }
@@ -194,12 +205,68 @@ type UiCtx = { dialog: (o: DialogOpts) => void; toast: (msg: string) => void };
 const UiContext = createContext<UiCtx>({ dialog: () => {}, toast: () => {} });
 export const useUi = () => useContext(UiContext);
 
-export function UiProvider({ children }: { children: React.ReactNode }) {
+// Which sheets are open, so dialogs and messages appear in the one on top.
+type LayerCtx = { top: string | null; push: (id: string) => void; pop: (id: string) => void };
+const LayerContext = createContext<LayerCtx>({ top: null, push: () => {}, pop: () => {} });
+type OverlayState = {
+  opts: DialogOpts | null; val: string; setVal: (v: string) => void; close: () => void;
+  msg: string; fade: Animated.Value;
+};
+const OverlayContext = createContext<OverlayState | null>(null);
+
+function DialogBox() {
+  const t = useTheme();
+  const o = useContext(OverlayContext);
+  if (!o || !o.opts) return null;
+  const { opts, val, setVal, close } = o;
+  return (
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 28 }}>
+      <View style={{ backgroundColor: t.surface, borderRadius: 18, padding: 18 }}>
+        <H2 style={{ marginBottom: opts.message ? 6 : 12 }}>{opts.title}</H2>
+        {opts.message ? <Text style={{ color: t.textDim, fontSize: 14, marginBottom: 14, lineHeight: 20 }}>{opts.message}</Text> : null}
+        {opts.input ? (
+          <Field autoFocus value={val} onChangeText={setVal} placeholder={opts.input.placeholder}
+            keyboardType={opts.input.keyboard || "default"} autoCapitalize="none" onSubmitEditing={() => { close(); opts.onConfirm(val); }} />
+        ) : null}
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <Button style={{ flex: 1 }} kind="ghost" title={opts.cancel || "Cancel"} onPress={close} />
+          <Button style={{ flex: 1 }} kind={opts.danger ? "danger" : "primary"} title={opts.confirm || "Save"} onPress={() => { close(); opts.onConfirm(val); }} />
+        </View>
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+function ToastView() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const o = useContext(OverlayContext);
+  if (!o) return null;
+  return (
+    <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: insets.bottom + 84, alignItems: "center", opacity: o.fade }}>
+      <View style={{ backgroundColor: t.dark ? "#F3EEE6" : "#14181F", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9 }}>
+        <Text style={{ color: t.dark ? "#14181F" : "#FFFFFF", fontWeight: "600" }}>{o.msg}</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+// Dialog and message drawn inside an open sheet (no separate pop-up window).
+function Overlays() {
+  const o = useContext(OverlayContext);
+  return (
+    <>
+      {o && o.opts ? <View style={StyleSheet.absoluteFill}><DialogBox /></View> : null}
+      <ToastView />
+    </>
+  );
+}
+
+export function UiProvider({ children }: { children: React.ReactNode }) {
   const [opts, setOpts] = useState<DialogOpts | null>(null);
   const [val, setVal] = useState("");
   const [msg, setMsg] = useState("");
+  const [stack, setStack] = useState<string[]>([]);
   const fade = useRef(new Animated.Value(0)).current;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -212,33 +279,28 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   }, [fade]);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  const close = () => setOpts(null);
+  const close = useCallback(() => setOpts(null), []);
+  const push = useCallback((id: string) => setStack((s) => s.filter((x) => x !== id).concat(id)), []);
+  const pop = useCallback((id: string) => setStack((s) => s.filter((x) => x !== id)), []);
+  const top = stack.length ? stack[stack.length - 1] : null;
+  const ui = useMemo(() => ({ dialog, toast }), [dialog, toast]);
+  const layer = useMemo(() => ({ top, push, pop }), [top, push, pop]);
+  const overlay = { opts, val, setVal, close, msg, fade };
   return (
-    <UiContext.Provider value={{ dialog, toast }}>
-      {children}
-      <Modal statusBarTranslucent navigationBarTranslucent visible={!!opts} transparent animationType="fade" onRequestClose={close}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 28 }}>
-          {opts ? (
-            <View style={{ backgroundColor: t.surface, borderRadius: 18, padding: 18 }}>
-              <H2 style={{ marginBottom: opts.message ? 6 : 12 }}>{opts.title}</H2>
-              {opts.message ? <Text style={{ color: t.textDim, fontSize: 14, marginBottom: 14, lineHeight: 20 }}>{opts.message}</Text> : null}
-              {opts.input ? (
-                <Field autoFocus value={val} onChangeText={setVal} placeholder={opts.input.placeholder}
-                  keyboardType={opts.input.keyboard || "default"} autoCapitalize="none" onSubmitEditing={() => { close(); opts.onConfirm(val); }} />
-              ) : null}
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <Button style={{ flex: 1 }} kind="ghost" title={opts.cancel || "Cancel"} onPress={close} />
-                <Button style={{ flex: 1 }} kind={opts.danger ? "danger" : "primary"} title={opts.confirm || "Save"} onPress={() => { const o = opts; close(); o.onConfirm(val); }} />
-              </View>
-            </View>
+    <UiContext.Provider value={ui}>
+      <LayerContext.Provider value={layer}>
+        <OverlayContext.Provider value={overlay}>
+          {children}
+          {!top ? (
+            <>
+              <Modal statusBarTranslucent navigationBarTranslucent visible={!!opts} transparent animationType="fade" onRequestClose={close}>
+                <DialogBox />
+              </Modal>
+              <ToastView />
+            </>
           ) : null}
-        </KeyboardAvoidingView>
-      </Modal>
-      <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: insets.bottom + 84, alignItems: "center", opacity: fade }}>
-        <View style={{ backgroundColor: t.dark ? "#F3EEE6" : "#14181F", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9 }}>
-          <Text style={{ color: t.dark ? "#14181F" : "#FFFFFF", fontWeight: "600" }}>{msg}</Text>
-        </View>
-      </Animated.View>
+        </OverlayContext.Provider>
+      </LayerContext.Provider>
     </UiContext.Provider>
   );
 }
