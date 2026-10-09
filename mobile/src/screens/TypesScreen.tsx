@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,16 +7,16 @@ import { TimeField } from "../components/TimeField";
 import { Button, Card, Dim, Divider, Field, H1, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
 import { FREE_TYPE_LIMIT, usePremium } from "../lib/premium";
-import { PALETTE, addDays, employmentOf, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
+import { PALETTE, TYPE_ICONS, addDays, employmentOf, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
 
 type Draft = {
-  name: string; color: string; ink: string; kind: "work" | "personal";
+  name: string; color: string; ink: string; icon: string | null; kind: "work" | "personal";
   start: string; end: string; overtimeEligible: boolean; excessEligible: boolean;
   allDay: boolean; timed: boolean; time: string;
   notes: string; useRange: boolean; rangeStart: string; rangeEnd: string;
 };
 const blank = (): Draft => ({
-  name: "", color: PALETTE[0].hex, ink: PALETTE[0].ink, kind: "work", start: "07:00", end: "19:00",
+  name: "", color: PALETTE[0].hex, ink: PALETTE[0].ink, icon: null, kind: "work", start: "07:00", end: "19:00",
   overtimeEligible: true, excessEligible: true, allDay: true, timed: false, time: "09:00",
   notes: "", useRange: false, rangeStart: ymd(new Date()), rangeEnd: ymd(new Date()),
 });
@@ -38,7 +39,7 @@ export function TypesScreen() {
       setDraft(blank()); setEditing("new"); return;
     }
     setDraft({
-      name: ty.name, color: ty.color, ink: ty.ink, kind: ty.kind === "personal" ? "personal" : "work",
+      name: ty.name, color: ty.color, ink: ty.ink, icon: ty.icon || null, kind: ty.kind === "personal" ? "personal" : "work",
       start: ty.startTime || "07:00", end: ty.endTime || "19:00",
       overtimeEligible: ty.overtimeEligible !== false, excessEligible: ty.excessEligible !== false,
       allDay: !!ty.allDay, timed: !ty.allDay && !!ty.time, time: ty.time || "09:00",
@@ -52,7 +53,7 @@ export function TypesScreen() {
     if (!name) { toast("Give it a name"); return; }
     const personal = draft.kind === "personal";
     const fields = {
-      name, color: draft.color, ink: draft.ink, kind: draft.kind,
+      name, color: draft.color, ink: draft.ink, icon: draft.icon, kind: draft.kind,
       startTime: personal ? (draft.timed ? draft.time : null) : draft.start,
       endTime: personal ? null : draft.end,
       hours: personal ? 0 : calcDuration(draft.start, draft.end),
@@ -134,7 +135,7 @@ export function TypesScreen() {
                 {i ? <Divider /> : null}
                 <Pressable accessibilityRole="button" onPress={() => open(ty)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13, opacity: pressed ? 0.6 : 1 })}>
                   <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: ty.color, alignItems: "center", justifyContent: "center" }}>
-                    <Text style={{ color: ty.ink, fontWeight: "800" }}>{ty.name.slice(0, 1).toUpperCase()}</Text>
+                    <TypeBadgeContent ty={ty} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{ty.name}</Text>
@@ -161,10 +162,31 @@ export function TypesScreen() {
         <View style={{ height: 14 }} />
         <Field label="Name" value={draft.name} onChangeText={(v) => set({ name: v })} placeholder={draft.kind === "work" ? "e.g. Day shift" : "e.g. Gym"} maxLength={30} />
         <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 8, fontWeight: "600" }}>Colour</Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
-          {PALETTE.map((p) => (
-            <Pressable key={p.hex} accessibilityRole="button" accessibilityState={{ selected: draft.color === p.hex }} onPress={() => set({ color: p.hex, ink: p.ink })}
-              style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: p.hex, borderWidth: 3, borderColor: draft.color === p.hex ? t.text : "transparent" }} />
+        <View style={{ gap: 10, marginBottom: 16 }}>
+          {[PALETTE.slice(0, 8), PALETTE.slice(8)].map((row, r) => (
+            <View key={r} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              {row.map((p) => (
+                <Pressable key={p.hex} accessibilityRole="button" accessibilityState={{ selected: draft.color === p.hex }} onPress={() => set({ color: p.hex, ink: p.ink })}
+                  style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: p.hex, borderWidth: 3, borderColor: draft.color === p.hex ? t.text : "transparent" }} />
+              ))}
+            </View>
+          ))}
+        </View>
+        <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 8, fontWeight: "600" }}>Icon</Text>
+        <View style={{ gap: 10, marginBottom: 16 }}>
+          {[TYPE_ICONS.slice(0, 8), TYPE_ICONS.slice(8)].map((row, r) => (
+            <View key={r} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              {row.map((ic) => {
+                const on = draft.icon === ic;
+                return (
+                  <Pressable key={ic} accessibilityRole="button" accessibilityLabel={ic.replace(/-/g, " ")} accessibilityState={{ selected: on }}
+                    onPress={() => set({ icon: on ? null : ic })}
+                    style={{ width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: on ? draft.color : t.surface2 }}>
+                    <Ionicons name={ic} size={18} color={on ? draft.ink : t.textDim} />
+                  </Pressable>
+                );
+              })}
+            </View>
           ))}
         </View>
         {draft.kind === "work" ? (
@@ -192,4 +214,10 @@ export function TypesScreen() {
       </Sheet>
     </View>
   );
+}
+
+// A type's badge: its chosen icon, or the first letter of its name.
+function TypeBadgeContent({ ty }: { ty: ShiftType }) {
+  if (ty.icon && (TYPE_ICONS as readonly string[]).includes(ty.icon)) return <Ionicons name={ty.icon as any} size={18} color={ty.ink} />;
+  return <Text style={{ color: ty.ink, fontWeight: "800" }}>{ty.name.slice(0, 1).toUpperCase()}</Text>;
 }

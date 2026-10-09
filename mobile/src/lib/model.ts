@@ -8,6 +8,7 @@ export type Rec = { id: string; updatedAt?: number; [k: string]: any };
 
 export type ShiftType = Rec & {
   name: string;
+  icon?: string | null;
   color: string;
   ink: string;
   kind?: "work" | "personal";
@@ -73,7 +74,15 @@ export const PALETTE = [
   { hex: "#E5484D", ink: "#FFFFFF" }, { hex: "#E8B339", ink: "#241900" }, { hex: "#4C8DFF", ink: "#FFFFFF" },
   { hex: "#A76BF0", ink: "#FFFFFF" }, { hex: "#3FC5C0", ink: "#062523" }, { hex: "#3ECF8E", ink: "#04241A" },
   { hex: "#F0679E", ink: "#FFFFFF" }, { hex: "#7E8B99", ink: "#FFFFFF" },
+  { hex: "#FF8C42", ink: "#2A1300" }, { hex: "#A3D65C", ink: "#1A2A05" }, { hex: "#7CC7F5", ink: "#062234" },
+  { hex: "#C9A7F5", ink: "#24113D" }, { hex: "#1F4E9C", ink: "#FFFFFF" }, { hex: "#8E2C48", ink: "#FFFFFF" },
+  { hex: "#9B6B43", ink: "#FFFFFF" }, { hex: "#3A3F47", ink: "#FFFFFF" },
 ];
+// Icons a shift type can show instead of its first letter (Ionicons names).
+export const TYPE_ICONS = [
+  "sunny", "moon", "partly-sunny", "alarm", "briefcase", "medkit", "call", "home",
+  "bed", "school", "airplane", "barbell", "people", "restaurant", "construct", "checkmark-circle",
+] as const;
 export const LEAVE_KINDS: { [k: string]: { color: string; ink: string; label: string } } = {
   annual: { color: "#7E8B99", ink: "#FFFFFF", label: "Annual Leave" },
   sick: { color: "#C24444", ink: "#FFFFFF", label: "Sick Leave" },
