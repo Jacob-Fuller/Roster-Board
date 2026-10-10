@@ -22,7 +22,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
   // widths of the sample words at size 100, measured on this phone's font
   const [w100, setW100] = useState<{ [k in keyof typeof SAMPLES]?: number }>({});
   const ts = useMemo(() => bannerSizes(gridW, w100), [gridW, w100]);
-  const cells = useMemo(() => buildMonthCells(month), [month]);
+  const cells = useMemo(() => buildMonthCells(month, { nextWeek: true }), [month]);
   // alternate pay periods are shaded, like the web app (only once pay is set up)
   const shade = useMemo(() => (data.settings && payIsSetUp(data.settings) ? payConfig(data.settings) : null), [data.settings]);
   const rows = cells.length / 7;

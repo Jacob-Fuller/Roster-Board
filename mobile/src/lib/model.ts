@@ -116,15 +116,18 @@ export function calcDuration(start: string, end: string) {
 }
 
 // Monday-first month grid; drops a sixth row that's entirely next month.
-export function buildMonthCells(month: Date) {
+// The month's weeks (Monday first). The calendar also shows the week after the
+// month (nextWeek), greyed out like the previous month's days on the first row.
+export function buildMonthCells(month: Date, opts?: { nextWeek?: boolean }) {
   const first = startOfMonth(month);
   const lead = (first.getDay() + 6) % 7;
+  const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+  const weeks = Math.ceil((lead + days) / 7) + (opts && opts.nextWeek ? 1 : 0);
   const cells: { date: Date; inMonth: boolean }[] = [];
-  for (let i = 0; i < 42; i++) {
+  for (let i = 0; i < weeks * 7; i++) {
     const d = new Date(first.getFullYear(), first.getMonth(), 1 - lead + i);
     cells.push({ date: d, inMonth: d.getMonth() === month.getMonth() });
   }
-  if (cells.slice(35).every((c) => !c.inMonth)) return cells.slice(0, 35);
   return cells;
 }
 
