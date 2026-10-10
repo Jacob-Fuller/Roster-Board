@@ -37,10 +37,12 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const [cat, setCat] = useState("other");
   const [allDay, setAllDay] = useState(false);
   const [time, setTime] = useState("");
-  const [remind, setRemind] = useState(false);
+  const [remindOn, setRemind] = useState(false);
   const [alerts, setAlerts] = useState<[number, number]>([-1, -1]);
   const alarmsOk = useAlarmsAvailable();
   const { locked, openPaywall } = usePremium();
+  // Premium on iOS 26+: real alarms replace "Remind me", so an event never gets both.
+  const useAlarms = alarmsOk && !locked;
   const [moveTo, setMoveTo] = useState("");
   // sub-dialogs
   const [chooser, setChooser] = useState<ShiftType | null>(null);
@@ -149,6 +151,8 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     setEditing({ id: n.id, date: key }); setText(n.text || ""); setAllDay(!!n.allDay); setTime(n.time || "");
     setRemind(!!n.remind); setCat(EVENT_CATS[n.category] ? n.category : "other"); setMoveTo(key);
     const a = (n.alarms || []).filter((m: number) => m >= 0);
+    // an older "Remind me" becomes an alert at the time of the event
+    if (!a.length && n.remind && useAlarms) a.push(0);
     setAlerts([a.length ? a[0] : -1, a.length > 1 ? a[1] : -1]);
   }
   async function chooseAlert(which: 0 | 1, v: number) {
@@ -156,9 +160,10 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     if (v >= 0 && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
     setAlerts((cur) => (which === 0 ? (v < 0 ? [-1, -1] : [v, cur[1]]) : [cur[0], v]));
   }
-  const alarmList = () => (allDay || !time ? [] : alerts.filter((m, i, a) => m >= 0 && a.indexOf(m) === i));
+  const alarmList = () => (allDay || !time || !useAlarms ? [] : alerts.filter((m, i, a) => m >= 0 && a.indexOf(m) === i));
   async function saveEvent() {
     const v = text.trim();
+    const remind = remindOn && !useAlarms;
     if (remind && !allDay && !time) { toast("Pick a time for the reminder"); return; }
     if (!v) { if (editing) toast("Give the event a name"); return; }
     if (remind) {
@@ -272,7 +277,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         const c = EVENT_CATS[n.category || "other"] || EVENT_CATS.other;
         return (
           <Item key={n.id} color={c.color} title={n.text} highlight={!!editing && editing.id === n.id}
-            sub={n.allDay ? "All day" : n.time ? n.time + (n.remind ? " 🔔" : "") : undefined} onPress={() => startEdit(n)}
+            sub={n.allDay ? "All day" : n.time ? n.time + (n.remind || (n.alarms || []).length ? " 🔔" : "") : undefined} onPress={() => startEdit(n)}
             actions={[{ label: "Remove", danger: true, onPress: () => { if (editing && editing.id === n.id) resetForm(); removeFrom("notes", n.id); } }]} />
         );
       }) : null}
@@ -298,8 +303,8 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
               <Text style={{ color: t.accent, fontWeight: "700" }}>+ Add a time (optional)</Text>
             </Pressable>
           )}
-          <ToggleRow label="Remind me" value={remind} onChange={setRemind} />
-          {alarmsOk && time ? (<>
+          {!useAlarms ? <ToggleRow label="Remind me" value={remindOn} onChange={setRemind} /> : null}
+          {useAlarms && time ? (<>
             <OptionPicker label="Alert" value={alerts[0]} options={EVENT_ALARM_OPTIONS} onChange={(v) => chooseAlert(0, v)} />
             {alerts[0] >= 0 ? <OptionPicker label="Second alert" value={alerts[1]} options={EVENT_ALARM_OPTIONS} onChange={(v) => chooseAlert(1, v)} /> : null}
           </>) : null}

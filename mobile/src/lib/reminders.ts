@@ -60,7 +60,8 @@ export function syncReminders(notes: Buckets<EventEntry>) {
       const now = Date.now();
       const upcoming: { at: Date; n: EventEntry }[] = [];
       Object.keys(notes || {}).forEach((k) => (notes[k] || []).forEach((n) => {
-        if (!n.remind || !n.time || n.allDay) return;
+        // events with alarms ring as alarms instead, so they never get a notification as well
+        if (!n.remind || !n.time || n.allDay || (n.alarms || []).length) return;
         const [h, m] = n.time.split(":").map((x) => +x);
         const d = parseYmd(k); d.setHours(h, m, 0, 0);
         if (d.getTime() > now) upcoming.push({ at: d, n });
