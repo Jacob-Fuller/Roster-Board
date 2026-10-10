@@ -119,6 +119,9 @@ const SWAP_OFF = "#F2843A", SWAP_ON = "#22A06B";
 // that fits "APPOINTMENT"; "EXCESS + OVERTIME" is the one exception and gets the
 // largest size that fits it. Sizes come from measuring the words on the phone.
 const BANNER_H = 28, STRIP_H = 10;
+// Every title strip sits this far in from the banner's top and sides, so a type's
+// border (drawn within this margin) runs around the strip too. Same on all banners.
+const STRIP_INSET = 3;
 const COMBO = "Excess + Overtime";
 const SAMPLES = {
   label: { text: "Psychologist", weight: "700" as const, est: 6.3 },
@@ -133,7 +136,8 @@ function bannerSizes(gridW: number, w100: { [k in keyof typeof SAMPLES]?: number
     const em = w100[k] ? w100[k]! / 100 : SAMPLES[k].est;
     return Math.max(3.5, Math.min(max, Math.floor((room / em) * 10) / 10));
   };
-  return { label: fit("label", content - 6 - 1, 12), title: fit("title", content - 4 - 1, 8), combo: fit("combo", content - 4 - 1, 8) };
+  const strip = content - 2 * STRIP_INSET - 4 - 1;
+  return { label: fit("label", content - 6 - 1, 12), title: fit("title", strip, 8), combo: fit("combo", strip, 8) };
 }
 
 // Party bunting and confetti for birthdays.
@@ -165,19 +169,17 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { l
   return (
     <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
-        <View style={{ height: STRIP_H, backgroundColor: stripBg, justifyContent: "center" }}>
+        <View style={{ height: STRIP_H, marginTop: STRIP_INSET, marginHorizontal: STRIP_INSET, borderRadius: 3, overflow: "hidden", backgroundColor: stripBg, justifyContent: "center" }}>
           <Text numberOfLines={1} ellipsizeMode="clip"
             style={{ color: stripFg, fontSize: strip === COMBO ? ts.combo : ts.title, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
         </View>
       ) : null}
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3, paddingTop: party ? 3 : 0 }}>
         {party ? <><Bunting /><Confetti /></> : null}
-        {/* under a title strip the border frames the name only, so the title is never covered */}
-        {strip ? <BannerBorder kind={border} ink={fg} radius={4} /> : null}
         <Text numberOfLines={1} ellipsizeMode="tail"
           style={{ color: fg, fontSize: ts.label, fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
-      {!strip ? <BannerBorder kind={border} ink={fg} radius={5} /> : null}
+      <BannerBorder kind={border} ink={fg} radius={5} />
     </View>
   );
 }
