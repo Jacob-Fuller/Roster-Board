@@ -135,7 +135,7 @@ platform :ios do
       counts = sets.map { |s| "#{s.screenshot_display_type}=#{s.app_screenshots.to_a.length}" }
       "#{loc.locale}: #{counts.join(' ')}"
     end
-    puts "::notice title=App Store screenshots::#{report.join(' | ')}"
+    STDOUT.puts "::notice title=App Store screenshots::#{report.join(' | ')}"
     UI.success("Uploaded #{files.length} screenshots for #{locales.join(', ')}")
   end
 end
