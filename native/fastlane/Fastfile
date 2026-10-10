@@ -222,6 +222,11 @@ platform :ios do
     end
     out["builds"] = get.call("v1/builds", { "filter[app]" => app.id, "sort" => "-uploadedDate", "limit" => 5 })
     out["availability"] = get.call("v1/apps/#{app.id}/appAvailabilityV2")
+    subs = get.call("v1/reviewSubmissions", { "filter[app]" => app.id, "limit" => 10 })
+    out["reviewSubmissions"] = subs
+    (subs["data"] || []).each do |rs|
+      out["reviewSubmission_#{rs['id']}_items"] = get.call("v1/reviewSubmissions/#{rs['id']}/items", { "include" => "appStoreVersion,appEvent,appCustomProductPageVersion,appStoreVersionExperiment" })
+    end
     path = File.expand_path("../build/asc-report.json", __dir__)
     FileUtils.mkdir_p(File.dirname(path))
     File.write(path, JSON.pretty_generate(out))
