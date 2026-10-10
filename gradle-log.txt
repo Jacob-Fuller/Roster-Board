@@ -1,0 +1,300 @@
+> Task :expo-modules-core:mergeReleaseAssets
+> Task :expo-modules-core:extractProguardFiles
+> Task :expo-modules-core:prepareLintJarForPublish
+> Task :expo-modules-core:stripReleaseDebugSymbols
+> Task :expo-modules-core:copyReleaseJniLibsProjectAndLocalJars
+> Task :expo-modules-core:extractDeepLinksForAarRelease
+> Task :expo-modules-core:writeReleaseLintModelMetadata
+> Task :react-native-async-storage_async-storage:writeReleaseLintModelMetadata
+> Task :react-native-community_datetimepicker:writeReleaseLintModelMetadata
+The Daemon will expire after the build after running out of JVM Metaspace.
+The project memory settings are likely not configured or are configured to an insufficient value.
+The daemon will restart for the next build, which may increase subsequent build times.
+These settings can be adjusted by setting 'org.gradle.jvmargs' in 'gradle.properties'.
+The currently configured max heap space is '2 GiB' and the configured max metaspace is '512 MiB'.
+For more information on how to set these values, please refer to https://docs.gradle.org/8.14.3/userguide/build_environment.html#sec:configuring_jvm_memory in the Gradle documentation.
+To disable this warning, set 'org.gradle.daemon.performance.disable-logging=true'.
+> Task :expo-modules-core:compileReleaseKotlin
+> Task :react-native-safe-area-context:writeReleaseLintModelMetadata
+> Task :react-native-safe-area-context:lintVitalAnalyzeRelease
+> Task :react-native-webview:writeReleaseLintModelMetadata
+> Task :react-native-async-storage_async-storage:generateReleaseLintVitalModel
+> Task :react-native-community_datetimepicker:generateReleaseLintVitalModel
+> Task :react-native-safe-area-context:generateReleaseLintVitalModel
+> Task :react-native-webview:generateReleaseLintVitalModel
+> Task :expo:mapReleaseSourceSetPaths
+> Task :app:mergeReleaseJniLibFolders
+> Task :expo:mergeReleaseResources
+> Task :react-native-webview:lintVitalAnalyzeRelease
+> Task :expo-constants:mapReleaseSourceSetPaths
+> Task :expo-constants:mergeReleaseResources
+> Task :expo-constants:verifyReleaseResources
+> Task :app:mergeReleaseNativeLibs
+> Task :expo:verifyReleaseResources
+> Task :expo-modules-core:mapReleaseSourceSetPaths
+> Task :expo-iap:mapReleaseSourceSetPaths
+> Task :app:checkReleaseDuplicateClasses
+> Task :app:buildKotlinToolingMetadata
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateReleaseBuildConfig
+> Task :app:stripReleaseDebugSymbols
+> Task :expo-modules-core:mergeReleaseResources
+> Task :app:checkReleaseAarMetadata
+> Task :expo-iap:mergeReleaseResources
+> Task :app:extractReleaseNativeSymbolTables
+> Task :expo-modules-core:verifyReleaseResources
+> Task :react-native-async-storage_async-storage:bundleReleaseAar
+> Task :react-native-async-storage_async-storage:mapReleaseSourceSetPaths
+
+> Task :app:createBundleReleaseJsAndAssets
+🔍 [expo-iap] Config values: horizonAppId=undefined, pinnedStore=auto, amazonAppstoreKey=none, vega=auto, onside=false
+📦 [expo-iap] Using OpenIAP from CocoaPods
+
+> Task :react-native-async-storage_async-storage:mergeReleaseResources
+> Task :expo-iap:verifyReleaseResources
+> Task :react-native-community_datetimepicker:bundleReleaseAar
+> Task :react-native-community_datetimepicker:mapReleaseSourceSetPaths
+
+> Task :app:createBundleReleaseJsAndAssets
+Starting Metro Bundler
+
+> Task :react-native-async-storage_async-storage:verifyReleaseResources
+> Task :react-native-async-storage_async-storage:assembleRelease
+> Task :react-native-safe-area-context:bundleReleaseAar
+> Task :react-native-safe-area-context:mapReleaseSourceSetPaths
+> Task :react-native-safe-area-context:mergeReleaseResources
+> Task :react-native-community_datetimepicker:mergeReleaseResources
+
+> Task :expo-modules-core:compileReleaseKotlin
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/apploader/RNHeadlessAppLoader.kt:48:87 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/apploader/RNHeadlessAppLoader.kt:91:85 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/adapters/react/apploader/RNHeadlessAppLoader.kt:120:83 'val reactNativeHost: ReactNativeHost' is deprecated. You should not use ReactNativeHost directly in the New Architecture. Use ReactHost instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/apploader/AppLoaderProvider.kt:34:52 Unchecked cast of 'Class<*>!' to 'Class<out HeadlessAppLoader>'.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:30:8 'typealias ErrorManagerModule = JSLoggerModule' is deprecated. Use JSLoggerModule instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:253:21 'typealias ErrorManagerModule = JSLoggerModule' is deprecated. Use JSLoggerModule instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/AppContext.kt:343:21 'val DEFAULT: Int' is deprecated. UIManagerType.DEFAULT will be deleted in the next release of React Native. Use [LEGACY] instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/defaultmodules/NativeModulesProxyModule.kt:16:5 'fun Constants(legacyConstantsProvider: () -> Map<String, Any?>): Unit' is deprecated. Use `Constant` or `Property` instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/jni/PromiseImpl.kt:65:51 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/jni/PromiseImpl.kt:69:22 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewDefinitionBuilder.kt:464:16 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewDefinitionBuilder.kt:464:30 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewManagerDefinition.kt:41:16 'val errorManager: JSLoggerModule?' is deprecated. Use AppContext.jsLogger instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-modules-core/android/src/main/java/expo/modules/kotlin/views/ViewManagerDefinition.kt:41:30 'fun reportExceptionToLogBox(codedException: CodedException): Unit' is deprecated. Use appContext.jsLogger.error(...) instead.
+
+> Task :app:createBundleReleaseJsAndAssets
+Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+
+> Task :react-native-safe-area-context:verifyReleaseResources
+> Task :react-native-safe-area-context:assembleRelease
+> Task :react-native-webview:bundleReleaseAar
+> Task :react-native-webview:mapReleaseSourceSetPaths
+> Task :react-native-webview:mergeReleaseResources
+
+> Task :expo-modules-core:compileReleaseJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :react-native-community_datetimepicker:verifyReleaseResources
+> Task :react-native-community_datetimepicker:assembleRelease
+
+> Task :app:createBundleReleaseJsAndAssets
+Android ./index.ts ▓░░░░░░░░░░░░░░░  9.0% ( 23/173)
+
+> Task :react-native-webview:verifyReleaseResources
+> Task :react-native-webview:assembleRelease
+> Task :expo-modules-core:bundleLibRuntimeToJarRelease
+> Task :expo-modules-core:bundleLibCompileToJarRelease
+> Task :expo-modules-core:bundleLibRuntimeToDirRelease
+
+> Task :app:createBundleReleaseJsAndAssets
+Android ./index.ts ▓░░░░░░░░░░░░░░░ 11.6% ( 91/267)
+
+> Task :expo-constants:compileReleaseKotlin
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo-constants/android/src/main/java/expo/modules/constants/ConstantsModule.kt:12:5 'fun Constants(legacyConstantsProvider: () -> Map<String, Any?>): Unit' is deprecated. Use `Constant` or `Property` instead.
+
+> Task :expo-constants:compileReleaseJavaWithJavac
+> Task :expo-constants:bundleLibCompileToJarRelease
+
+> Task :app:createBundleReleaseJsAndAssets
+Android ./index.ts ▓▓▓▓░░░░░░░░░░░░ 29.3% (229/423)
+Android ./index.ts ▓▓▓▓▓▓▓░░░░░░░░░ 49.7% (401/569)
+
+> Task :expo-iap:compileReleaseKotlin
+
+> Task :app:createBundleReleaseJsAndAssets
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 73.0% (557/660)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.8% (613/686)
+
+> Task :expo-iap:compileReleaseJavaWithJavac
+> Task :expo-constants:bundleLibRuntimeToDirRelease
+> Task :expo-iap:bundleLibCompileToJarRelease
+> Task :expo-iap:bundleLibRuntimeToDirRelease
+
+> Task :app:createBundleReleaseJsAndAssets
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 87.6% (680/732)
+
+> Task :expo-iap:bundleLibRuntimeToJarRelease
+> Task :expo-constants:bundleLibRuntimeToJarRelease
+> Task :expo-constants:processReleaseJavaRes
+> Task :expo-constants:createFullJarRelease
+> Task :expo-modules-core:processReleaseJavaRes
+> Task :expo-modules-core:createFullJarRelease
+> Task :expo-iap:processReleaseJavaRes
+> Task :expo-iap:createFullJarRelease
+> Task :expo-iap:extractReleaseAnnotations
+> Task :expo-iap:mergeReleaseGeneratedProguardFiles
+> Task :expo-iap:mergeReleaseConsumerProguardFiles
+> Task :expo-iap:mergeReleaseJavaResource
+> Task :expo-modules-core:generateReleaseLintModel
+> Task :expo-constants:generateReleaseLintModel
+> Task :expo-iap:syncReleaseLibJars
+> Task :expo-modules-core:extractReleaseAnnotations
+> Task :expo-modules-core:mergeReleaseGeneratedProguardFiles
+> Task :expo-modules-core:mergeReleaseConsumerProguardFiles
+> Task :expo-modules-core:mergeReleaseJavaResource
+
+> Task :app:createBundleReleaseJsAndAssets
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 95.9% (791/854)
+
+> Task :expo-modules-core:syncReleaseLibJars
+> Task :expo-modules-core:bundleReleaseLocalLintAar
+
+> Task :expo:compileReleaseKotlin
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ExpoModulesPackage.kt:34:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ExpoReactHostFactory.kt:8:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ExpoReactHostFactory.kt:80:22 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:24:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:58:33 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:105:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:105:38 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:113:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:114:21 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:168:36 'constructor(activity: Activity, reactNativeHost: ReactNativeHost?, appKey: String?, launchOptions: Bundle?, fabricEnabled: Boolean): ReactDelegate' is deprecated. Deprecated since 0.81.0, use one of the other constructors instead.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:279:77 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:282:22 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactActivityDelegateWrapper.kt:286:54 'val reactInstanceManager: ReactInstanceManager' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapper.kt:6:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapper.kt:15:9 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapper.kt:47:60 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:7:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:16:23 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:89:16 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/ReactNativeHostWrapperBase.kt:101:38 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/fetch/ExpoFetchModule.kt:30:39 'constructor(reactContext: ReactContext): ForwardingCookieHandler' is deprecated. Use the default constructor.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/fetch/NativeResponse.kt:44:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/node_modules/expo/android/src/main/java/expo/modules/fetch/NativeResponse.kt:46:11 'fun deallocate(): Unit' is deprecated. Use sharedObjectDidRelease() instead.
+
+> Task :expo-constants:extractReleaseAnnotations
+> Task :expo-constants:mergeReleaseGeneratedProguardFiles
+> Task :expo-constants:mergeReleaseConsumerProguardFiles
+> Task :expo-constants:mergeReleaseJavaResource
+> Task :expo-constants:syncReleaseLibJars
+> Task :expo-constants:bundleReleaseLocalLintAar
+> Task :expo-iap:generateReleaseLintModel
+> Task :expo:compileReleaseJavaWithJavac
+> Task :expo-iap:bundleReleaseLocalLintAar
+> Task :expo:bundleLibCompileToJarRelease
+> Task :expo:bundleLibRuntimeToJarRelease
+> Task :expo:bundleLibRuntimeToDirRelease
+> Task :expo-constants:lintVitalAnalyzeRelease
+> Task :expo:processReleaseJavaRes
+> Task :expo:createFullJarRelease
+
+> Task :app:createBundleReleaseJsAndAssets
+Android Bundled 31842ms index.ts (894 modules)
+Writing bundle output to: /home/runner/work/Roster-Board/Roster-Board/mobile/android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle
+Writing sourcemap output to: /home/runner/work/Roster-Board/Roster-Board/mobile/android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map
+Copying 20 asset files
+Done writing bundle output
+Done writing sourcemap output
+
+> Task :expo:generateReleaseLintModel
+> Task :expo:extractReleaseAnnotations
+> Task :expo:mergeReleaseGeneratedProguardFiles
+> Task :expo:mergeReleaseConsumerProguardFiles
+> Task :expo:mergeReleaseJavaResource
+> Task :expo:syncReleaseLibJars
+> Task :expo:bundleReleaseLocalLintAar
+> Task :expo-iap:lintVitalAnalyzeRelease
+> Task :expo:generateReleaseLintVitalModel
+> Task :expo-constants:generateReleaseLintVitalModel
+> Task :expo-iap:generateReleaseLintVitalModel
+> Task :expo-modules-core:generateReleaseLintVitalModel
+> Task :expo:bundleReleaseAar
+> Task :expo:assembleRelease
+> Task :expo-constants:bundleReleaseAar
+> Task :expo-constants:assembleRelease
+> Task :expo-iap:bundleReleaseAar
+> Task :expo-iap:assembleRelease
+> Task :expo-modules-core:bundleReleaseAar
+> Task :expo-modules-core:assembleRelease
+> Task :app:generateReleaseResValues
+> Task :app:mapReleaseSourceSetPaths
+> Task :app:generateReleaseResources
+> Task :expo:lintVitalAnalyzeRelease
+> Task :app:packageReleaseResources
+> Task :app:parseReleaseLocalResources
+> Task :app:createReleaseCompatibleScreenManifests
+> Task :app:extractDeepLinksRelease
+> Task :app:mergeReleaseNativeDebugMetadata
+
+> Task :app:processReleaseMainManifest
+/home/runner/work/Roster-Board/Roster-Board/mobile/android/app/src/main/AndroidManifest.xml:7:3-90 Warning:
+	uses-permission#android.permission.WRITE_CONTACTS was tagged at AndroidManifest.xml:7 to remove other declarations but no other declaration present
+/home/runner/work/Roster-Board/Roster-Board/mobile/android/app/src/main/AndroidManifest.xml Warning:
+	provider#expo.modules.filesystem.FileSystemFileProvider@android:authorities was tagged at AndroidManifest.xml:0 to replace other declarations but no other declaration present
+
+> Task :app:processReleaseManifest
+> Task :app:javaPreCompileRelease
+> Task :app:desugarReleaseFileDependencies
+> Task :app:mergeReleaseStartupProfile
+> Task :app:mergeReleaseResources
+> Task :expo-modules-core:lintVitalAnalyzeRelease
+> Task :app:processReleaseManifestForPackage
+> Task :app:mergeExtDexRelease
+> Task :app:mergeReleaseArtProfile
+> Task :app:mergeReleaseShaders
+> Task :app:compileReleaseShaders NO-SOURCE
+> Task :app:generateReleaseAssets UP-TO-DATE
+> Task :app:mergeReleaseAssets
+> Task :app:compressReleaseAssets
+> Task :app:extractReleaseVersionControlInfo
+> Task :app:extractProguardFiles
+> Task :app:collectReleaseDependencies
+> Task :app:sdkReleaseDependencyData
+> Task :app:validateSigningRelease
+> Task :app:writeReleaseAppMetadata
+> Task :app:writeReleaseSigningConfigVersions
+> Task :app:processReleaseResources
+> Task :app:optimizeReleaseResources
+
+> Task :app:compileReleaseKotlin
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/android/app/src/main/java/net/rosterboard/app/MainApplication.kt:9:8 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/android/app/src/main/java/net/rosterboard/app/MainApplication.kt:21:16 This declaration overrides a deprecated member but is not marked as deprecated itself. Add the '@Deprecated' annotation or suppress the diagnostic.
+w: file:///home/runner/work/Roster-Board/Roster-Board/mobile/android/app/src/main/java/net/rosterboard/app/MainApplication.kt:21:33 'class ReactNativeHost : Any' is deprecated. Deprecated in Java.
+
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics
+> Task :app:generateReleaseLintVitalReportModel
+> Task :app:processReleaseJavaRes
+> Task :app:lintVitalAnalyzeRelease
+> Task :app:lintVitalReportRelease
+> Task :app:lintVitalRelease
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeDexRelease
+> Task :app:compileReleaseArtProfile
+> Task :app:packageRelease
+> Task :app:createReleaseApkListingFileRedirect
+> Task :app:assembleRelease
+
+[Incubating] Problems report is available at: file:///home/runner/work/Roster-Board/Roster-Board/mobile/android/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 8m 20s
+425 actionable tasks: 425 executed
