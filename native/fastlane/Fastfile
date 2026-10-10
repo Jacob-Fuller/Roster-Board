@@ -128,14 +128,23 @@ platform :ios do
       submit_for_review: false,
       force: true
     )
-    # Check what App Store Connect actually holds now, and report it as a run annotation.
+    # Check what App Store Connect actually holds now: every language must have exactly
+    # these files, in this order (matched by checksum). Fail the run if not.
+    require "digest"
+    want = files.map { |f| Digest::MD5.hexdigest(File.binread(File.expand_path("../appstore-screenshots/#{f}", __dir__))) }
     version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
-    report = version.get_app_store_version_localizations.map do |loc|
-      sets = loc.get_app_screenshot_sets
-      counts = sets.map { |s| "#{s.screenshot_display_type}=#{s.app_screenshots.to_a.length}" }
-      "#{loc.locale}: #{counts.join(' ')}"
+    problems = []
+    version.get_app_store_version_localizations.each do |loc|
+      iphone = loc.get_app_screenshot_sets.select { |s| s.screenshot_display_type.to_s.start_with?("APP_IPHONE") }
+      iphone.each do |set|
+        shots = set.app_screenshots.to_a
+        got = shots.map(&:source_file_checksum)
+        UI.message("#{loc.locale} #{set.screenshot_display_type}: #{shots.length} screenshots")
+        problems << "#{loc.locale} #{set.screenshot_display_type}: #{shots.length} on App Store Connect, expected #{files.length} matching files" if got != want
+      end
+      problems << "#{loc.locale}: no iPhone screenshots" if iphone.empty?
     end
-    STDOUT.puts "::notice title=App Store screenshots::#{report.join(' | ')}"
-    UI.success("Uploaded #{files.length} screenshots for #{locales.join(', ')}")
+    UI.user_error!("Screenshots on App Store Connect don't match: #{problems.join('; ')}") unless problems.empty?
+    UI.success("Verified: #{files.length} screenshots on App Store Connect for #{locales.join(', ')}")
   end
 end
