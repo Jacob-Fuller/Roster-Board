@@ -233,10 +233,20 @@ platform :ios do
     require "json"
     lst = JSON.parse(File.read(File.expand_path("../listing/app-store.json", __dir__)))
     c = Spaceship::ConnectAPI.client.tunes_request_client
+    results = []
     patch = lambda do |path, type, id, attrs|
       body = { data: { type: type, id: id, attributes: attrs } }
-      c.patch(path) { |req| req.body = body.to_json; req.headers["Content-Type"] = "application/json" }
-      UI.message("Updated #{type} #{id}: #{attrs.keys.join(', ')}")
+      begin
+        r = c.patch(path, body)
+        ok = r.status.to_i < 300
+        results << { path: path, fields: attrs.keys, status: r.status, error: ok ? nil : r.body }
+      rescue => e
+        results << { path: path, fields: attrs.keys, error: e.message }
+      end
+    end
+    at_exit_write = lambda do
+      f = File.expand_path("../build/asc-update.json", __dir__)
+      FileUtils.mkdir_p(File.dirname(f)); File.write(f, JSON.pretty_generate(results))
     end
     app = Spaceship::ConnectAPI::App.find(APP_ID)
     version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
@@ -265,6 +275,9 @@ platform :ios do
         end
       end
     end
-    UI.success("Listing updated")
+    at_exit_write.call
+    failed = results.select { |x| x[:error] }
+    UI.user_error!("#{failed.length} of #{results.length} updates failed") unless failed.empty?
+    UI.success("Listing updated (#{results.length} changes)")
   end
 end

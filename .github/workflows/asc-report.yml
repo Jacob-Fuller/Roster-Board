@@ -50,6 +50,7 @@ jobs:
         if: always()
         run: |
           mkdir -p /tmp/report && cp build/asc-report.json /tmp/report/ 2>/dev/null || echo '{"error":"no report"}' > /tmp/report/asc-report.json
+          cp build/asc-update.json /tmp/report/ 2>/dev/null || true
           cd /tmp/report
           git init -q -b asc-report
           git config user.name "github-actions"; git config user.email "actions@github.com"
