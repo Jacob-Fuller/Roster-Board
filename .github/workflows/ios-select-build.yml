@@ -1,0 +1,38 @@
+# Attaches the newest processed build (the native app) to the App Store version being prepared.
+# Run it from GitHub: Actions -> "App Store build" -> Run workflow.
+name: App Store build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: Build number to attach (leave empty for the newest processed build)
+        default: ""
+      min_uploaded:
+        description: Only accept a build uploaded after this time (UTC)
+        default: ""
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - run: gem install fastlane -N
+      - name: Attach build
+        run: fastlane select_build
+        env:
+          BUILD_NUMBER: ${{ inputs.build_number }}
+          MIN_UPLOADED: ${{ inputs.min_uploaded }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
