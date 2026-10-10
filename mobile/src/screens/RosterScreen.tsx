@@ -105,7 +105,7 @@ export function RosterScreen() {
                     return (
                       <View key={id} style={{ backgroundColor: ty.color, borderRadius: 4, paddingHorizontal: 2, paddingVertical: icon ? 2 : 0, alignItems: "center" }}>
                         {icon ? <Ionicons name={icon as any} size={13} color={ty.ink} accessibilityLabel={ty.name} />
-                          : <Text numberOfLines={1} style={{ color: ty.ink, fontSize: size, fontWeight: "700" }}>{ty.name}</Text>}
+                          : <Text numberOfLines={1} style={{ color: ty.ink, fontSize: size, lineHeight: Math.ceil(size * 1.35), fontWeight: "700" }}>{ty.name}</Text>}
                       </View>
                     );
                   })}
