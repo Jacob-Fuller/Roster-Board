@@ -75,12 +75,12 @@ export function AccountScreen() {
 
         {signedIn ? (
           <>
-            <SectionHead title="Invite a friend" />
-            <Card><Button title="Share invite" onPress={shareInvite} /></Card>
             <SectionHead title="Share your roster" />
             <Card style={{ paddingVertical: 2 }}>
               <MenuRow title="Shared rosters" onPress={() => setShareOpen(true)} />
             </Card>
+            <SectionHead title="Invite a friend" />
+            <Card><Button title="Share invite" onPress={shareInvite} /></Card>
           </>
         ) : (
           <>
