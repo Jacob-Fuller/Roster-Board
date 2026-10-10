@@ -67,7 +67,7 @@ export function TypesScreen() {
       hours: personal ? 0 : calcDuration(draft.start, draft.end),
       overtimeEligible: personal ? false : draft.overtimeEligible,
       excessEligible: personal ? false : draft.excessEligible,
-      alarm: personal || !draft.alarm ? null : draft.alarm,
+      alarm: !draft.alarm || (personal && !draft.timed) ? null : draft.alarm,
       time: personal && draft.timed ? draft.time : null,
       allDay: personal ? !draft.timed : false,
       notes: personal ? draft.notes.trim() || null : null,
@@ -211,6 +211,7 @@ export function TypesScreen() {
           <>
             <ToggleRow label="Set a time" value={draft.timed} onChange={(v) => set({ timed: v })} />
             {draft.timed ? <TimeField label="Time" value={draft.time} onChange={(v) => set({ time: v })} /> : null}
+            {draft.timed && alarmsOk ? <OptionPicker label="Alarm" value={draft.alarm} options={SHIFT_ALARM_OPTIONS} onChange={chooseAlarm} /> : null}
             <Field label="Notes (optional)" value={draft.notes} onChangeText={(v) => set({ notes: v })} multiline style={{ minHeight: 64, textAlignVertical: "top" }} />
             <ToggleRow label="Add to a range of dates" value={draft.useRange} onChange={(v) => set({ useRange: v })} />
             {draft.useRange ? (

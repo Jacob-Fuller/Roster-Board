@@ -13,7 +13,7 @@ export type ShiftType = Rec & {
   ink: string;
   kind?: "work" | "personal";
   startTime?: string | null;
-  alarm?: number | null; // minutes before each shift of this type (iPhone alarms), work types only
+  alarm?: number | null; // minutes before each entry of this type (iPhone alarms); personal types need a time
   endTime?: string | null;
   hours?: number;
   overtimeEligible?: boolean;

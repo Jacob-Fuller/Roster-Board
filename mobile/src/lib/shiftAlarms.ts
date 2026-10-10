@@ -60,16 +60,21 @@ export function buildAlarms(data: Snapshot, now = Date.now()): ShiftAlarmItem[] 
   (data.types || []).forEach((t) => { typesById[t.id] = t; });
   for (let i = 0; i <= HORIZON_DAYS; i++) {
     const k = ymd(addDays(today, i));
-    if ((data.leave[k] || []).length) continue;
+    const onLeave = (data.leave[k] || []).length > 0;
     (data.shifts[k] || []).forEach((sh) => {
       if (sh.typeId === OVERTIME_ID || sh.typeId === EXCESS_ID) return;
       const t = typesById[sh.typeId];
       const mins = (t && t.alarm) || 0;
-      if (!t || t.kind === "personal" || !t.startTime || !(mins > 0)) return;
-      const [h, m] = t.startTime.split(":").map((x) => +x);
+      if (!t || !(mins > 0)) return;
+      const personal = t.kind === "personal";
+      // work shifts don't ring on leave days; personal entries still do
+      if (!personal && onLeave) return;
+      const start = personal ? (t.allDay ? null : t.time || t.startTime) : t.startTime;
+      if (!start) return;
+      const [h, m] = start.split(":").map((x) => +x);
       const d = parseYmd(k); d.setHours(h, m, 0, 0);
       const at = d.getTime() - mins * 60000;
-      if (at > now && at <= until) list.push({ at, title: t.name + " at " + t.startTime });
+      if (at > now && at <= until) list.push({ at, title: t.name + " at " + start });
     });
   }
   // events can have an alert up to a week ahead, so look a week further out
