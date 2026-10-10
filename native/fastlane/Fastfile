@@ -128,6 +128,14 @@ platform :ios do
       submit_for_review: false,
       force: true
     )
+    # Check what App Store Connect actually holds now, and report it as a run annotation.
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    report = version.get_app_store_version_localizations.map do |loc|
+      sets = loc.get_app_screenshot_sets
+      counts = sets.map { |s| "#{s.screenshot_display_type}=#{s.app_screenshots.to_a.length}" }
+      "#{loc.locale}: #{counts.join(' ')}"
+    end
+    puts "::notice title=App Store screenshots::#{report.join(' | ')}"
     UI.success("Uploaded #{files.length} screenshots for #{locales.join(', ')}")
   end
 end
