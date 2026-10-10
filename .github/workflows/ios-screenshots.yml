@@ -1,0 +1,34 @@
+# Replaces the iPhone screenshots on the App Store listing with the ones in native/appstore-screenshots.
+# Run it from GitHub: Actions -> "App Store screenshots" -> Run workflow.
+name: App Store screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      files:
+        description: Screenshots to upload, in order (comma-separated file names)
+        default: iphone-6.9-01.png,iphone-6.9-02.png,iphone-6.9-03.png,iphone-6.9-04.png,iphone-6.9-05.png,iphone-6.9-06.png,iphone-6.9-07.png,iphone-6.9-09.png
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - run: gem install fastlane -N
+      - name: Upload screenshots
+        run: fastlane screenshots
+        env:
+          SCREENSHOTS: ${{ inputs.files }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
