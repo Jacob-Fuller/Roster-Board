@@ -227,4 +227,44 @@ platform :ios do
     File.write(path, JSON.pretty_generate(out))
     UI.success("Wrote #{path}")
   end
+  desc "Apply native/listing/app-store.json to the App Store version being prepared"
+  lane :asc_update do
+    asc_key
+    require "json"
+    lst = JSON.parse(File.read(File.expand_path("../listing/app-store.json", __dir__)))
+    c = Spaceship::ConnectAPI.client.tunes_request_client
+    patch = lambda do |path, type, id, attrs|
+      body = { data: { type: type, id: id, attributes: attrs } }
+      c.patch(path) { |req| req.body = body.to_json; req.headers["Content-Type"] = "application/json" }
+      UI.message("Updated #{type} #{id}: #{attrs.keys.join(', ')}")
+    end
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    version = app.get_edit_app_store_version(platform: Spaceship::ConnectAPI::Platform::IOS)
+    UI.user_error!("No editable App Store version") unless version
+    patch.call("v1/appStoreVersions/#{version.id}", "appStoreVersions", version.id, { copyright: lst["copyright"] })
+    version.get_app_store_version_localizations.each do |loc|
+      patch.call("v1/appStoreVersionLocalizations/#{loc.id}", "appStoreVersionLocalizations", loc.id,
+        { description: lst["description"], keywords: lst["keywords"], promotionalText: lst["promotionalText"], marketingUrl: lst["marketingUrl"] })
+    end
+    rd = c.get("v1/appStoreVersions/#{version.id}/appStoreReviewDetail").body["data"]
+    UI.user_error!("No review detail on the version") unless rd
+    patch.call("v1/appStoreReviewDetails/#{rd['id']}", "appStoreReviewDetails", rd["id"], { notes: lst["reviewNotes"] })
+    (c.get("v1/apps/#{app.id}/inAppPurchasesV2").body["data"] || []).each do |iap|
+      cfg = lst["iap"][iap["attributes"]["productId"]] or next
+      patch.call("v2/inAppPurchases/#{iap['id']}", "inAppPurchases", iap["id"], { reviewNote: cfg["reviewNote"] })
+      (c.get("v2/inAppPurchases/#{iap['id']}/inAppPurchaseLocalizations").body["data"] || []).each do |l|
+        patch.call("v1/inAppPurchaseLocalizations/#{l['id']}", "inAppPurchaseLocalizations", l["id"], { description: cfg["description"] })
+      end
+    end
+    (c.get("v1/apps/#{app.id}/subscriptionGroups").body["data"] || []).each do |g|
+      (c.get("v1/subscriptionGroups/#{g['id']}/subscriptions").body["data"] || []).each do |sub|
+        cfg = lst["iap"][sub["attributes"]["productId"]] or next
+        patch.call("v1/subscriptions/#{sub['id']}", "subscriptions", sub["id"], { reviewNote: cfg["reviewNote"] })
+        (c.get("v1/subscriptions/#{sub['id']}/subscriptionLocalizations").body["data"] || []).each do |l|
+          patch.call("v1/subscriptionLocalizations/#{l['id']}", "subscriptionLocalizations", l["id"], { description: cfg["description"] })
+        end
+      end
+    end
+    UI.success("Listing updated")
+  end
 end

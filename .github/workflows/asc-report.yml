@@ -4,6 +4,11 @@ name: App Store Connect report
 
 on:
   workflow_dispatch:
+    inputs:
+      update:
+        description: Apply native/listing/app-store.json first
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -21,7 +26,18 @@ jobs:
         with:
           ruby-version: "3.3"
       - run: gem install fastlane -N
+      - name: Update listing
+        if: inputs.update
+        run: fastlane asc_update
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
       - name: Read App Store Connect
+        if: always()
         run: fastlane asc_report
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
