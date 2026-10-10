@@ -1,9 +1,10 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DateField } from "../components/DateField";
 import { Button, Card, Chip, Dim, H1, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
-import { WEEKDAYS_SHORT, ymd } from "../lib/model";
+import { TYPE_ICONS, WEEKDAYS_SHORT, ymd } from "../lib/model";
 import { applyRosterPattern, ensurePatternShape, patternHasContent } from "../lib/roster";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
@@ -19,6 +20,7 @@ export function RosterScreen() {
   const { dialog, toast } = useUi();
   const { locked, openPaywall } = usePremium();
   const typesById = useTypesById();
+  const [rowW, setRowW] = useState(0);
   const [cell, setCell] = useState<{ w: number; d: number } | null>(null);
   const [start, setStart] = useState(ymd(new Date()));
   const [months, setMonths] = useState<Months>("12");
@@ -83,7 +85,7 @@ export function RosterScreen() {
               onConfirm: (v) => { const n = parseInt(v, 10); if (n) setWeeks(n); },
             })} />
           </View>
-          <View style={{ flexDirection: "row", marginBottom: 4 }}>
+          <View onLayout={(e) => setRowW(e.nativeEvent.layout.width)} style={{ flexDirection: "row", marginBottom: 4 }}>
             <View style={{ width: 30 }} />
             {WEEKDAYS_SHORT.map((w) => <Text key={w} style={{ flex: 1, textAlign: "center", fontSize: 10, fontWeight: "700", color: t.textFaint }}>{w.toUpperCase()}</Text>)}
           </View>
@@ -96,7 +98,16 @@ export function RosterScreen() {
                   {ids.slice(0, 2).map((id) => {
                     const ty = typesById[id];
                     if (!ty) return null;
-                    return <View key={id} style={{ backgroundColor: ty.color, borderRadius: 4, paddingHorizontal: 2 }}><Text numberOfLines={1} style={{ color: ty.ink, fontSize: 9, fontWeight: "700" }}>{ty.name}</Text></View>;
+                    // the type's icon when it has one, otherwise its whole name sized to fit the cell
+                    const icon = ty.icon && (TYPE_ICONS as readonly string[]).includes(ty.icon) ? ty.icon : null;
+                    const room = rowW ? (rowW - 30) / 7 - 3 - 4 - 4 - 2 : 30;
+                    const size = Math.max(6, Math.min(9, room / (Math.max(1, ty.name.length) * 0.62)));
+                    return (
+                      <View key={id} style={{ backgroundColor: ty.color, borderRadius: 4, paddingHorizontal: 2, paddingVertical: icon ? 2 : 0, alignItems: "center" }}>
+                        {icon ? <Ionicons name={icon as any} size={13} color={ty.ink} accessibilityLabel={ty.name} />
+                          : <Text numberOfLines={1} style={{ color: ty.ink, fontSize: size, fontWeight: "700" }}>{ty.name}</Text>}
+                      </View>
+                    );
                   })}
                   {ids.length > 2 ? <Text style={{ fontSize: 9, color: t.textDim }}>+{ids.length - 2}</Text> : null}
                 </Pressable>

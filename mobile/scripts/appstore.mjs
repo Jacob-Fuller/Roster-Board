@@ -11,42 +11,53 @@ const Y = now.getFullYear(), M = now.getMonth();
 const key = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 
 const types = [
-  { id: "t-day", name: "Dayshift", color: "#E8B339", ink: "#241900", kind: "work", startTime: "07:00", endTime: "19:00", hours: 12, overtimeEligible: true, excessEligible: true, order: 0 },
-  { id: "t-night", name: "Nightshift", color: "#4C8DFF", ink: "#FFFFFF", kind: "work", startTime: "19:00", endTime: "07:00", hours: 12, overtimeEligible: true, excessEligible: true, order: 1 },
-  { id: "t-train", name: "Training", color: "#3FC5C0", ink: "#062523", kind: "work", startTime: "08:00", endTime: "16:00", hours: 8, overtimeEligible: false, excessEligible: false, order: 2 },
-  { id: "t-gym", name: "Gym", color: "#3ECF8E", ink: "#04241A", kind: "personal", time: "06:00", startTime: "06:00", allDay: false, hours: 0, order: 3 },
+  { id: "t-day", name: "Dayshift", icon: "sunny", color: "#E8B339", ink: "#241900", kind: "work", startTime: "07:00", endTime: "19:00", hours: 12, overtimeEligible: true, excessEligible: true, order: 0 },
+  { id: "t-night", name: "Nightshift", icon: "moon", color: "#4C8DFF", ink: "#FFFFFF", kind: "work", startTime: "19:00", endTime: "07:00", hours: 12, overtimeEligible: true, excessEligible: true, order: 1 },
+  { id: "t-train", name: "Training", icon: "school", color: "#3FC5C0", ink: "#062523", kind: "work", startTime: "08:00", endTime: "16:00", hours: 8, overtimeEligible: false, excessEligible: false, order: 2 },
 ];
-// a 4-week rotation stamped over the whole year
+// A realistic 2-week rotation: 2 days, 2 nights, then days off (never a night straight into a day).
 const pattern = [
-  [["t-day"], ["t-day"], [], [], ["t-night"], ["t-night"], []],
+  [["t-day"], ["t-day"], ["t-night"], ["t-night"], [], [], []],
   [[], ["t-day"], ["t-day"], ["t-night"], ["t-night"], [], []],
-  [["t-day"], [], ["t-day"], ["t-day"], [], ["t-night"], ["t-night"]],
-  [[], [], ["t-night"], ["t-night"], ["t-day"], [], ["t-train"]],
 ];
 const shifts = {};
 const start = new Date(Y, 0, 1);
 const lead = (start.getDay() + 6) % 7;
+const weekOf = (d) => Math.floor((Math.round((d - new Date(Y, 0, 1)) / 86400000) + lead) / 7) % 2;
 for (let d = new Date(start); d.getFullYear() === Y; d.setDate(d.getDate() + 1)) {
-  const idx = Math.floor((Math.round((d - start) / 86400000) + lead) / 7) % 4;
-  const ids = pattern[idx][(d.getDay() + 6) % 7];
+  const ids = pattern[weekOf(d)][(d.getDay() + 6) % 7];
   if (ids.length) shifts[key(d)] = ids.map((typeId, i) => ({ id: "s" + key(d) + i, typeId }));
 }
 const day = (n) => key(new Date(Y, M, n));
-const add = (n, e) => (shifts[day(n)] = shifts[day(n)] || []).push(e);
-add(6, { id: "ot1", typeId: "overtime", hours: 3, baseTypeId: "t-day" });
-add(14, { id: "sp1", typeId: "overtime", hours: 4, excessHours: 8, baseTypeId: "t-day" });
-add(3, { id: "g1", typeId: "t-gym" }); add(17, { id: "g2", typeId: "t-gym" });
+const last = new Date(Y, M + 1, 0).getDate();
+// free days this month: no shift that day, and not the morning a night shift finishes
+const used = {};
+const free = [];
+for (let n = 2; n <= last; n++) {
+  const k = day(n), prev = shifts[key(new Date(Y, M, n - 1))] || [];
+  if (!shifts[k] && !prev.some((e) => e.typeId === "t-night")) free.push(n);
+}
+const take = (pred) => { const n = free.find((x) => !used[x] && pred(x)); if (n) used[n] = true; return n; };
+const dow = (n) => (new Date(Y, M, n).getDay() + 6) % 7; // 0 = Monday
+const add = (n, e) => { if (n) (shifts[day(n)] = shifts[day(n)] || []).push(e); };
+const otDay = take((n) => n > 3);
+const splitDay = take((n) => n > (otDay || 0) + 4);
+const trainDay = take((n) => n > (splitDay || 0) + 2);
+add(otDay, { id: "ot1", typeId: "overtime", hours: 12, baseTypeId: "t-day" });
+add(splitDay, { id: "sp1", typeId: "overtime", hours: 4, excessHours: 8, baseTypeId: "t-day" });
+add(trainDay, { id: "tr1", typeId: "t-train" });
+const dentist = take(() => true), bbq = take((n) => dow(n) >= 5), physio = take(() => true), bday = take(() => true), ph = take(() => true);
+const notes = {};
+if (dentist) notes[day(dentist)] = [{ id: "n1", text: "Dentist", category: "appointment", time: "10:30" }];
+if (physio) notes[day(physio)] = [{ id: "n2", text: "Physio", category: "appointment", time: "14:00" }];
+if (bbq) notes[day(bbq)] = [{ id: "n3", text: "Team BBQ", category: "family", allDay: true }];
+const DETAIL_DAY = splitDay || otDay || 6;
 const data = {
-  types, shifts,
-  notes: {
-    [day(now.getDate())]: [{ id: "n0", text: "Pick up Hayley", category: "family", time: "15:30", remind: true }],
-    [day(5)]: [{ id: "n1", text: "Dentist", category: "appointment", time: "10:30" }],
-    [day(18)]: [{ id: "n2", text: "Team BBQ", category: "family", allDay: true }],
-  },
-  leave: { [day(29)]: [{ id: "l1", kind: "annual", hours: 12 }], [day(30)]: [{ id: "l2", kind: "annual", hours: 12 }] },
-  swaps: {}, payTags: { [day(26)]: [{ id: "ph1", kind: "holiday" }] },
-  birthdays: [{ id: "b1", name: "Sam Taylor", day: 12, month: M + 1, year: 1990 }],
-  roster: { weeks: 4, pattern, updatedAt: 1 },
+  types, shifts, notes,
+  leave: {},
+  swaps: {}, payTags: ph ? { [day(ph)]: [{ id: "ph1", kind: "holiday" }] } : {},
+  birthdays: bday ? [{ id: "b1", name: "Sam Taylor", day: bday, month: M + 1, year: 1990 }] : [],
+  roster: { weeks: 2, pattern, updatedAt: 1 },
   settings: { hourlyRate: 46.5, otMultiplier: 1.5, excessMultiplier: 1, payLeave: true, updatedAt: 1 },
   tombstones: {},
 };
@@ -75,8 +86,8 @@ const shots = [
   { eyebrow: "YOUR ROSTER", title: "Every shift at a glance", img: await capture("light", async () => {}) },
   { eyebrow: "ROSTER PATTERNS", title: "Fill a whole year in one tap", img: await capture("light", tab(/Roster/)) },
   { eyebrow: "ESTIMATED PAY", title: "Know your pay before payday", img: await capture("light", tab(/Reports/)) },
-  { eyebrow: "EVERY DETAIL", title: "Overtime, swaps and leave", img: await capture("light", async (p) => {
-    await p.getByLabel(new Date(Y, M, 6).toDateString(), { exact: true }).first().click(); await p.waitForTimeout(800);
+  { eyebrow: "EVERY DETAIL", title: "Log overtime and excess", img: await capture("light", async (p) => {
+    await p.getByLabel(new Date(Y, M, DETAIL_DAY).toDateString(), { exact: true }).first().click(); await p.waitForTimeout(800);
   }) },
   { eyebrow: "DARK MODE", title: "Easy on the eyes after a night shift", img: await capture("dark", async () => {}) },
   { eyebrow: "YOUR SHIFTS", title: "Your shifts, your colours", img: await capture("light", tab(/Types/)) },

@@ -21,10 +21,10 @@ shifts[day(9)].push({ id: "sp1", typeId: "overtime", hours: 4, excessHours: 8, b
 shifts[day(3)] = [{ id: "g1", typeId: "t-gym" }];
 const data = {
   types, shifts,
-  notes: { [day(7)]: [{ id: "n1", text: "Dentist", category: "appointment", time: "10:30" }], [day(15)]: [{ id: "n2", text: "Hayley's recital", category: "family", allDay: true }] },
+  notes: { [day(7)]: [{ id: "n1", text: "Dentist", category: "appointment", time: "10:30" }], [day(15)]: [{ id: "n2", text: "School concert", category: "family", allDay: true }] },
   leave: { [day(28)]: [{ id: "l1", kind: "annual", hours: 12 }] },
   swaps: {}, payTags: {},
-  birthdays: [{ id: "b1", name: "Kathryn Smith", day: now.getDate(), month: now.getMonth() + 1 }],
+  birthdays: [{ id: "b1", name: "Sam Taylor", day: now.getDate(), month: now.getMonth() + 1 }],
   roster: { weeks: 2, pattern: [[["t-day"], ["t-day"], [], [], ["t-night"], ["t-night"], []], [[], [], ["t-day"], ["t-day"], [], [], ["t-night"]]], updatedAt: 1 }, settings: { hourlyRate: 0 }, tombstones: {},
 };
 
