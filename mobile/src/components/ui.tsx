@@ -140,16 +140,16 @@ export function ToggleRow({ label, value, onChange, sub }: { label: string; valu
   );
 }
 
-export function MenuRow({ title, sub, onPress, danger, right }: { title: string; sub?: string; onPress: () => void; danger?: boolean; right?: string }) {
+export function MenuRow({ title, sub, onPress, danger, right, center }: { title: string; sub?: string; onPress: () => void; danger?: boolean; right?: string; center?: boolean }) {
   const t = useTheme();
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 10, opacity: pressed ? 0.6 : 1 })}>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, alignItems: center ? "center" : "flex-start" }}>
         <Text style={{ color: danger ? t.danger : t.text, fontSize: 15, fontWeight: "600" }}>{title}</Text>
         {sub ? <Dim>{sub}</Dim> : null}
       </View>
       {right ? <Dim>{right}</Dim> : null}
-      <Text style={{ color: t.textFaint, fontSize: 20 }}>›</Text>
+      {center ? null : <Text style={{ color: t.textFaint, fontSize: 20 }}>›</Text>}
     </Pressable>
   );
 }

@@ -237,20 +237,29 @@ function AccountDetail({ visible, onClose }: { visible: boolean; onClose: () => 
 
 // Premium status, upgrade, manage and restore (Apple purchases, iPhone only).
 function PremiumSection() {
+  const t = useTheme();
   const premium = usePremium();
   const { toast } = useUi();
+  const [open, setOpen] = useState(false);
   if (Platform.OS !== "ios") return null;
+  const plan = !premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Monthly";
   return (
     <>
       <SectionHead title="Premium" />
       <Card style={{ paddingVertical: 2 }}>
-        <MenuRow title="Roster Board Premium" right={!premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Monthly"}
-          onPress={() => (premium.status.active ? undefined : premium.openPaywall())} />
-        {!premium.status.active ? (<><Divider /><MenuRow title="Unlock Premium" onPress={() => premium.openPaywall()} /></>) : null}
-        {premium.status.kind === "monthly" ? (<><Divider /><MenuRow title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
+        <MenuRow center title="Roster Board Premium" onPress={() => (premium.status.active ? setOpen(true) : premium.openPaywall())} />
         <Divider />
-        <MenuRow title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
+        <MenuRow center title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
       </Card>
+      <Sheet visible={open} onClose={() => setOpen(false)} title="Roster Board Premium">
+        <Card style={{ paddingVertical: 2 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 12 }}>
+            <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>Plan</Text>
+            <Dim>{plan}</Dim>
+          </View>
+          {premium.status.kind === "monthly" ? (<><Divider /><MenuRow center title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
+        </Card>
+      </Sheet>
     </>
   );
 }
