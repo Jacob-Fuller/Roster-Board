@@ -13,6 +13,7 @@ export type ShiftType = Rec & {
   ink: string;
   kind?: "work" | "personal";
   startTime?: string | null;
+  alarm?: number | null; // minutes before each shift of this type (iPhone alarms), work types only
   endTime?: string | null;
   hours?: number;
   overtimeEligible?: boolean;
@@ -25,7 +26,7 @@ export type ShiftType = Rec & {
 };
 export type ShiftEntry = Rec & { typeId: string; hours?: number; baseTypeId?: string; tag?: string };
 export type LeaveEntry = Rec & { kind: string; hours?: number };
-export type EventEntry = Rec & { text: string; category?: string; time?: string; allDay?: boolean; remind?: boolean; notified?: boolean };
+export type EventEntry = Rec & { text: string; category?: string; time?: string; allDay?: boolean; remind?: boolean; notified?: boolean; alarms?: number[] };
 export type Birthday = Rec & { name: string; day: number; month: number; year?: number | null };
 export type Buckets<T> = { [dateKey: string]: T[] };
 

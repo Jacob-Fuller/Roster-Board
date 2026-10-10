@@ -9,7 +9,10 @@ import {
   type Rec, type ShiftEntry, type ShiftType, type Snapshot,
 } from "../lib/model";
 import { payTagLabel, payAllowances, payTagsOn } from "../lib/pay";
+import { OptionPicker } from "../components/OptionPicker";
+import { usePremium } from "../lib/premium";
 import { askReminderPermission } from "../lib/reminders";
+import { EVENT_ALARM_OPTIONS, requestAlarmPermission, useAlarmsAvailable } from "../lib/shiftAlarms";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
 
@@ -35,13 +38,16 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const [allDay, setAllDay] = useState(false);
   const [time, setTime] = useState("");
   const [remind, setRemind] = useState(false);
+  const [alerts, setAlerts] = useState<[number, number]>([-1, -1]);
+  const alarmsOk = useAlarmsAvailable();
+  const { locked, openPaywall } = usePremium();
   const [moveTo, setMoveTo] = useState("");
   // sub-dialogs
   const [chooser, setChooser] = useState<ShiftType | null>(null);
   const [split, setSplit] = useState<{ baseTypeId?: string; ot: string; ex: string; label: string; onSave: (ot: number, ex: number) => void } | null>(null);
   const [swap, setSwap] = useState<{ shift: ShiftEntry } | null>(null);
 
-  const resetForm = () => { setEditing(null); setText(""); setCat("other"); setAllDay(false); setTime(""); setRemind(false); };
+  const resetForm = () => { setEditing(null); setText(""); setCat("other"); setAllDay(false); setTime(""); setRemind(false); setAlerts([-1, -1]); };
   useEffect(() => { resetForm(); }, [dateKey]);
   if (!dateKey) return <Sheet visible={false} onClose={onClose} title=""><View /></Sheet>;
   const key = dateKey;
@@ -142,7 +148,15 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   function startEdit(n: any) {
     setEditing({ id: n.id, date: key }); setText(n.text || ""); setAllDay(!!n.allDay); setTime(n.time || "");
     setRemind(!!n.remind); setCat(EVENT_CATS[n.category] ? n.category : "other"); setMoveTo(key);
+    const a = (n.alarms || []).filter((m: number) => m >= 0);
+    setAlerts([a.length ? a[0] : -1, a.length > 1 ? a[1] : -1]);
   }
+  async function chooseAlert(which: 0 | 1, v: number) {
+    if (v >= 0 && locked) { onClose(); setTimeout(() => openPaywall("Alarms are part of Premium."), 500); return; }
+    if (v >= 0 && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
+    setAlerts((cur) => (which === 0 ? (v < 0 ? [-1, -1] : [v, cur[1]]) : [cur[0], v]));
+  }
+  const alarmList = () => (allDay || !time ? [] : alerts.filter((m, i, a) => m >= 0 && a.indexOf(m) === i));
   async function saveEvent() {
     const v = text.trim();
     if (remind && !allDay && !time) { toast("Pick a time for the reminder"); return; }
@@ -160,9 +174,10 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         const n: any = list[i];
         const prevTime = n.time, prevRemind = n.remind, prevNotified = !!n.notified;
         n.text = v; n.category = cat || n.category || "other";
-        delete n.time; delete n.allDay; delete n.remind; delete n.notified;
+        delete n.time; delete n.allDay; delete n.remind; delete n.notified; delete n.alarms;
         if (allDay) n.allDay = true; else if (time) n.time = time;
         if (remind && time && !allDay) { n.remind = true; n.notified = prevRemind && prevTime === time && from === to ? prevNotified : false; }
+        const al = alarmList(); if (al.length) n.alarms = al;
         n.updatedAt = Date.now();
         if (to !== from) {
           list.splice(i, 1);
@@ -176,6 +191,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         const e: any = { id: mkId(), text: v, category: cat || "other" };
         if (allDay) e.allDay = true; else if (time) e.time = time;
         if (remind && time && !allDay) { e.remind = true; e.notified = false; }
+        const al = alarmList(); if (al.length) e.alarms = al;
         (d.notes[key] = d.notes[key] || []).push(e);
       });
       toast("Event added");
@@ -283,6 +299,10 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
             </Pressable>
           )}
           <ToggleRow label="Remind me" value={remind} onChange={setRemind} />
+          {alarmsOk && time ? (<>
+            <OptionPicker label="Alert" value={alerts[0]} options={EVENT_ALARM_OPTIONS} onChange={(v) => chooseAlert(0, v)} />
+            {alerts[0] >= 0 ? <OptionPicker label="Second alert" value={alerts[1]} options={EVENT_ALARM_OPTIONS} onChange={(v) => chooseAlert(1, v)} /> : null}
+          </>) : null}
         </>
       ) : null}
       <Button title={editing ? "Save" : "Add"} onPress={saveEvent} />

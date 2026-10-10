@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card, Dim, Divider, Field, H1, MenuRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { employmentOf, type Employment } from "../lib/model";
 import { usePremium } from "../lib/premium";
-import { getPersonalAlarms, getShiftAlarmMinutes, PERSONAL_ALARM_OPTIONS, personalAlarmsSummary, setPersonalAlarms, setShiftAlarmMinutes, SHIFT_ALARM_OPTIONS, shiftAlarmLabel, shiftAlarmsAvailable, syncShiftAlarms, type PersonalAlarms } from "../lib/shiftAlarms";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
@@ -25,40 +24,6 @@ export function AccountScreen() {
   const [bdaysOpen, setBdaysOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const premiumCtx = usePremium();
-  const [alarmOk, setAlarmOk] = useState(false);
-  const [alarmMins, setAlarmMins] = useState(0);
-  const [alarmOpen, setAlarmOpen] = useState(false);
-  const [personal, setPersonal] = useState<PersonalAlarms>({ first: -1, second: -1 });
-  const [personalOpen, setPersonalOpen] = useState(false);
-  useEffect(() => {
-    shiftAlarmsAvailable().then((ok) => {
-      setAlarmOk(ok);
-      if (ok) { getShiftAlarmMinutes().then(setAlarmMins); getPersonalAlarms().then(setPersonal); }
-    });
-  }, []);
-  // Alarms are part of Premium: close the sheet first so the paywall can open on top.
-  function needPremium(close: () => void) {
-    if (!premiumCtx.locked) return false;
-    close();
-    setTimeout(() => premiumCtx.openPaywall("Alarms are part of Premium."), 500);
-    return true;
-  }
-  async function chooseAlarm(m: number) {
-    if (m > 0 && needPremium(() => setAlarmOpen(false))) return;
-    const ok = await setShiftAlarmMinutes(m);
-    if (!ok) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
-    setAlarmMins(m); setAlarmOpen(false);
-    syncShiftAlarms(data, premiumCtx.locked);
-  }
-  async function choosePersonal(which: "first" | "second", m: number) {
-    const next = { ...personal, [which]: m };
-    if (next.first >= 0 && needPremium(() => setPersonalOpen(false))) return;
-    const ok = await setPersonalAlarms(next);
-    if (!ok) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
-    setPersonal(next.first < 0 ? { first: -1, second: -1 } : next);
-    syncShiftAlarms(data, premiumCtx.locked);
-  }
 
   const signedIn = auth === "signedIn" && !!user;
   const name = (user && user.user_metadata && (user.user_metadata as any).full_name) || "";
@@ -88,14 +53,6 @@ export function AccountScreen() {
           <MenuRow title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
         </Card>
 
-        {alarmOk ? (<>
-          <SectionHead title="Alarms" />
-          <Card style={{ paddingVertical: 2 }}>
-            <MenuRow title="Shift" right={shiftAlarmLabel(alarmMins)} onPress={() => setAlarmOpen(true)} />
-            <Divider />
-            <MenuRow title="Personal" right={personalAlarmsSummary(personal)} onPress={() => setPersonalOpen(true)} />
-          </Card>
-        </>) : null}
 
         <SectionHead title="Employment" />
         <Card>
@@ -149,38 +106,6 @@ export function AccountScreen() {
 
       <AccountDetail visible={acctOpen} onClose={() => setAcctOpen(false)} />
       <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
-      <Sheet visible={personalOpen} onClose={() => setPersonalOpen(false)} title="Personal alarms">
-        <SectionHead title="Alert" />
-        <Card style={{ paddingVertical: 2 }}>
-          {PERSONAL_ALARM_OPTIONS.map((o, i) => (
-            <React.Fragment key={o.value}>
-              {i ? <Divider /> : null}
-              <MenuRow center title={(o.value === personal.first ? "✓  " : "") + o.label} onPress={() => choosePersonal("first", o.value)} />
-            </React.Fragment>
-          ))}
-        </Card>
-        {personal.first >= 0 ? (<>
-          <SectionHead title="Second alert" />
-          <Card style={{ paddingVertical: 2 }}>
-            {PERSONAL_ALARM_OPTIONS.map((o, i) => (
-              <React.Fragment key={o.value}>
-                {i ? <Divider /> : null}
-                <MenuRow center title={(o.value === personal.second ? "✓  " : "") + o.label} onPress={() => choosePersonal("second", o.value)} />
-              </React.Fragment>
-            ))}
-          </Card>
-        </>) : null}
-      </Sheet>
-      <Sheet visible={alarmOpen} onClose={() => setAlarmOpen(false)} title="Shift alarm">
-        <Card style={{ paddingVertical: 2 }}>
-          {SHIFT_ALARM_OPTIONS.map((o, i) => (
-            <React.Fragment key={o.value}>
-              {i ? <Divider /> : null}
-              <MenuRow center title={(o.value === alarmMins ? "✓  " : "") + o.label} onPress={() => chooseAlarm(o.value)} />
-            </React.Fragment>
-          ))}
-        </Card>
-      </Sheet>
       <SharingSheet visible={shareOpen} onClose={() => setShareOpen(false)} />
       <Onboarding visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </View>

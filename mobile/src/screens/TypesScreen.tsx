@@ -5,19 +5,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
 import { Button, Card, Dim, Divider, Field, H1, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
+import { OptionPicker } from "../components/OptionPicker";
+import { requestAlarmPermission, SHIFT_ALARM_OPTIONS, useAlarmsAvailable } from "../lib/shiftAlarms";
 import { useStore } from "../lib/store";
 import { FREE_TYPE_LIMIT, usePremium } from "../lib/premium";
 import { PALETTE, TYPE_ICONS, addDays, employmentOf, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
 
 type Draft = {
   name: string; color: string; ink: string; icon: string | null; kind: "work" | "personal";
-  start: string; end: string; overtimeEligible: boolean; excessEligible: boolean;
+  start: string; end: string; overtimeEligible: boolean; excessEligible: boolean; alarm: number;
   allDay: boolean; timed: boolean; time: string;
   notes: string; useRange: boolean; rangeStart: string; rangeEnd: string;
 };
 const blank = (): Draft => ({
   name: "", color: PALETTE[0].hex, ink: PALETTE[0].ink, icon: null, kind: "work", start: "07:00", end: "19:00",
-  overtimeEligible: true, excessEligible: true, allDay: true, timed: false, time: "09:00",
+  overtimeEligible: true, excessEligible: true, alarm: 0, allDay: true, timed: false, time: "09:00",
   notes: "", useRange: false, rangeStart: ymd(new Date()), rangeEnd: ymd(new Date()),
 });
 
@@ -32,6 +34,12 @@ export function TypesScreen() {
   const [draft, setDraft] = useState<Draft>(blank());
   const types = data.types.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
+  const alarmsOk = useAlarmsAvailable();
+  async function chooseAlarm(v: number) {
+    if (v > 0 && locked) { setEditing(null); setTimeout(() => openPaywall("Alarms are part of Premium."), 500); return; }
+    if (v > 0 && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
+    set({ alarm: v });
+  }
 
   function open(ty?: ShiftType) {
     if (!ty) {
@@ -41,7 +49,7 @@ export function TypesScreen() {
     setDraft({
       name: ty.name, color: ty.color, ink: ty.ink, icon: ty.icon || null, kind: ty.kind === "personal" ? "personal" : "work",
       start: ty.startTime || "07:00", end: ty.endTime || "19:00",
-      overtimeEligible: ty.overtimeEligible !== false, excessEligible: ty.excessEligible !== false,
+      overtimeEligible: ty.overtimeEligible !== false, excessEligible: ty.excessEligible !== false, alarm: ty.alarm || 0,
       allDay: !!ty.allDay, timed: !ty.allDay && !!ty.time, time: ty.time || "09:00",
       notes: ty.notes || "", useRange: false, rangeStart: ymd(new Date()), rangeEnd: ymd(new Date()),
     });
@@ -59,6 +67,7 @@ export function TypesScreen() {
       hours: personal ? 0 : calcDuration(draft.start, draft.end),
       overtimeEligible: personal ? false : draft.overtimeEligible,
       excessEligible: personal ? false : draft.excessEligible,
+      alarm: personal || !draft.alarm ? null : draft.alarm,
       time: personal && draft.timed ? draft.time : null,
       allDay: personal ? !draft.timed : false,
       notes: personal ? draft.notes.trim() || null : null,
@@ -196,6 +205,7 @@ export function TypesScreen() {
             <Dim style={{ marginBottom: 8 }}>{fmtHours(hours)} hours</Dim>
             <ToggleRow label="Overtime" value={draft.overtimeEligible} onChange={(v) => set({ overtimeEligible: v })} />
             {!fullTime ? <ToggleRow label="Excess" value={draft.excessEligible} onChange={(v) => set({ excessEligible: v })} /> : null}
+            {alarmsOk ? <OptionPicker label="Alarm" value={draft.alarm} options={SHIFT_ALARM_OPTIONS} onChange={chooseAlarm} /> : null}
           </>
         ) : (
           <>
