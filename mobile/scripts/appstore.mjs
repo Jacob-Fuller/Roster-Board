@@ -63,7 +63,7 @@ if (swapFrom && swapTo) {
   swaps[day(swapFrom)] = [{ id: "sw-off", kind: "off", partner: "Chris", note: "Family wedding", linkedDate: day(swapTo), linkedSwapId: "sw-on", typeId: "t-day", baseTypeId: null, hours: null, shiftEntryId: orig.id }];
   swaps[day(swapTo)] = [{ id: "sw-on", kind: "on", partner: "Chris", note: "Family wedding", linkedDate: day(swapFrom), linkedSwapId: "sw-off", typeId: "t-day", baseTypeId: null, hours: null, shiftEntryId: "sw-new" }];
 }
-const DETAIL_DAY = swapFrom || splitDay || otDay || 6;
+const DETAIL_DAY = swapTo || splitDay || otDay || 6;
 const data = {
   types, shifts, notes,
   leave: {},
@@ -172,7 +172,8 @@ const shots = [
   }) },
   { eyebrow: "MAKE IT YOURS", title: "Full or part time, light or dark", img: await capture("dark", async (p) => {
     await tab(/Account/)(p);
-    await scrollTo(p, "Employment");
+    await p.getByText("Appearance", { exact: true }).first().evaluate((el) => el.scrollIntoView({ block: "center" }));
+    await p.waitForTimeout(500);
   }) },
   { eyebrow: "ROSTER PATTERNS", title: "Fill a whole year in one tap", img: await capture("light", tab(/Roster/)) },
   { eyebrow: "YOUR SHIFTS", title: "Your shifts, your colours", img: await capture("light", tab(/Types/)) },
