@@ -1,0 +1,14 @@
+{
+  "name": "rb-shift-alarm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Roster Board shift alarms using Apple's AlarmKit (iOS 26+).",
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    }
+  },
+  "peerDependencies": {
+    "@capacitor/core": ">=7.0.0"
+  }
+}

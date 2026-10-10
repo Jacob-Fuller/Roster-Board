@@ -54,6 +54,9 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Roster Board" "$PLIST" || \
           /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Roster Board" "$PLIST"
+          # Shift alarms (AlarmKit): the text shown when iOS asks permission
+          /usr/libexec/PlistBuddy -c "Delete :NSAlarmKitUsageDescription" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :NSAlarmKitUsageDescription string Roster Board sets an alarm before your shifts so you never miss one." "$PLIST"
 
       - name: Build and upload
         run: fastlane ${{ inputs.lane }}

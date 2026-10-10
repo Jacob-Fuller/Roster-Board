@@ -19,7 +19,8 @@
     "@capacitor/filesystem": "^7.0.0",
     "@capacitor/share": "^7.0.0",
     "@capacitor/local-notifications": "^7.0.0",
-    "@capgo/native-purchases": "^7.0.0"
+    "@capgo/native-purchases": "^7.0.0",
+    "rb-shift-alarm": "file:plugins/rb-shift-alarm"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",
