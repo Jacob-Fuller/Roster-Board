@@ -42,14 +42,14 @@ function Shell() {
   const [fontsLoaded, fontError] = useFonts({ Fraunces_700Bold });
   const fontsReady = fontsLoaded || !!fontError;
   useEffect(() => { if (auth !== "loading") syncReminders(data.notes); }, [auth, data.notes]);
-  // Shift alarms follow the roster: refresh shortly after any change, and when the app comes back.
+  // Alarms follow the calendar: refresh shortly after any change, and when the app comes back.
   const { locked } = usePremium();
   const alarmData = useRef(data); alarmData.current = data;
   useEffect(() => {
     if (auth === "loading") return;
     const timer = setTimeout(() => syncShiftAlarms(alarmData.current, locked), 800);
     return () => clearTimeout(timer);
-  }, [auth, data.shifts, data.types, data.leave, locked]);
+  }, [auth, data.shifts, data.types, data.leave, data.notes, locked]);
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => { if (s === "active") syncShiftAlarms(alarmData.current, locked); });
     return () => sub.remove();
