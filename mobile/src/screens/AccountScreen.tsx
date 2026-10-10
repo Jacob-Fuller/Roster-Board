@@ -247,9 +247,7 @@ function PremiumSection() {
     <>
       <SectionHead title="Premium" />
       <Card style={{ paddingVertical: 2 }}>
-        <MenuRow center title="Roster Board Premium" onPress={() => (premium.status.active ? setOpen(true) : premium.openPaywall())} />
-        <Divider />
-        <MenuRow center title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
+        <MenuRow center title="Roster Board Premium" onPress={() => setOpen(true)} />
       </Card>
       <Sheet visible={open} onClose={() => setOpen(false)} title="Roster Board Premium">
         <Card style={{ paddingVertical: 2 }}>
@@ -257,7 +255,10 @@ function PremiumSection() {
             <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>Plan</Text>
             <Dim>{plan}</Dim>
           </View>
+          {!premium.status.active ? (<><Divider /><MenuRow center title="Unlock Premium" onPress={() => { setOpen(false); setTimeout(() => premium.openPaywall(), 500); }} /></>) : null}
           {premium.status.kind === "monthly" ? (<><Divider /><MenuRow center title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
+          <Divider />
+          <MenuRow center title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
         </Card>
       </Sheet>
     </>
