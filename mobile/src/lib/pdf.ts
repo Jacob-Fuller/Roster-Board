@@ -62,7 +62,7 @@ function dayEntries(data: PdfData, typesById: TypesById, key: string): PdfEntry[
       const bt = s.baseTypeId ? typesById[s.baseTypeId] : undefined;
       const split = s.typeId === OVERTIME_ID && s.excessHours > 0;
       const detail = split
-        ? "EX " + fmtHours(entryExcessHours(s)) + "h + OT " + fmtHours(entryOTHours(s)) + "h"
+        ? "Excess " + fmtHours(entryExcessHours(s)) + "h + overtime " + fmtHours(entryOTHours(s)) + "h"
         : (comboT === EXCESS_TYPE ? "Excess" : "Overtime") + (h ? " · " + fmtHours(h) + "h" : "");
       let exH = entryExcessHours(s), otH = entryOTHours(s);
       if (!exH && !otH) { if (s.typeId === EXCESS_ID) exH = h; else otH = h; }

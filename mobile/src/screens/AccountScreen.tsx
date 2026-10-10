@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card, Dim, Divider, Field, H1, MenuRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { employmentOf, type Employment } from "../lib/model";
 import { usePremium } from "../lib/premium";
+import { getShiftAlarmMinutes, setShiftAlarmMinutes, SHIFT_ALARM_OPTIONS, shiftAlarmLabel, shiftAlarmsAvailable, syncShiftAlarms } from "../lib/shiftAlarms";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
@@ -24,6 +25,24 @@ export function AccountScreen() {
   const [bdaysOpen, setBdaysOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const premiumCtx = usePremium();
+  const [alarmOk, setAlarmOk] = useState(false);
+  const [alarmMins, setAlarmMins] = useState(0);
+  const [alarmOpen, setAlarmOpen] = useState(false);
+  useEffect(() => {
+    shiftAlarmsAvailable().then((ok) => { setAlarmOk(ok); if (ok) getShiftAlarmMinutes().then(setAlarmMins); });
+  }, []);
+  async function chooseAlarm(m: number) {
+    if (m > 0 && premiumCtx.locked) {
+      setAlarmOpen(false);
+      setTimeout(() => premiumCtx.openPaywall("Shift alarms are part of Premium."), 500);
+      return;
+    }
+    const ok = await setShiftAlarmMinutes(m);
+    if (!ok) { toast("Allow alarms for Roster Board in Settings to use shift alarms"); return; }
+    setAlarmMins(m); setAlarmOpen(false);
+    syncShiftAlarms(data, premiumCtx.locked);
+  }
 
   const signedIn = auth === "signedIn" && !!user;
   const name = (user && user.user_metadata && (user.user_metadata as any).full_name) || "";
@@ -52,6 +71,13 @@ export function AccountScreen() {
         <Card style={{ paddingVertical: 2 }}>
           <MenuRow title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
         </Card>
+
+        {alarmOk ? (<>
+          <SectionHead title="Shift alarm" />
+          <Card style={{ paddingVertical: 2 }}>
+            <MenuRow title={shiftAlarmLabel(alarmMins)} onPress={() => setAlarmOpen(true)} />
+          </Card>
+        </>) : null}
 
         <SectionHead title="Employment" />
         <Card>
@@ -105,6 +131,16 @@ export function AccountScreen() {
 
       <AccountDetail visible={acctOpen} onClose={() => setAcctOpen(false)} />
       <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
+      <Sheet visible={alarmOpen} onClose={() => setAlarmOpen(false)} title="Shift alarm">
+        <Card style={{ paddingVertical: 2 }}>
+          {SHIFT_ALARM_OPTIONS.map((o, i) => (
+            <React.Fragment key={o.value}>
+              {i ? <Divider /> : null}
+              <MenuRow center title={(o.value === alarmMins ? "✓  " : "") + o.label} onPress={() => chooseAlarm(o.value)} />
+            </React.Fragment>
+          ))}
+        </Card>
+      </Sheet>
       <SharingSheet visible={shareOpen} onClose={() => setShareOpen(false)} />
       <Onboarding visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </View>

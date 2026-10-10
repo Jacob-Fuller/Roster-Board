@@ -8,7 +8,8 @@ import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-cont
 import { UiProvider, useTheme } from "./src/components/ui";
 import { askIfRemindersNeedIt, syncReminders } from "./src/lib/reminders";
 import { planContactSync, readContactBirthdays } from "./src/lib/contactBirthdays";
-import { PremiumProvider } from "./src/lib/premium";
+import { PremiumProvider, usePremium } from "./src/lib/premium";
+import { syncShiftAlarms } from "./src/lib/shiftAlarms";
 import { StoreProvider, useStore } from "./src/lib/store";
 import { Paywall } from "./src/screens/Paywall";
 import { AccountScreen } from "./src/screens/AccountScreen";
@@ -41,6 +42,18 @@ function Shell() {
   const [fontsLoaded, fontError] = useFonts({ Fraunces_700Bold });
   const fontsReady = fontsLoaded || !!fontError;
   useEffect(() => { if (auth !== "loading") syncReminders(data.notes); }, [auth, data.notes]);
+  // Shift alarms follow the roster: refresh shortly after any change, and when the app comes back.
+  const { locked } = usePremium();
+  const alarmData = useRef(data); alarmData.current = data;
+  useEffect(() => {
+    if (auth === "loading") return;
+    const timer = setTimeout(() => syncShiftAlarms(alarmData.current, locked), 800);
+    return () => clearTimeout(timer);
+  }, [auth, data.shifts, data.types, data.leave, locked]);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (s) => { if (s === "active") syncShiftAlarms(alarmData.current, locked); });
+    return () => sub.remove();
+  }, [locked]);
   useEffect(() => {
     if (auth === "loading") return;
     askIfRemindersNeedIt(data.notes).then(() => syncReminders(data.notes));

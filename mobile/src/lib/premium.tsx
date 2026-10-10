@@ -1,6 +1,7 @@
 // Premium (Apple in-app purchases), same products and limits as the web app's
 // iPhone version. Free: calendar, up to 3 shift types, overtime/excess, leave,
-// events, birthdays, reminders, sharing and cloud backup. Premium unlocks the rest.
+// events, birthdays, reminders and cloud backup. Premium unlocks the rest,
+// including roster sharing and shift alarms.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as IAP from "expo-iap";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";

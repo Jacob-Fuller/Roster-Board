@@ -16,7 +16,8 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAlarmKitUsageDescription": "Roster Board sets an alarm before your shifts so you never miss one."
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,

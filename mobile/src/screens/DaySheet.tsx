@@ -198,7 +198,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         const combo = isCombo(s.typeId);
         const col = entryColor(s, typesById);
         const detail = isSplitEntry(s)
-          ? fmtHours(entryExcessHours(s)) + "h EX + " + fmtHours(entryOTHours(s)) + "h OT"
+          ? fmtHours(entryExcessHours(s)) + "h excess + " + fmtHours(entryOTHours(s)) + "h overtime"
           : combo && s.hours != null ? fmtHours(s.hours) + "h" : ty.kind === "personal" ? (s.tag ? "“" + s.tag + "”" : "") : fmtHours(ty.hours || 0) + "h";
         return (
           <Item key={s.id} color={col.bg} title={entryName(s, typesById)} sub={detail}
