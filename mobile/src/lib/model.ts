@@ -9,6 +9,7 @@ export type Rec = { id: string; updatedAt?: number; [k: string]: any };
 export type ShiftType = Rec & {
   name: string;
   icon?: string | null;
+  border?: string | null; // BANNER_BORDERS id, drawn inside the calendar banner
   color: string;
   ink: string;
   kind?: "work" | "personal";
@@ -84,6 +85,12 @@ export const TYPE_ICONS = [
   "sunny", "moon", "partly-sunny", "alarm", "briefcase", "medkit", "call", "home",
   "bed", "school", "airplane", "barbell", "people", "restaurant", "construct", "checkmark-circle",
 ] as const;
+// Borders drawn around the inside of a type's calendar banners (two rows of 8 in the editor).
+export const BANNER_BORDERS = [
+  "none", "thin", "thick", "double", "dashed", "dotted", "white", "dark",
+  "corners", "rails", "sides", "left", "stitched", "glow", "frame", "dots",
+] as const;
+export type BannerBorder = (typeof BANNER_BORDERS)[number];
 export const LEAVE_KINDS: { [k: string]: { color: string; ink: string; label: string } } = {
   annual: { color: "#7E8B99", ink: "#FFFFFF", label: "Annual Leave" },
   sick: { color: "#C24444", ink: "#FFFFFF", label: "Sick Leave" },

@@ -5,6 +5,7 @@ import {
   type Birthday, type Buckets, type EventEntry, type LeaveEntry, type Rec, type ShiftEntry, type ShiftType,
 } from "../lib/model";
 import { payConfig, payIsSetUp, payPeriodIsAlt } from "../lib/pay";
+import { BannerBorder } from "./BannerBorder";
 import { useTheme } from "./ui";
 
 export type GridData = {
@@ -63,9 +64,9 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                 if (isCombo(s.typeId)) {
                   const bt = s.baseTypeId ? typesById[s.baseTypeId] : null;
                   items.push(<Pill ts={ts} key={s.id} strip={isSplitEntry(s) ? COMBO : ty.id === "overtime" ? "Overtime" : "Excess"} stripBg={ty.color} stripFg={ty.ink}
-                    label={bt ? bt.name : ty.name} bg={col.bg} fg={col.ink} />);
+                    label={bt ? bt.name : ty.name} bg={col.bg} fg={col.ink} border={bt ? bt.border : null} />);
                 } else {
-                  items.push(<Pill ts={ts} key={s.id} label={ty.name + (s.tag ? " · " + s.tag : "")} bg={col.bg} fg={col.ink} />);
+                  items.push(<Pill ts={ts} key={s.id} label={ty.name + (s.tag ? " · " + s.tag : "")} bg={col.bg} fg={col.ink} border={ty.border} />);
                 }
               });
               (data.leave[key] || []).forEach((l) => {
@@ -160,7 +161,7 @@ function Confetti() {
   );
 }
 
-function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; party?: boolean; ts: Sizes }) {
+function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; party?: boolean; ts: Sizes; border?: string | null }) {
   return (
     <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
@@ -174,6 +175,7 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party }: { label: st
         <Text numberOfLines={1} ellipsizeMode="tail"
           style={{ color: fg, fontSize: ts.label, fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
+      <BannerBorder kind={border} ink={fg} radius={5} />
     </View>
   );
 }

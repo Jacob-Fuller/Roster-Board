@@ -5,20 +5,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
 import { Button, Card, Dim, Divider, Field, H1, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
+import { BannerBorder } from "../components/BannerBorder";
 import { OptionPicker } from "../components/OptionPicker";
 import { requestAlarmPermission, SHIFT_ALARM_OPTIONS, useAlarmsAvailable } from "../lib/shiftAlarms";
 import { useStore } from "../lib/store";
 import { FREE_TYPE_LIMIT, usePremium } from "../lib/premium";
-import { PALETTE, TYPE_ICONS, addDays, employmentOf, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
+import { BANNER_BORDERS, PALETTE, TYPE_ICONS, addDays, employmentOf, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
 
 type Draft = {
-  name: string; color: string; ink: string; icon: string | null; kind: "work" | "personal";
+  name: string; color: string; ink: string; icon: string | null; border: string; kind: "work" | "personal";
   start: string; end: string; overtimeEligible: boolean; excessEligible: boolean; alarm: number;
   allDay: boolean; timed: boolean; time: string;
   notes: string; useRange: boolean; rangeStart: string; rangeEnd: string;
 };
 const blank = (): Draft => ({
-  name: "", color: PALETTE[0].hex, ink: PALETTE[0].ink, icon: null, kind: "work", start: "07:00", end: "19:00",
+  name: "", color: PALETTE[0].hex, ink: PALETTE[0].ink, icon: null, border: "none", kind: "work", start: "07:00", end: "19:00",
   overtimeEligible: true, excessEligible: true, alarm: 0, allDay: true, timed: false, time: "09:00",
   notes: "", useRange: false, rangeStart: ymd(new Date()), rangeEnd: ymd(new Date()),
 });
@@ -47,7 +48,7 @@ export function TypesScreen() {
       setDraft(blank()); setEditing("new"); return;
     }
     setDraft({
-      name: ty.name, color: ty.color, ink: ty.ink, icon: ty.icon || null, kind: ty.kind === "personal" ? "personal" : "work",
+      name: ty.name, color: ty.color, ink: ty.ink, icon: ty.icon || null, border: ty.border || "none", kind: ty.kind === "personal" ? "personal" : "work",
       start: ty.startTime || "07:00", end: ty.endTime || "19:00",
       overtimeEligible: ty.overtimeEligible !== false, excessEligible: ty.excessEligible !== false, alarm: ty.alarm || 0,
       allDay: !!ty.allDay, timed: !ty.allDay && !!ty.time, time: ty.time || "09:00",
@@ -61,7 +62,7 @@ export function TypesScreen() {
     if (!name) { toast("Give it a name"); return; }
     const personal = draft.kind === "personal";
     const fields = {
-      name, color: draft.color, ink: draft.ink, icon: draft.icon, kind: draft.kind,
+      name, color: draft.color, ink: draft.ink, icon: draft.icon, border: draft.border === "none" ? null : draft.border, kind: draft.kind,
       startTime: personal ? (draft.timed ? draft.time : null) : draft.start,
       endTime: personal ? null : draft.end,
       hours: personal ? 0 : calcDuration(draft.start, draft.end),
@@ -192,6 +193,25 @@ export function TypesScreen() {
                     onPress={() => set({ icon: on ? null : ic })}
                     style={{ width: 34, height: 34, borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: on ? draft.color : t.surface2 }}>
                     <Ionicons name={ic} size={18} color={on ? draft.ink : t.textDim} />
+                  </Pressable>
+                );
+              })}
+            </View>
+          ))}
+        </View>
+        <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 8, fontWeight: "600" }}>Border</Text>
+        <View style={{ gap: 10, marginBottom: 16 }}>
+          {[BANNER_BORDERS.slice(0, 8), BANNER_BORDERS.slice(8)].map((row, r) => (
+            <View key={r} style={{ flexDirection: "row", justifyContent: "space-between" }}>
+              {row.map((b) => {
+                const on = draft.border === b;
+                return (
+                  <Pressable key={b} accessibilityRole="button" accessibilityLabel={b === "none" ? "No border" : b + " border"} accessibilityState={{ selected: on }}
+                    onPress={() => set({ border: b })}
+                    style={{ width: 34, height: 34, borderRadius: 10, padding: 2, borderWidth: 2, borderColor: on ? t.text : "transparent" }}>
+                    <View style={{ flex: 1, borderRadius: 6, overflow: "hidden", backgroundColor: b === "none" ? t.surface2 : draft.color, alignItems: "center", justifyContent: "center" }}>
+                      {b === "none" ? <Ionicons name="close" size={16} color={t.textDim} /> : <BannerBorder kind={b} ink={draft.ink} radius={6} s={1.3} />}
+                    </View>
                   </Pressable>
                 );
               })}
