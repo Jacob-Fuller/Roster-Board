@@ -11,7 +11,7 @@
       "reviewNote": "Opens from Account > Premium > Roster Board Premium > Unlock Premium, and whenever a Premium feature is used (roster sharing, alarms, a 4th shift type, Reports pay estimates, roster pattern fill or PDF export). Restore purchases is on the same screen. Unlocks all Premium features permanently."
     },
     "net.rosterboard.app.premium.monthly": {
-      "description": "Every Premium feature, billed monthly.",
+      "description": "Unlock everything with a monthly plan.",
       "reviewNote": "Opens from Account > Premium > Roster Board Premium > Unlock Premium, and whenever a Premium feature is used (roster sharing, alarms, a 4th shift type, Reports pay estimates, roster pattern fill or PDF export). Restore purchases is on the same screen. Unlocks all Premium features while active."
     }
   }
