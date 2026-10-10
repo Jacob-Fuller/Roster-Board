@@ -51,45 +51,130 @@ const notes = {};
 if (dentist) notes[day(dentist)] = [{ id: "n1", text: "Dentist", category: "appointment", time: "10:30" }];
 if (physio) notes[day(physio)] = [{ id: "n2", text: "Physio", category: "appointment", time: "14:00" }];
 if (bbq) notes[day(bbq)] = [{ id: "n3", text: "Team BBQ", category: "family", allDay: true }];
-const DETAIL_DAY = splitDay || otDay || 6;
+// a shift swapped with a workmate: the first Dayshift after the overtime days moves to a free day
+const swapFrom = (() => { for (let n = (trainDay || 15) + 1; n <= last; n++) { const l = shifts[day(n)] || []; if (l.length === 1 && l[0].typeId === "t-day") return n; } return null; })();
+const swapTo = take((n) => n > (swapFrom || 0) + 1 && dow(n) < 5);
+const swaps = {};
+if (swapFrom && swapTo) {
+  const orig = shifts[day(swapFrom)][0];
+  delete shifts[day(swapFrom)];
+  const ne = { id: "sw-new", typeId: "t-day" };
+  add(swapTo, ne);
+  swaps[day(swapFrom)] = [{ id: "sw-off", kind: "off", partner: "Chris", note: "Family wedding", linkedDate: day(swapTo), linkedSwapId: "sw-on", typeId: "t-day", baseTypeId: null, hours: null, shiftEntryId: orig.id }];
+  swaps[day(swapTo)] = [{ id: "sw-on", kind: "on", partner: "Chris", note: "Family wedding", linkedDate: day(swapFrom), linkedSwapId: "sw-off", typeId: "t-day", baseTypeId: null, hours: null, shiftEntryId: "sw-new" }];
+}
+const DETAIL_DAY = swapFrom || splitDay || otDay || 6;
 const data = {
   types, shifts, notes,
   leave: {},
-  swaps: {}, payTags: ph ? { [day(ph)]: [{ id: "ph1", kind: "holiday" }] } : {},
-  birthdays: bday ? [{ id: "b1", name: "Sam Taylor", day: bday, month: M + 1, year: 1990 }] : [],
+  swaps,
+  payTags: Object.assign(ph ? { [day(ph)]: [{ id: "ph1", kind: "holiday" }] } : {}, otDay ? { [day(otDay)]: [{ id: "al1", kind: "allowance", allowanceId: "a-meal" }] } : {}),
+  birthdays: [
+    ...(bday ? [{ id: "b1", name: "Sam Taylor", day: bday, month: M + 1, year: 1990, source: "contacts", contactKey: "sam taylor|" + bday + "|" + (M + 1) }] : []),
+    { id: "b2", name: "Jordan Lee", day: 3, month: ((M + 1) % 12) + 1, source: "contacts", contactKey: "jordan lee|3" },
+    { id: "b3", name: "Riley Brooks", day: 21, month: ((M + 2) % 12) + 1, year: 1987, source: "contacts", contactKey: "riley brooks|21" },
+    { id: "b4", name: "Mum", day: 9, month: ((M + 3) % 12) + 1 },
+    { id: "b5", name: "Casey Nguyen", day: 27, month: ((M + 5) % 12) + 1, source: "contacts", contactKey: "casey nguyen|27" },
+  ],
   roster: { weeks: 2, pattern, updatedAt: 1 },
-  settings: { pay: { savedAt: 1, baseRate: 38.5, cycle: "fortnightly", periodStart: "2026-01-05", otMult: 1.5, otTiered: true, otTierHours: 2, otMult2: 2, exMult: 1, superPct: 12, showTax: true, taxFree: true }, updatedAt: 1 },
+  settings: {
+    employment: "part",
+    pay: {
+      savedAt: 1, baseRate: 38.5, cycle: "fortnightly", periodStart: "2026-01-05",
+      otMult: 1.5, otTiered: true, otTierHours: 2, otMult2: 2, exMult: 1,
+      pen: { sat: 50, sun: 75, ph: 150, night: 15 },
+      typeRules: { "t-day": { penalties: true }, "t-night": { penalties: true, night: true }, "t-train": { penalties: false } },
+      allowances: [{ id: "a-meal", name: "Meal allowance", kind: "flat", amount: 16.8 }],
+      payLeave: true, leaveLoading: 17.5, superPct: 12, showTax: true, taxFree: true,
+    },
+    updatedAt: 1,
+  },
   tombstones: {},
 };
+
+// A friend's roster for the sharing screen (their own shift types and colours).
+const friendTypes = [
+  { id: "f-am", name: "Early", color: "#3ECF8E", ink: "#04241A", kind: "work", startTime: "06:00", endTime: "14:30", hours: 8.5 },
+  { id: "f-pm", name: "Late", color: "#A76BF0", ink: "#FFFFFF", kind: "work", startTime: "14:00", endTime: "22:30", hours: 8.5 },
+  { id: "f-nt", name: "Night", color: "#E5484D", ink: "#FFFFFF", kind: "work", startTime: "22:00", endTime: "06:30", hours: 8.5 },
+];
+const friendShifts = {};
+const fcycle = ["f-am", "f-am", "f-am", null, null, "f-pm", "f-pm", "f-pm", null, "f-nt", "f-nt", null, null, null];
+for (let n = 1; n <= last; n++) { const id = fcycle[(n + 3) % fcycle.length]; if (id) friendShifts[day(n)] = [{ id: "f" + n, typeId: id }]; }
+const friendData = { types: friendTypes, shifts: friendShifts, leave: {} };
+
+const UID = "00000000-0000-4000-8000-000000000001";
+const user = { id: UID, aud: "authenticated", role: "authenticated", email: "you@rosterboard.net", user_metadata: { name: "Taylor" }, app_metadata: { provider: "email" }, created_at: "2026-01-01T00:00:00Z" };
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
+const token = b64({ alg: "HS256", typ: "JWT" }) + "." + b64({ sub: UID, role: "authenticated", exp: 4102444800 }) + ".sig";
+const session = { access_token: token, refresh_token: "r", token_type: "bearer", expires_in: 3600, expires_at: 4102444800, user };
+const conns = [{ id: "c1", requester_id: UID, target_id: "u2", requester_email: user.email, target_email: "alex@rosterboard.net", status: "accepted" }];
 
 const browser = await chromium.launch();
 async function capture(theme, steps) {
   const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, colorScheme: theme });
   const p = await ctx.newPage();
-  await p.addInitScript(([d, theme]) => {
+  await p.route(/supabase\.co\//, async (route) => {
+    const u = route.request().url(), m = route.request().method();
+    const json = (body) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    if (u.includes("/auth/v1/user")) return json(user);
+    if (u.includes("/auth/v1/")) return json(session);
+    if (u.includes("/rest/v1/app_data")) return m === "GET" ? json({ data, updated_at: new Date().toISOString() }) : json([{ user_id: UID }]);
+    if (u.includes("/rest/v1/connections")) return json(conns);
+    if (u.includes("/rpc/get_shared_roster")) return json(friendData);
+    if (u.includes("/rest/v1/complimentary_access")) return json([]);
+    return json([]);
+  });
+  await p.addInitScript(([d, theme, sess]) => {
     localStorage.setItem("rosterBoard.v2", d);
-    localStorage.setItem("rosterBoard.localOnly", "1");
+    localStorage.setItem("rosterBoard.owner", JSON.parse(sess).user.id);
     localStorage.setItem("rosterBoard.onboardingSeen", "1");
     localStorage.setItem("rosterBoard.prefs", JSON.stringify({ theme, hideEvents: false, hideBirthdays: false }));
-  }, [JSON.stringify(data), theme]);
+    localStorage.setItem("sb-ebwfzcbynbsucrjnlumg-auth-token", sess);
+  }, [JSON.stringify(data), theme, JSON.stringify(session)]);
   await p.goto(URL);
-  await p.waitForTimeout(2500);
+  await p.waitForTimeout(3000);
   await steps(p);
-  await p.waitForTimeout(700);
+  await p.waitForTimeout(800);
   const buf = await p.screenshot();
   await ctx.close();
   return buf.toString("base64");
 }
 const tab = (name) => async (p) => { await p.getByRole("tab", { name }).click(); await p.waitForTimeout(600); };
 
+const click = (p, loc) => loc.first().click().then(() => p.waitForTimeout(900));
+const scrollTo = (p, text) => p.getByText(text, { exact: true }).first().evaluate((el) => el.scrollIntoView({ block: "start" })).then(() => p.waitForTimeout(500));
 const shots = [
-  { eyebrow: "YOUR ROSTER", title: "Every shift at a glance", img: await capture("light", async () => {}) },
-  { eyebrow: "ROSTER PATTERNS", title: "Fill a whole year in one tap", img: await capture("light", tab(/Roster/)) },
-  { eyebrow: "ESTIMATED PAY", title: "Know your pay before payday", img: await capture("light", tab(/Reports/)) },
-  { eyebrow: "EVERY DETAIL", title: "Log overtime and excess", img: await capture("light", async (p) => {
-    await p.getByLabel(new Date(Y, M, DETAIL_DAY).toDateString(), { exact: true }).first().click(); await p.waitForTimeout(800);
+  { eyebrow: "ONE APP FOR IT ALL", title: "Shifts, events and birthdays in one place", img: await capture("light", async () => {}) },
+  { eyebrow: "ROSTER SHARING", title: "See your family and friends' rosters", img: await capture("light", async (p) => {
+    await tab(/Account/)(p);
+    await click(p, p.getByText("Shared rosters", { exact: true }));
+    await click(p, p.getByText("alex@rosterboard.net", { exact: true }));
   }) },
-  { eyebrow: "DARK MODE", title: "Easy on the eyes after a night shift", img: await capture("dark", async () => {}) },
+  { eyebrow: "SHIFT SWAPS", title: "Swap shifts and keep track", img: await capture("light", async (p) => {
+    await click(p, p.getByLabel(new Date(Y, M, DETAIL_DAY).toDateString(), { exact: true }));
+  }) },
+  { eyebrow: "FULL REPORTS", title: "Every hour tracked and compared", img: await capture("light", async (p) => {
+    await tab(/Reports/)(p);
+    await scrollTo(p, "By shift type");
+  }) },
+  { eyebrow: "YOUR PAY, YOUR RULES", title: "Set it up to match your payslip", img: await capture("light", async (p) => {
+    await tab(/Reports/)(p);
+    await click(p, p.getByText("Pay setup", { exact: true }));
+  }) },
+  { eyebrow: "ESTIMATED PAY", title: "Know your pay before payday", img: await capture("light", async (p) => {
+    await tab(/Reports/)(p);
+    await click(p, p.getByText("Breakdown ›", { exact: true }));
+  }) },
+  { eyebrow: "BIRTHDAYS", title: "Birthdays straight from your contacts", img: await capture("light", async (p) => {
+    await tab(/Account/)(p);
+    await click(p, p.getByRole("button", { name: /^Birthdays/ }));
+  }) },
+  { eyebrow: "MAKE IT YOURS", title: "Full or part time, light or dark", img: await capture("dark", async (p) => {
+    await tab(/Account/)(p);
+    await scrollTo(p, "Employment");
+  }) },
+  { eyebrow: "ROSTER PATTERNS", title: "Fill a whole year in one tap", img: await capture("light", tab(/Roster/)) },
   { eyebrow: "YOUR SHIFTS", title: "Your shifts, your colours", img: await capture("light", tab(/Types/)) },
 ];
 
@@ -102,8 +187,8 @@ for (let i = 0; i < shots.length; i++) {
     *{margin:0;box-sizing:border-box} body{width:1290px;height:2796px;overflow:hidden;
     background:radial-gradient(120% 60% at 50% 0%, #3E5F8F 0%, #1F3A5F 45%, #0B1830 100%);font-family:'IBM Plex Sans',sans-serif;text-align:center}
     .eb{color:#E8B339;letter-spacing:.32em;font-size:56px;font-weight:600;margin-top:170px}
-    h1{font-family:Fraunces,Georgia,serif;color:#F7F3EC;font-size:118px;line-height:1.08;margin:44px 90px 0;font-weight:700}
-    .phone{position:absolute;left:105px;top:${shots[i].title.length > 26 ? 760 : 640}px;width:1080px;border-radius:150px;background:#1B1E24;padding:26px;
+    h1{font-family:Fraunces,Georgia,serif;color:#F7F3EC;font-size:108px;line-height:1.08;margin:40px 80px 0;font-weight:700}
+    .phone{position:relative;margin:90px auto 0;width:1080px;border-radius:150px;background:#1B1E24;padding:26px;
       box-shadow:0 40px 120px rgba(0,0,0,.55), inset 0 0 0 4px #3A3F48}
     .phone img{display:block;width:100%;border-radius:126px}
   </style></head><body><div class="eb">${s.eyebrow}</div><h1>${s.title}</h1>
