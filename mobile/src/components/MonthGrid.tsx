@@ -172,10 +172,12 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { l
       ) : null}
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3, paddingTop: party ? 3 : 0 }}>
         {party ? <><Bunting /><Confetti /></> : null}
+        {/* under a title strip the border frames the name only, so the title is never covered */}
+        {strip ? <BannerBorder kind={border} ink={fg} radius={4} /> : null}
         <Text numberOfLines={1} ellipsizeMode="tail"
           style={{ color: fg, fontSize: ts.label, fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
-      <BannerBorder kind={border} ink={fg} radius={5} />
+      {!strip ? <BannerBorder kind={border} ink={fg} radius={5} /> : null}
     </View>
   );
 }
