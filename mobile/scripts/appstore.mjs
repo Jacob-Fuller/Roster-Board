@@ -15,10 +15,10 @@ const types = [
   { id: "t-night", name: "Nightshift", icon: "moon", color: "#4C8DFF", ink: "#FFFFFF", kind: "work", startTime: "19:00", endTime: "07:00", hours: 12, overtimeEligible: true, excessEligible: true, order: 1 },
   { id: "t-train", name: "Training", icon: "school", color: "#3FC5C0", ink: "#062523", kind: "work", startTime: "08:00", endTime: "16:00", hours: 8, overtimeEligible: false, excessEligible: false, order: 2 },
 ];
-// A realistic 2-week rotation: 2 days, 2 nights, then days off (never a night straight into a day).
+// A realistic 2-week rotation of 12-hour shifts (about 36 hours a week, never a night straight into a day).
 const pattern = [
   [["t-day"], ["t-day"], ["t-night"], ["t-night"], [], [], []],
-  [[], ["t-day"], ["t-day"], ["t-night"], ["t-night"], [], []],
+  [[], [], [], ["t-day"], ["t-day"], [], []],
 ];
 const shifts = {};
 const start = new Date(Y, 0, 1);
@@ -43,8 +43,8 @@ const add = (n, e) => { if (n) (shifts[day(n)] = shifts[day(n)] || []).push(e); 
 const otDay = take((n) => n > 3);
 const splitDay = take((n) => n > (otDay || 0) + 4);
 const trainDay = take((n) => n > (splitDay || 0) + 2);
-add(otDay, { id: "ot1", typeId: "overtime", hours: 12, baseTypeId: "t-day" });
-add(splitDay, { id: "sp1", typeId: "overtime", hours: 4, excessHours: 8, baseTypeId: "t-day" });
+add(otDay, { id: "ot1", typeId: "overtime", hours: 4, baseTypeId: "t-day" });
+add(splitDay, { id: "sp1", typeId: "overtime", hours: 2, excessHours: 4, baseTypeId: "t-day" });
 add(trainDay, { id: "tr1", typeId: "t-train" });
 const dentist = take(() => true), bbq = take((n) => dow(n) >= 5), physio = take(() => true), bday = take(() => true), ph = take(() => true);
 const notes = {};
@@ -58,7 +58,7 @@ const data = {
   swaps: {}, payTags: ph ? { [day(ph)]: [{ id: "ph1", kind: "holiday" }] } : {},
   birthdays: bday ? [{ id: "b1", name: "Sam Taylor", day: bday, month: M + 1, year: 1990 }] : [],
   roster: { weeks: 2, pattern, updatedAt: 1 },
-  settings: { hourlyRate: 46.5, otMultiplier: 1.5, excessMultiplier: 1, payLeave: true, updatedAt: 1 },
+  settings: { pay: { savedAt: 1, baseRate: 38.5, cycle: "fortnightly", periodStart: "2026-01-05", otMult: 1.5, otTiered: true, otTierHours: 2, otMult2: 2, exMult: 1, superPct: 12, showTax: true, taxFree: true }, updatedAt: 1 },
   tombstones: {},
 };
 
