@@ -1,0 +1,15 @@
+ok light-calendar
+ok dark-calendar
+ok dark-stats
+ok light-roster
+ok light-reports
+ok light-stats
+ok light-weekdays
+ok light-reports-end
+ok light-reports-sep
+ok light-day12
+ok light-day20
+ok light-shared
+ok light-birthdays
+ok light-account
+Store captures written to screens/store
