@@ -808,6 +808,7 @@
         <p class="section-sub" id="paywallReason" style="text-align:center; margin:0;"></p>
         <div class="card">
           <ul class="pw-list">
+            <li>Roster sharing: see your family and friends' rosters</li>
             <li>Unlimited shift types</li>
             <li>Roster patterns: fill your calendar for a year in one tap</li>
             <li>Estimated pay for every week, fortnight, month and year</li>
@@ -3187,6 +3188,7 @@
 
   function respondConnection(id, accept){
     if (!sb) return;
+    if (accept && premiumLocked()){ openPaywall("Roster sharing is part of Premium."); return; }
     setSharedReqError("");
     sb.rpc("respond_connection", { p_connection_id: id, p_accept: accept }).then(function(res){
       if (res.error){
@@ -3231,6 +3233,7 @@
   });
   document.getElementById("inviteSendBtn").addEventListener("click", function(){
     if (!sb) return;
+    if (premiumLocked()){ openPaywall("Roster sharing is part of Premium."); return; }
     var email = document.getElementById("inviteEmailInput").value.trim();
     if (!email){ setInviteError("Enter an email address."); return; }
     setInviteError("");
@@ -3247,6 +3250,7 @@
 
   function openSharedRoster(conn){
     if (!sb) return;
+    if (premiumLocked()){ openPaywall("Roster sharing is part of Premium."); return; }
     var ownerId = conn.requester_id === currentUser.id ? conn.target_id : conn.requester_id;
     sb.rpc("get_shared_roster", { p_owner_id: ownerId }).then(function(res){
       if (res.error){ toast(res.error.message || "Couldn't load that roster"); return; }
@@ -6033,7 +6037,7 @@
 
   /* ---------------- Premium (in-app purchases, iPhone app only) ----------------
      Free: calendar, up to 3 shift types, overtime/excess, leave, events, birthdays,
-     reminders, sharing and cloud backup. Premium unlocks the rest. Purchases go
+     reminders and cloud backup. Premium unlocks the rest, including roster sharing. Purchases go
      through Apple (StoreKit 2, verified on the device); the website stays free. */
   var PREMIUM_MONTHLY = "net.rosterboard.app.premium.monthly";
   var PREMIUM_LIFETIME = "net.rosterboard.app.premium.lifetime";

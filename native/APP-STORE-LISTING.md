@@ -48,7 +48,7 @@ SAFE AND SHARED
   pay are never shared
 
 ROSTER BOARD PREMIUM
-Free includes the calendar, up to 3 shift types, overtime and excess, leave, events, birthdays, reminders, roster sharing and cloud backup. Premium unlocks unlimited shift types, roster patterns, pay estimates, full reports and PDF export. Choose a monthly subscription or a one-off lifetime purchase.
+Free includes the calendar, up to 3 shift types, overtime and excess, leave, events, birthdays, reminders and cloud backup. Premium unlocks roster sharing, unlimited shift types, roster patterns, pay estimates, full reports and PDF export. Choose a monthly subscription or a one-off lifetime purchase.
 
 The monthly subscription renews automatically unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID. Manage or cancel it in your Apple ID settings.
 
