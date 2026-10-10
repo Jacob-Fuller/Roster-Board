@@ -36,6 +36,7 @@ LEAVE, SWAPS AND LIFE
 - Track annual and sick leave on the same calendar
 - Record shift swaps with who and why
 - Add appointments, reminders and birthdays alongside your shifts
+- Birthdays from your phone's contacts appear automatically
 
 REPORTS
 - Hours by shift type, weekday vs weekend and comparison with last month
@@ -57,7 +58,7 @@ Privacy policy: https://www.rosterboard.net/privacy.html
 
 **Support URL:** https://www.rosterboard.net
 
-**Copyright:** 2026 Jacob Fuller
+**Copyright:** 2026 Roster Board
 
 **Age rating:** 4+
 
