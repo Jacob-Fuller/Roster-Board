@@ -26,6 +26,7 @@ function rotation(starts) {
   return { P, shifts };
 }
 const { P: pattern, shifts } = rotation([0, 2, 1, 1]);
+for (const [k, id] of [["2026-10-03", "overtime"], ["2026-10-04", "excess"], ["2026-10-11", "overtime"]]) shifts[k] = [{ id: "x" + k, typeId: id, hours: 12, baseTypeId: "t_day" }];
 const leave = {};
 const lv = (k, kind) => { delete shifts[k]; (leave[k] = leave[k] || []).push({ id: "l" + k, kind, hours: 12 }); };
 for (const k of ["2026-02-18", "2026-05-13", "2026-08-19", "2026-10-19"]) if (!shifts[k]) shifts[k] = [{ id: "tr" + k, typeId: "t_train" }];
@@ -163,5 +164,10 @@ await capture("light-type-editor", "light", async (p) => {
   await click(p, p.getByText("Dayshift", { exact: true }));
   await p.mouse.move(215, 600); await p.mouse.wheel(0, 900); await p.waitForTimeout(600);
 });
+for (const b of ["none", "thin", "thick", "double", "dashed", "dotted", "white", "dark", "corners", "rails", "sides", "left", "stitched", "glow", "frame", "dots"]) {
+  types[0].border = b; types[1].border = b;
+  await capture("strip-" + b, "light", async () => {});
+}
+await capture("strip-dark-theme", "dark", async () => {});
 await browser.close();
 console.log("Store captures written to " + OUT);
