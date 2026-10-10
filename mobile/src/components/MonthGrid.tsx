@@ -52,7 +52,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               daySwaps.forEach((r) => { if (r.kind === "on" && r.shiftEntryId) swappedIn[r.shiftEntryId] = true; });
               daySwaps.forEach((r) => {
                 const col = entryColor(r, typesById);
-                items.push(<Pill ts={ts} key={r.id} strip={r.kind === "off" ? "Swap off" : "Swap on"} stripBg={t.textDim} stripFg={t.bg}
+                items.push(<Pill ts={ts} key={r.id} strip={r.kind === "off" ? "Swap off" : "Swap on"} stripBg={r.kind === "off" ? SWAP_OFF : SWAP_ON} stripFg="#FFFFFF"
                   label={entryName(r, typesById)} bg={col.bg} fg={col.ink} />);
               });
               (data.shifts[key] || []).forEach((s) => {
@@ -110,6 +110,8 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
 }
 
 const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
+// Swap tabs: orange for a shift given away, green for one picked up.
+const SWAP_OFF = "#F2843A", SWAP_ON = "#22A06B";
 
 // Every banner is the same height. All descriptions share one size: the largest
 // that fits "Psychologist" in a day cell. All titles share one size: the largest

@@ -63,18 +63,30 @@ if (swapFrom && swapTo) {
   swaps[day(swapFrom)] = [{ id: "sw-off", kind: "off", partner: "Chris", note: "Family wedding", linkedDate: day(swapTo), linkedSwapId: "sw-on", typeId: "t-day", baseTypeId: null, hours: null, shiftEntryId: orig.id }];
   swaps[day(swapTo)] = [{ id: "sw-on", kind: "on", partner: "Chris", note: "Family wedding", linkedDate: day(swapFrom), linkedSwapId: "sw-off", typeId: "t-day", baseTypeId: null, hours: null, shiftEntryId: "sw-new" }];
 }
+{ // a little overtime and training last month too
+  const pk = (n) => key(new Date(Y, M - 1, n));
+  for (const [n, e] of [[6, { id: "pot1", typeId: "overtime", hours: 4, baseTypeId: "t-day" }], [20, { id: "ptr", typeId: "t-train" }], [24, { id: "pot2", typeId: "overtime", hours: 6, baseTypeId: "t-day" }]]) {
+    if (!shifts[pk(n)]) (shifts[pk(n)] = []).push(e);
+  }
+}
 const DETAIL_DAY = swapTo || splitDay || otDay || 6;
 const data = {
   types, shifts, notes,
   leave: {},
   swaps,
-  payTags: Object.assign(ph ? { [day(ph)]: [{ id: "ph1", kind: "holiday" }] } : {}, otDay ? { [day(otDay)]: [{ id: "al1", kind: "allowance", allowanceId: "a-meal" }] } : {}),
+  payTags: Object.assign({}, otDay ? { [day(otDay)]: [{ id: "al1", kind: "allowance", allowanceId: "a-meal" }] } : {}),
   birthdays: [
     ...(bday ? [{ id: "b1", name: "Sam Taylor", day: bday, month: M + 1, year: 1990, source: "contacts", contactKey: "sam taylor|" + bday + "|" + (M + 1) }] : []),
-    { id: "b2", name: "Jordan Lee", day: 3, month: ((M + 1) % 12) + 1, source: "contacts", contactKey: "jordan lee|3" },
-    { id: "b3", name: "Riley Brooks", day: 21, month: ((M + 2) % 12) + 1, year: 1987, source: "contacts", contactKey: "riley brooks|21" },
-    { id: "b4", name: "Mum", day: 9, month: ((M + 3) % 12) + 1 },
-    { id: "b5", name: "Casey Nguyen", day: 27, month: ((M + 5) % 12) + 1, source: "contacts", contactKey: "casey nguyen|27" },
+    ...[
+      ["Mum", 9, 1, null, false], ["Jordan Lee", 3, 2, null, true], ["Riley Brooks", 21, 2, 1987, true], ["Casey Nguyen", 14, 3, null, true],
+      ["Dad", 27, 3, null, false], ["Morgan Hayes", 2, 4, 1992, true], ["Jamie Clarke", 18, 5, null, true], ["Ash Patel", 30, 5, null, true],
+      ["Charlie Evans", 7, 6, 1995, true], ["Nan", 15, 7, null, false], ["Drew Mitchell", 23, 8, null, true], ["Taylor Brown", 11, 9, 1989, true],
+      ["Kim Walker", 5, 11, null, true], ["Lee Harris", 19, 11, 1991, true], ["Pat O'Neill", 28, 12, null, true],
+    ].map(([name, d, mo, year, fromContacts], i) => Object.assign(
+      { id: "bb" + i, name, day: d, month: mo },
+      year ? { year } : {},
+      fromContacts ? { source: "contacts", contactKey: String(name).toLowerCase() + "|" + d + "|" + mo } : {},
+    )),
   ],
   roster: { weeks: 2, pattern, updatedAt: 1 },
   settings: {
@@ -94,13 +106,13 @@ const data = {
 
 // A friend's roster for the sharing screen (their own shift types and colours).
 const friendTypes = [
-  { id: "f-am", name: "Early", color: "#3ECF8E", ink: "#04241A", kind: "work", startTime: "06:00", endTime: "14:30", hours: 8.5 },
-  { id: "f-pm", name: "Late", color: "#A76BF0", ink: "#FFFFFF", kind: "work", startTime: "14:00", endTime: "22:30", hours: 8.5 },
-  { id: "f-nt", name: "Night", color: "#E5484D", ink: "#FFFFFF", kind: "work", startTime: "22:00", endTime: "06:30", hours: 8.5 },
+  { id: "f-day", name: "Dayshift", icon: "sunny", color: "#E8B339", ink: "#241900", kind: "work", startTime: "07:00", endTime: "17:00", hours: 10 },
+  { id: "f-night", name: "Nightshift", icon: "moon", color: "#4C8DFF", ink: "#FFFFFF", kind: "work", startTime: "20:00", endTime: "06:00", hours: 10 },
 ];
+// their rotation: 2 days, 2 nights, 4 off
 const friendShifts = {};
-const fcycle = ["f-am", "f-am", "f-am", null, null, "f-pm", "f-pm", "f-pm", null, "f-nt", "f-nt", null, null, null];
-for (let n = 1; n <= last; n++) { const id = fcycle[(n + 3) % fcycle.length]; if (id) friendShifts[day(n)] = [{ id: "f" + n, typeId: id }]; }
+const fcycle = ["f-day", "f-day", "f-night", "f-night", null, null, null, null];
+for (let n = -6; n <= last + 8; n++) { const id = fcycle[((n + 5) % 8 + 8) % 8]; if (id) friendShifts[key(new Date(Y, M, n))] = [{ id: "f" + n, typeId: id }]; }
 const friendData = { types: friendTypes, shifts: friendShifts, leave: {} };
 
 const UID = "00000000-0000-4000-8000-000000000001";
@@ -145,7 +157,7 @@ const tab = (name) => async (p) => { await p.getByRole("tab", { name }).click();
 const click = (p, loc) => loc.first().click().then(() => p.waitForTimeout(900));
 const scrollTo = (p, text) => p.getByText(text, { exact: true }).first().evaluate((el) => el.scrollIntoView({ block: "start" })).then(() => p.waitForTimeout(500));
 const shots = [
-  { eyebrow: "ONE APP FOR IT ALL", title: "Shifts, events and birthdays in one place", img: await capture("light", async () => {}) },
+  { eyebrow: "SHIFTS, EVENTS, BIRTHDAYS", title: "The only shift app you'll ever need", img: await capture("light", async () => {}) },
   { eyebrow: "ROSTER SHARING", title: "See your family and friends' rosters", img: await capture("light", async (p) => {
     await tab(/Account/)(p);
     await click(p, p.getByText("Shared rosters", { exact: true }));
@@ -157,10 +169,6 @@ const shots = [
   { eyebrow: "FULL REPORTS", title: "Every hour tracked and compared", img: await capture("light", async (p) => {
     await tab(/Reports/)(p);
     await scrollTo(p, "By shift type");
-  }) },
-  { eyebrow: "YOUR PAY, YOUR RULES", title: "Set it up to match your payslip", img: await capture("light", async (p) => {
-    await tab(/Reports/)(p);
-    await click(p, p.getByText("Pay setup", { exact: true }));
   }) },
   { eyebrow: "ESTIMATED PAY", title: "Know your pay before payday", img: await capture("light", async (p) => {
     await tab(/Reports/)(p);
