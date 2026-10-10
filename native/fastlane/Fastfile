@@ -173,4 +173,58 @@ platform :ios do
     UI.user_error!("Screenshots on App Store Connect don't match: #{problems.join('; ')}") unless problems.empty?
     UI.success("Verified: #{files.length} screenshots on App Store Connect for #{locales.join(', ')}")
   end
+  desc "Read everything App Store Connect holds for the app into build/asc-report.json"
+  lane :asc_report do
+    asc_key
+    require "json"
+    c = Spaceship::ConnectAPI.client.tunes_request_client
+    get = lambda do |path, params = {}|
+      begin
+        r = c.get(path, params)
+        r.body
+      rescue => e
+        { "error" => e.message }
+      end
+    end
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    UI.user_error!("App not found") unless app
+    out = { "app" => get.call("v1/apps/#{app.id}") }
+    infos = get.call("v1/apps/#{app.id}/appInfos")
+    out["appInfos"] = infos
+    (infos["data"] || []).each do |info|
+      id = info["id"]
+      out["appInfo_#{id}_localizations"] = get.call("v1/appInfos/#{id}/appInfoLocalizations")
+      out["appInfo_#{id}_ageRating"] = get.call("v1/appInfos/#{id}/ageRatingDeclaration")
+      out["appInfo_#{id}_primaryCategory"] = get.call("v1/appInfos/#{id}/primaryCategory")
+      out["appInfo_#{id}_secondaryCategory"] = get.call("v1/appInfos/#{id}/secondaryCategory")
+    end
+    versions = get.call("v1/apps/#{app.id}/appStoreVersions", { "limit" => 5 })
+    out["versions"] = versions
+    (versions["data"] || []).each do |v|
+      id = v["id"]
+      out["version_#{id}_localizations"] = get.call("v1/appStoreVersions/#{id}/appStoreVersionLocalizations")
+      out["version_#{id}_reviewDetail"] = get.call("v1/appStoreVersions/#{id}/appStoreReviewDetail")
+      out["version_#{id}_build"] = get.call("v1/appStoreVersions/#{id}/build")
+    end
+    out["iaps"] = get.call("v1/apps/#{app.id}/inAppPurchasesV2", { "limit" => 50 })
+    (out["iaps"]["data"] || []).each do |i|
+      out["iap_#{i['id']}_localizations"] = get.call("v2/inAppPurchases/#{i['id']}/inAppPurchaseLocalizations")
+    end
+    groups = get.call("v1/apps/#{app.id}/subscriptionGroups", { "include" => "subscriptions" })
+    out["subscriptionGroups"] = groups
+    (groups["data"] || []).each do |g|
+      out["group_#{g['id']}_localizations"] = get.call("v1/subscriptionGroups/#{g['id']}/subscriptionGroupLocalizations")
+      subs = get.call("v1/subscriptionGroups/#{g['id']}/subscriptions")
+      out["group_#{g['id']}_subscriptions"] = subs
+      (subs["data"] || []).each do |s|
+        out["sub_#{s['id']}_localizations"] = get.call("v1/subscriptions/#{s['id']}/subscriptionLocalizations")
+      end
+    end
+    out["builds"] = get.call("v1/builds", { "filter[app]" => app.id, "sort" => "-uploadedDate", "limit" => 5 })
+    out["availability"] = get.call("v1/apps/#{app.id}/appAvailabilityV2")
+    path = File.expand_path("../build/asc-report.json", __dir__)
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, JSON.pretty_generate(out))
+    UI.success("Wrote #{path}")
+  end
 end

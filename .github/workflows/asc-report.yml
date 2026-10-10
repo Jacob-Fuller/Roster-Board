@@ -1,0 +1,41 @@
+# Reads what App Store Connect holds for the app (listing text, categories, age rating,
+# review details, in-app purchases, builds) and saves it to the asc-report branch.
+name: App Store Connect report
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - run: gem install fastlane -N
+      - name: Read App Store Connect
+        run: fastlane asc_report
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
+      - name: Save report
+        if: always()
+        run: |
+          mkdir -p /tmp/report && cp build/asc-report.json /tmp/report/ 2>/dev/null || echo '{"error":"no report"}' > /tmp/report/asc-report.json
+          cd /tmp/report
+          git init -q -b asc-report
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -A && git commit -qm "App Store Connect report"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" asc-report
