@@ -158,5 +158,10 @@ await capture("light-shared", "light", async (p) => {
 });
 await capture("light-birthdays", "light", async (p) => { await tab(p, /Account/); await click(p, p.getByRole("button", { name: /^Birthdays/ })); });
 await capture("light-account", "light", async (p) => { await tab(p, /Account/); });
+await capture("light-type-editor", "light", async (p) => {
+  await tab(p, /Types/);
+  await click(p, p.getByText("Dayshift", { exact: true }));
+  await p.mouse.move(215, 600); await p.mouse.wheel(0, 900); await p.waitForTimeout(600);
+});
 await browser.close();
 console.log("Store captures written to " + OUT);
