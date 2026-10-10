@@ -11,11 +11,11 @@ const Y = now.getFullYear(), M = now.getMonth();
 const key = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 
 const types = [
-  { id: "t-day", name: "Dayshift", icon: "sunny", color: "#E8B339", ink: "#241900", kind: "work", startTime: "07:00", endTime: "19:00", hours: 12, overtimeEligible: true, excessEligible: true, order: 0 },
-  { id: "t-night", name: "Nightshift", icon: "moon", color: "#4C8DFF", ink: "#FFFFFF", kind: "work", startTime: "19:00", endTime: "07:00", hours: 12, overtimeEligible: true, excessEligible: true, order: 1 },
+  { id: "t-day", name: "Dayshift", icon: "sunny", color: "#E8B339", ink: "#241900", kind: "work", startTime: "07:00", endTime: "17:00", hours: 10, overtimeEligible: true, excessEligible: true, order: 0 },
+  { id: "t-night", name: "Nightshift", icon: "moon", color: "#4C8DFF", ink: "#FFFFFF", kind: "work", startTime: "20:00", endTime: "06:00", hours: 10, overtimeEligible: true, excessEligible: true, order: 1 },
   { id: "t-train", name: "Training", icon: "school", color: "#3FC5C0", ink: "#062523", kind: "work", startTime: "08:00", endTime: "16:00", hours: 8, overtimeEligible: false, excessEligible: false, order: 2 },
 ];
-// A realistic 2-week rotation of 12-hour shifts (about 36 hours a week, never a night straight into a day).
+// A realistic 2-week rotation of 10-hour shifts (about 36 hours a week, never a night straight into a day).
 const pattern = [
   [["t-day"], ["t-day"], ["t-night"], ["t-night"], [], [], []],
   [[], [], [], ["t-day"], ["t-day"], [], []],
