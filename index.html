@@ -809,6 +809,7 @@
         <div class="card">
           <ul class="pw-list">
             <li>Roster sharing: see your family and friends' rosters</li>
+            <li>Shift alarms before every shift</li>
             <li>Unlimited shift types</li>
             <li>Roster patterns: fill your calendar for a year in one tap</li>
             <li>Estimated pay for every week, fortnight, month and year</li>
@@ -4375,7 +4376,7 @@
     if (!SA) return;
     clearTimeout(shiftAlarmTimer);
     shiftAlarmTimer = setTimeout(function(){
-      var mins = shiftAlarmMinutes(), list = [];
+      var mins = premiumLocked() ? 0 : shiftAlarmMinutes(), list = [];
       if (mins > 0){
         var now = Date.now(), today = new Date();
         for (var i = 0; i <= 30; i++){
@@ -4419,6 +4420,7 @@
     sel.addEventListener("change", function(){
       var v = parseInt(sel.value, 10) || 0;
       if (!v){ saveMinutes(0); return; }
+      if (premiumLocked()){ sel.value = "0"; openPaywall("Shift alarms are part of Premium."); return; }
       SA.requestPermission().then(function(r){
         if (r && r.granted){ saveMinutes(v); return; }
         sel.value = "0"; saveMinutes(0);
@@ -6127,7 +6129,7 @@
 
   /* ---------------- Premium (in-app purchases, iPhone app only) ----------------
      Free: calendar, up to 3 shift types, overtime/excess, leave, events, birthdays,
-     reminders and cloud backup. Premium unlocks the rest, including roster sharing. Purchases go
+     reminders and cloud backup. Premium unlocks the rest, including roster sharing and shift alarms. Purchases go
      through Apple (StoreKit 2, verified on the device); the website stays free. */
   var PREMIUM_MONTHLY = "net.rosterboard.app.premium.monthly";
   var PREMIUM_LIFETIME = "net.rosterboard.app.premium.lifetime";
