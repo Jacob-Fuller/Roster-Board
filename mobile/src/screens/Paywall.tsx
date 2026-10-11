@@ -1,9 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Button, Card, Dim, H1, LinkText, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, H1, LinkText, useSheetsClear, useTheme, useUi } from "../components/ui";
 import { usePremium } from "../lib/premium";
 import { WEB_URL } from "../lib/supabase";
 
@@ -23,8 +23,17 @@ export function Paywall() {
   const insets = useSafeAreaInsets();
   const { toast } = useUi();
   const { paywall, closePaywall, prices, buy, restore, busy, error } = usePremium();
+  // Opened from inside a sheet: wait until that sheet has fully closed, or iOS silently won't show it.
+  const clear = useSheetsClear();
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (paywall === null) { setShow(false); return; }
+    if (!clear || show) return;
+    const t = setTimeout(() => setShow(true), 120);
+    return () => clearTimeout(t);
+  }, [paywall, clear, show]);
   return (
-    <Modal statusBarTranslucent navigationBarTranslucent visible={paywall !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={closePaywall}>
+    <Modal statusBarTranslucent navigationBarTranslucent visible={show} animationType="slide" presentationStyle="pageSheet" onRequestClose={closePaywall}>
       <View style={{ flex: 1, backgroundColor: t.bg }}>
         {Platform.OS === "android" ? <StatusBar style={t.dark ? "light" : "dark"} /> : null}
         <ScrollView contentContainerStyle={{ padding: 22, paddingTop: Platform.OS === "android" ? insets.top + 16 : 22, paddingBottom: insets.bottom + 24 }}>

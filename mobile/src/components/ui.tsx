@@ -173,9 +173,19 @@ export function Sheet({ visible, onClose, title, children, footer }: {
     return () => layer.pop(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
+  // Track the sheet until it has fully left the screen (iOS reports that in onDismiss;
+  // the timer covers other platforms), so a pop-up opened next waits for it.
+  useEffect(() => {
+    if (visible) { layer.shown(id); return; }
+    const gone = setTimeout(() => layer.gone(id), 900);
+    return () => clearTimeout(gone);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => () => layer.gone(id), []);
   const onTop = visible && layer.top === id;
   return (
-    <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} transparent={Platform.OS === "web"}>
+    <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} onDismiss={() => layer.gone(id)} transparent={Platform.OS === "web"}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: t.bg }}>
         {Platform.OS === "android" ? <StatusBar style={t.dark ? "light" : "dark"} /> : null}
         <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: Platform.OS === "android" ? insets.top + 12 : 16, paddingBottom: 10, gap: 10 }}>
@@ -206,8 +216,13 @@ const UiContext = createContext<UiCtx>({ dialog: () => {}, toast: () => {} });
 export const useUi = () => useContext(UiContext);
 
 // Which sheets are open, so dialogs and messages appear in the one on top.
-type LayerCtx = { top: string | null; push: (id: string) => void; pop: (id: string) => void };
-const LayerContext = createContext<LayerCtx>({ top: null, push: () => {}, pop: () => {} });
+type LayerCtx = {
+  top: string | null; push: (id: string) => void; pop: (id: string) => void;
+  onScreen: number; shown: (id: string) => void; gone: (id: string) => void;
+};
+const LayerContext = createContext<LayerCtx>({ top: null, push: () => {}, pop: () => {}, onScreen: 0, shown: () => {}, gone: () => {} });
+// True once no sheet is open or still sliding away; iOS can only show one pop-up at a time.
+export const useSheetsClear = () => useContext(LayerContext).onScreen === 0;
 type OverlayState = {
   opts: DialogOpts | null; val: string; setVal: (v: string) => void; close: () => void;
   msg: string; fade: Animated.Value;
@@ -267,6 +282,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   const [val, setVal] = useState("");
   const [msg, setMsg] = useState("");
   const [stack, setStack] = useState<string[]>([]);
+  const [visibleSheets, setVisibleSheets] = useState<string[]>([]);
   const fade = useRef(new Animated.Value(0)).current;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -283,8 +299,11 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
   const push = useCallback((id: string) => setStack((s) => s.filter((x) => x !== id).concat(id)), []);
   const pop = useCallback((id: string) => setStack((s) => s.filter((x) => x !== id)), []);
   const top = stack.length ? stack[stack.length - 1] : null;
+  const shown = useCallback((id: string) => setVisibleSheets((s) => (s.includes(id) ? s : s.concat(id))), []);
+  const gone = useCallback((id: string) => setVisibleSheets((s) => (s.includes(id) ? s.filter((x) => x !== id) : s)), []);
+  const onScreen = visibleSheets.length;
   const ui = useMemo(() => ({ dialog, toast }), [dialog, toast]);
-  const layer = useMemo(() => ({ top, push, pop }), [top, push, pop]);
+  const layer = useMemo(() => ({ top, push, pop, onScreen, shown, gone }), [top, push, pop, onScreen, shown, gone]);
   const overlay = { opts, val, setVal, close, msg, fade };
   return (
     <UiContext.Provider value={ui}>
