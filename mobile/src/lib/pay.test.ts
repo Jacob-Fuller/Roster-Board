@@ -2,7 +2,7 @@
 // code (../index.html) on random settings and shifts. Run: npm test
 import { readFileSync } from "node:fs";
 import {
-  annualTaxEstimate, computePay, fmtMoney, fmtMoneyShort, payConfig, payFormFromConfig, payIsSetUp, payPeriodFor,
+  annualTaxEstimate, computePay, num, fmtMoney, fmtMoneyShort, payConfig, payFormFromConfig, payIsSetUp, payPeriodFor,
   payPeriodIsAlt, paySetupDraft, paySummaries, savePaySetup, shiftPayPeriod, workTypes, type PayForm,
 } from "./pay.ts";
 import { EXCESS_TYPE, OVERTIME_TYPE, addDays, ymd, type ShiftType } from "./model.ts";
@@ -176,6 +176,9 @@ for (let i = 0; i < CASES; i++) {
   }
   for (const [s, e, f] of ranges) {
     const a = computePay(snap, typesById, s, e, f), b = web.computePay(s, e, f);
+    // the native app also pays super on excess hours (the web app didn't)
+    b.superAmt += a.excess * num(mineCfg.superPct, 0) / 100;
+    if (Math.abs(a.superAmt - b.superAmt) < 1e-6) b.superAmt = a.superAmt;
     if (JSON.stringify(a) !== JSON.stringify(b)) fail("computePay " + ymd(s) + ".." + ymd(e), i, a, b);
     if (fmtMoney(a.gross) !== web.fmtMoney(b.gross) || fmtMoney(a.net) !== web.fmtMoney(b.net)) fail("fmtMoney", i, a.gross, b.gross);
     if (fmtMoneyShort(a.gross) !== web.fmtMoneyShort(b.gross)) fail("fmtMoneyShort", i, a.gross, b.gross);

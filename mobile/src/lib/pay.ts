@@ -321,8 +321,8 @@ export function computePay(
   });
 
   r.gross = r.ordinary + r.overtime + r.excess + r.penalties + r.shiftAllowance + r.allowances + r.leave + r.leaveLoading;
-  // Super is paid by the employer on ordinary-time earnings (not overtime).
-  r.superAmt = (r.ordinary + r.penalties + r.shiftAllowance + r.leave + r.leaveLoading) * num(cfg.superPct, 0) / 100;
+  // Super is paid by the employer on ordinary-time earnings, which include excess hours (not overtime).
+  r.superAmt = (r.ordinary + r.excess + r.penalties + r.shiftAllowance + r.leave + r.leaveLoading) * num(cfg.superPct, 0) / 100;
   const f = annualFactor || 1;
   r.tax = cfg.showTax ? annualTaxEstimate(r.gross * f, cfg.taxFree) / f : 0;
   r.net = r.gross - r.tax;

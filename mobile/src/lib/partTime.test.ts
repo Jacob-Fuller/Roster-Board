@@ -60,5 +60,8 @@ const range: [Date, Date] = [new Date(2026, 9, 5), new Date(2026, 9, 19)];
 eq(Math.round(computePay(e2, typesById, range[0], range[1], 26).shiftAllowance * 100) / 100, 126, "allowance on ordinary only");
 e2.settings.pay.typeRules.day.excessAllowance = true;
 eq(Math.round(computePay(e2, typesById, range[0], range[1], 26).shiftAllowance * 100) / 100, 478.8, "allowance on ordinary + 28h excess");
+// super includes excess pay and its shift allowance, not overtime
+e2.settings.pay.superPct = 12.75;
+eq(Math.round(computePay(e2, typesById, range[0], range[1], 26).superAmt * 100) / 100, 254.85, "super on ordinary + excess + allowance");
 console.log(fails ? fails + " part-time checks failed" : "part-time, allowances and pay card ranges: all checks pass");
 if (fails) process.exit(1);
