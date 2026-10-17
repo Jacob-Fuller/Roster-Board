@@ -1,13 +1,15 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { PanResponder, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Card, Dim, Divider, H1, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
-import { EXCESS_ID, MONTHS, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
+import { Button, Card, Dim, Divider, H1, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
+import { EXCESS_ID, MONTHS, WEEKDAYS_FULL, parseYmd, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
 import {
-  computePay, fmtMoney, fmtMoneyShort, payCardRange, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
-  type PayResult,
+  allowanceClaims, computePay, fmtMoney, fmtMoneyShort, payCardRangeAt, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
+  type PayResult, type PayTag,
 } from "../lib/pay";
+import { lastDay, partTimeOf, partTimeProgress } from "../lib/partTime";
 import { collectPeriodStats, type TypeRow } from "../lib/reports";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
@@ -75,34 +77,37 @@ export function ReportsScreen() {
   let busiest: string | null = null, busiestVal = 0;
   Object.keys(stats.monthTotals).forEach((k) => { if (stats.monthTotals[k] > busiestVal) { busiestVal = stats.monthTotals[k]; busiest = k; } });
 
-  // Estimated pay card (same rules as the web's renderPayCard).
+  // Estimated pay card: Weekly / Fortnightly / Monthly, stepped through with ‹ › or a swipe.
   const paySetUp = payIsSetUp(data.settings);
   const payCard = useMemo(() => {
     if (!paySetUp) return null;
     const cfg = payConfig(data.settings);
-    let range = mode === "month"
-      ? { start: month, end: addMonths(month, 1) }
-      : { start: new Date(year, 0, 1), end: new Date(year + 1, 0, 1) };
-    let view: CardView | null = null, rangeLabel = "";
-    if (mode !== "year") {
-      view = savedView === "weekly" || savedView === "fortnightly" || savedView === "monthly" ? savedView : (cfg.cycle || "fortnightly");
-      if (view !== "monthly") {
-        const now = new Date();
-        const ref = now >= month && now < addMonths(month, 1) ? now : month;
-        const base = payCardRange(cfg, view, ref), len = view === "weekly" ? 7 : 14;
-        range = { start: addDays(base.start, cardOffset * len), end: addDays(base.end, cardOffset * len) };
-        const last = addDays(range.end, -1);
-        rangeLabel = shortDate(range.start) + " – " + shortDate(last);
-      }
-    }
-    const factor = mode === "year" ? 1 : view === "weekly" ? 52 : view === "fortnightly" ? 26 : 12;
-    return { view, range, rangeLabel, p: computePay(data, typesById, range.start, range.end, factor) };
+    const view: CardView = savedView === "weekly" || savedView === "fortnightly" || savedView === "monthly" ? savedView : (cfg.cycle || "fortnightly");
+    const now = new Date();
+    const span = mode === "month" ? { start: month, end: addMonths(month, 1) } : { start: new Date(year, 0, 1), end: new Date(year + 1, 0, 1) };
+    const ref = now >= span.start && now < span.end ? now : span.start;
+    const r = payCardRangeAt(cfg, view, ref, cardOffset);
+    const rangeLabel = r.calendarMonth ? MONTHS[r.start.getMonth()] + " " + r.start.getFullYear() : shortDate(r.start) + " – " + shortDate(addDays(r.end, -1));
+    const factor = view === "weekly" ? 52 : view === "fortnightly" ? 26 : 12;
+    return { view, range: r, rangeLabel, p: computePay(data, typesById, r.start, r.end, factor) };
   }, [paySetUp, data, typesById, mode, month, year, savedView, cardOffset]);
+  const cardPan = useMemo(() => PanResponder.create({
+    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+    onPanResponderRelease: (_, g) => { if (Math.abs(g.dx) >= 50) setCardOffset((o) => o + (g.dx < 0 ? 1 : -1)); },
+  }), []);
+
+  // Part time: this pay period's rostered shifts, excess hours and overtime.
+  const ptProgress = useMemo(() => {
+    if (fullTime) return null;
+    const pt = partTimeOf(data.settings);
+    if (!pt.rostered && !pt.excessCap) return null;
+    return partTimeProgress(data, typesById, new Date());
+  }, [fullTime, data, typesById]);
 
   const openBreakdown = () => {
     if (!payCard) return;
-    if (payCard.view && payCard.view !== "monthly") { setPayScreen({ mode: "period", anchor: payCard.range.start }); return; }
-    setPayScreen(mode === "year" ? { mode: "year", anchor: new Date(year, 0, 1) } : { mode: "month", anchor: month });
+    if (payCard.range.calendarMonth) setPayScreen({ mode: "month", anchor: payCard.range.start });
+    else setPayScreen({ mode: "period", anchor: payCard.range.start });
   };
 
   // Year in review pay rows.
@@ -135,9 +140,9 @@ export function ReportsScreen() {
         <H1 style={{ marginBottom: 12 }}>Reports</H1>
         <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 14 }}>
-          <Nav label="‹" a11y="Previous" onPress={() => step(-1)} />
+          <Nav dir={-1} a11y="Previous" onPress={() => step(-1)} />
           <Text style={{ color: t.text, fontSize: 17, fontWeight: "700" }}>{label}</Text>
-          <Nav label="›" a11y="Next" onPress={() => step(1)} />
+          <Nav dir={1} a11y="Next" onPress={() => step(1)} />
         </View>
 
         <View style={{ flexDirection: "row", gap: 8 }}>
@@ -151,41 +156,51 @@ export function ReportsScreen() {
           <Stat label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} />
         </View>
 
+        {ptProgress ? (
+          <>
+            <SectionHead title="This pay period" right={<Dim>{shortDate(ptProgress.period.start) + " – " + shortDate(lastDay(ptProgress.period))}</Dim>} />
+            <Card>
+              {ptProgress.rostered ? <Bar name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={Math.max(ptProgress.rostered, ptProgress.rosteredDone)}
+                text={ptProgress.rosteredDone + " of " + ptProgress.rostered} /> : null}
+              {ptProgress.excessCap ? <Bar name="Excess hours" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
+                text={fmtHours(ptProgress.excessHours) + " of " + fmtHours(ptProgress.excessCap) + "h"} /> : null}
+              <Bar name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={Math.max(1, ptProgress.otHours)} text={fmtHours(ptProgress.otHours) + "h"} />
+            </Card>
+          </>
+        ) : null}
+
         <SectionHead title="Estimated pay" right={<Button small kind="ghost" title="Pay setup" onPress={() => setSetupOpen(true)} />} />
-        {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : <Card>
-          {!payCard ? (
-            <>
-              <Button small title="Set my hourly rate" onPress={() => setSetupOpen(true)} />
-            </>
-          ) : (
-            <>
-              {payCard.view ? (
-                <View style={{ marginBottom: 12 }}>
-                  <Segmented<CardView> value={payCard.view} onChange={chooseView}
-                    options={[{ value: "weekly", label: "Weekly" }, { value: "fortnightly", label: "Fortnightly" }, { value: "monthly", label: "Monthly" }]} />
-                </View>
-              ) : null}
-              {payCard.rangeLabel ? (
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  <Nav label="‹" a11y="Previous period" onPress={() => setCardOffset((o) => o - 1)} />
+        {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : !payCard ? (
+          <Card><Button small title="Set my hourly rate" onPress={() => setSetupOpen(true)} /></Card>
+        ) : (
+          <>
+            <View style={{ marginBottom: 10 }}>
+              <Segmented<CardView> value={payCard.view} onChange={chooseView}
+                options={[{ value: "weekly", label: "Weekly" }, { value: "fortnightly", label: "Fortnightly" }, { value: "monthly", label: "Monthly" }]} />
+            </View>
+            <HeroCard>
+              <View {...cardPan.panHandlers}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <Nav dir={-1} onHero a11y="Previous period" onPress={() => setCardOffset((o) => o - 1)} />
                   <Pressable accessibilityRole="button" accessibilityLabel="Back to current period" disabled={!cardOffset} onPress={() => setCardOffset(0)} style={{ alignItems: "center" }}>
-                    <Text style={{ color: t.text, fontSize: 15, fontWeight: "700" }}>{payCard.rangeLabel}</Text>
-                    {cardOffset ? <Text style={{ color: t.accent, fontSize: 12, fontWeight: "600" }}>Back to current</Text> : null}
+                    <Text style={{ color: t.heroInk, fontSize: 15, fontWeight: "700" }}>{payCard.rangeLabel}</Text>
+                    <Text style={{ color: t.heroDim, fontSize: 12, fontWeight: "600", marginTop: 1 }}>{cardOffset ? "Back to current" : "Current"}</Text>
                   </Pressable>
-                  <Nav label="›" a11y="Next period" onPress={() => setCardOffset((o) => o + 1)} />
+                  <Nav dir={1} onHero a11y="Next period" onPress={() => setCardOffset((o) => o + 1)} />
                 </View>
-              ) : null}
-              <Pressable accessibilityRole="button" onPress={openBreakdown}
-                style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 10, opacity: pressed ? 0.7 : 1 })}>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: t.text, fontSize: 26, fontWeight: "800", fontVariant: ["tabular-nums"] }}>{fmtMoney(payCard.p.gross)}</Text>
-                  <Dim>{"Gross" + (payCard.p.showTax ? " · about " + fmtMoney(payCard.p.net) + " take-home" : "")}</Dim>
-                </View>
-                <Text style={{ color: t.accent, fontWeight: "700", fontSize: 14 }}>Breakdown ›</Text>
-              </Pressable>
-            </>
-          )}
-        </Card>}
+                <Pressable accessibilityRole="button" accessibilityLabel="Pay breakdown" onPress={openBreakdown}
+                  style={({ pressed }) => ({ alignItems: "center", paddingTop: 18, paddingBottom: 4, opacity: pressed ? 0.75 : 1 })}>
+                  <Text style={{ fontFamily: SERIF, color: t.heroInk, fontSize: 42, letterSpacing: -0.8, fontVariant: ["tabular-nums"] }}>{fmtMoney(payCard.p.gross)}</Text>
+                  <Text style={{ color: t.heroDim, fontSize: 14, marginTop: 2 }}>{payCard.p.showTax ? "Gross · about " + fmtMoney(payCard.p.net) + " take-home" : "Gross"}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 14, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.12)" }}>
+                    <Text style={{ color: t.heroInk, fontWeight: "700", fontSize: 13 }}>Breakdown</Text>
+                    <Ionicons name="chevron-forward" size={14} color={t.heroInk} />
+                  </View>
+                </Pressable>
+              </View>
+            </HeroCard>
+          </>
+        )}
 
         {locked ? (
           <>
@@ -265,8 +280,15 @@ function PayScreenSheet({ state, onChange, typesById }: {
   typesById: { [id: string]: ShiftType };
 }) {
   const t = useTheme();
-  const { data } = useStore();
+  const { data, update } = useStore();
   const [setupOpen, setSetupOpen] = useState(false);
+  const setPaid = (dateKey: string, ids: string[], paid: boolean) => update((d) => {
+    ((d.payTags[dateKey] || []) as PayTag[]).forEach((x) => {
+      if (ids.indexOf(x.id) === -1) return;
+      if (paid) x.paid = true; else delete x.paid;
+      x.updatedAt = Date.now();
+    });
+  });
   const view = useMemo(() => {
     if (!state) return null;
     const cfg = payConfig(data.settings);
@@ -280,7 +302,8 @@ function PayScreenSheet({ state, onChange, typesById }: {
       const g = computePay(data, typesById, new Date(y, m, 1), new Date(y, m + 1, 1), 12).gross;
       months.push(g); yearTotal += g; if (g > max) max = g;
     }
-    return { cfg, r, p, rate, y, months, yearTotal, max };
+    const claims = allowanceClaims(data, r.start, r.end);
+    return { cfg, r, p, rate, y, months, yearTotal, max, claims };
   }, [state, data, typesById]);
 
   const step = (dir: number) => {
@@ -302,24 +325,55 @@ function PayScreenSheet({ state, onChange, typesById }: {
           <Segmented<PayMode> value={state.mode} onChange={(m) => onChange({ mode: m, anchor: state.anchor })}
             options={[{ value: "period", label: "Pay period" }, { value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 14 }}>
-            <Nav label="‹" a11y="Previous" onPress={() => step(-1)} />
+            <Nav dir={-1} a11y="Previous" onPress={() => step(-1)} />
             <View style={{ alignItems: "center" }}>
               <Text style={{ color: t.text, fontSize: 17, fontWeight: "700" }}>{view.r.label}</Text>
               <Dim>{view.r.sub}</Dim>
             </View>
-            <Nav label="›" a11y="Next" onPress={() => step(1)} />
+            <Nav dir={1} a11y="Next" onPress={() => step(1)} />
           </View>
-          <Card style={{ alignItems: "center", paddingVertical: 18 }}>
-            <Dim style={{ fontWeight: "600" }}>Estimated gross pay</Dim>
-            <Text style={{ color: t.text, fontSize: 32, fontWeight: "800", fontVariant: ["tabular-nums"], marginTop: 4 }}>{fmtMoney(view.p.gross)}</Text>
-            {view.p.showTax ? <Dim style={{ marginTop: 4 }}>{"About " + fmtMoney(view.p.net) + " take-home"}</Dim> : null}
-          </Card>
+          <HeroCard style={{ alignItems: "center", paddingVertical: 22 }}>
+            <Text style={{ color: t.heroDim, fontSize: 13, fontWeight: "600" }}>Estimated gross pay</Text>
+            <Text style={{ fontFamily: SERIF, color: t.heroInk, fontSize: 40, letterSpacing: -0.8, fontVariant: ["tabular-nums"], marginTop: 4 }}>{fmtMoney(view.p.gross)}</Text>
+            {view.p.showTax ? <Text style={{ color: t.heroDim, fontSize: 14, marginTop: 2 }}>{"About " + fmtMoney(view.p.net) + " take-home"}</Text> : null}
+          </HeroCard>
 
           <SectionHead title="Breakdown" />
           <Card style={{ paddingVertical: 4 }}>
             <PayLines p={view.p} superPct={view.cfg.superPct} />
           </Card>
           <Dim style={{ marginTop: 8 }}>{"Base rate " + fmtMoney(view.rate) + "/h"}</Dim>
+
+          {view.claims.length ? (() => {
+            const all = view.claims.reduce((n, c) => n + c.tags.length, 0);
+            const paid = view.claims.reduce((n, c) => n + c.tags.filter((x) => x.paid).length, 0);
+            return (
+              <>
+                <SectionHead title="Allowances" right={<Dim>{paid + " of " + all + " paid"}</Dim>} />
+                <Card style={{ paddingVertical: 4 }}>
+                  {view.claims.map((c, i) => {
+                    const done = c.tags.every((x) => x.paid);
+                    const dt = parseYmd(c.dateKey);
+                    return (
+                      <View key={c.dateKey + c.allowance.id}>
+                        {i ? <Divider /> : null}
+                        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: done }}
+                          onPress={() => setPaid(c.dateKey, c.tags.map((x) => x.id), !done)}
+                          style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 11, opacity: pressed ? 0.6 : 1 })}>
+                          <Ionicons name={done ? "checkmark-circle" : "ellipse-outline"} size={24} color={done ? t.good : t.textFaint} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{c.allowance.name + (c.tags.length > 1 ? " ×" + c.tags.length : "")}</Text>
+                            <Dim>{WEEKDAYS_FULL[dt.getDay()].slice(0, 3) + " " + shortDate(dt)}</Dim>
+                          </View>
+                          <Text style={{ color: done ? t.textDim : t.text, fontSize: 14, fontWeight: "700", fontVariant: ["tabular-nums"] }}>{fmtMoney(c.amount)}</Text>
+                        </Pressable>
+                      </View>
+                    );
+                  })}
+                </Card>
+              </>
+            );
+          })() : null}
 
           <SectionHead title={"By month · " + view.y} />
           <Card>
@@ -382,9 +436,9 @@ function PayLine({ label, amount, kind, detail }: { label: string; amount: numbe
 function Stat({ label, value }: { label: string; value: string }) {
   const t = useTheme();
   return (
-    <Card style={{ flex: 1, paddingVertical: 12, alignItems: "center" }}>
-      <Text style={{ color: t.text, fontSize: 22, fontWeight: "800", fontVariant: ["tabular-nums"] }}>{value}</Text>
-      <Text style={{ color: t.textDim, fontSize: 12, fontWeight: "600", marginTop: 2 }}>{label}</Text>
+    <Card style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 14 }}>
+      <Text style={{ color: t.textDim, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: SERIF, color: t.text, fontSize: 24, marginTop: 4, fontVariant: ["tabular-nums"] }}>{value}</Text>
     </Card>
   );
 }
@@ -400,19 +454,19 @@ function Bar({ name, color, value, max, text }: { name: string; color: string; v
         </View>
         <Text style={{ color: t.textDim, fontSize: 13, fontVariant: ["tabular-nums"] }}>{text}</Text>
       </View>
-      <View style={{ height: 8, borderRadius: 4, backgroundColor: t.surface2, overflow: "hidden" }}>
-        <View style={{ width: `${value > 0 ? Math.max(4, (value / max) * 100) : 0}%`, height: "100%", backgroundColor: color, borderRadius: 4 }} />
+      <View style={{ height: 10, borderRadius: 5, backgroundColor: t.surface2, overflow: "hidden" }}>
+        <View style={{ width: `${value > 0 ? Math.max(4, Math.min(100, (value / max) * 100)) : 0}%`, height: "100%", backgroundColor: color, borderRadius: 5 }} />
       </View>
     </View>
   );
 }
 
-function Nav({ label, onPress, a11y }: { label: string; onPress: () => void; a11y: string }) {
+function Nav({ dir, onPress, a11y, onHero }: { dir: -1 | 1; onPress: () => void; a11y: string; onHero?: boolean }) {
   const t = useTheme();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={a11y} onPress={onPress} hitSlop={6}
-      style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ color: t.text, fontSize: 22, fontWeight: "600", marginTop: -2 }}>{label}</Text>
+      style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, backgroundColor: onHero ? "rgba(255,255,255,0.12)" : t.surface2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}>
+      <Ionicons name={dir < 0 ? "chevron-back" : "chevron-forward"} size={18} color={onHero ? t.heroInk : t.text} />
     </Pressable>
   );
 }

@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
@@ -22,11 +23,11 @@ export const SERIF = "Fraunces_700Bold";
 /* ---------- text ---------- */
 export function H1({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
   const t = useTheme();
-  return <Text style={[{ fontFamily: SERIF, fontSize: 26, color: t.text }, style]}>{children}</Text>;
+  return <Text style={[{ fontFamily: SERIF, fontSize: 30, letterSpacing: -0.4, color: t.text }, style]}>{children}</Text>;
 }
 export function H2({ children, style }: { children: React.ReactNode; style?: StyleProp<TextStyle> }) {
   const t = useTheme();
-  return <Text style={[{ fontFamily: SERIF, fontSize: 18, color: t.text }, style]}>{children}</Text>;
+  return <Text style={[{ fontFamily: SERIF, fontSize: 18, letterSpacing: -0.2, color: t.text }, style]}>{children}</Text>;
 }
 export function Dim({ children, style, numberOfLines }: { children: React.ReactNode; style?: StyleProp<TextStyle>; numberOfLines?: number }) {
   const t = useTheme();
@@ -34,18 +35,36 @@ export function Dim({ children, style, numberOfLines }: { children: React.ReactN
 }
 
 /* ---------- containers ---------- */
+// Light: white cards lifted by a soft, low shadow. Dark: a quiet edge instead of a shadow.
 export function Card({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   const t = useTheme();
   return (
-    <View style={[{ backgroundColor: t.surface, borderColor: t.border, borderWidth: StyleSheet.hairlineWidth, borderRadius: 16, padding: 14 }, style]}>
+    <View style={[{
+      backgroundColor: t.surface, borderRadius: 18, padding: 16,
+      borderColor: t.border, borderWidth: t.dark ? StyleSheet.hairlineWidth : 0,
+      shadowColor: t.shadow, shadowOpacity: t.dark ? 0 : 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 3 }, elevation: t.dark ? 0 : 1,
+    }, style]}>
+      {children}
+    </View>
+  );
+}
+// The bold surface, used once per screen at most (the estimated pay figure).
+export function HeroCard({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
+  const t = useTheme();
+  return (
+    <View style={[{
+      backgroundColor: t.hero, borderRadius: 22, padding: 18,
+      borderColor: t.dark ? t.border : "transparent", borderWidth: t.dark ? StyleSheet.hairlineWidth : 0,
+      shadowColor: t.shadow, shadowOpacity: t.dark ? 0 : 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: t.dark ? 0 : 6,
+    }, style]}>
       {children}
     </View>
   );
 }
 export function SectionHead({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 22, marginBottom: 8 }}>
-      <H2>{title}</H2>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 26, marginBottom: 10, paddingHorizontal: 2 }}>
+      <H2 style={{ fontSize: 19 }}>{title}</H2>
       {right}
     </View>
   );
@@ -67,11 +86,12 @@ export function Button({ title, onPress, kind = "primary", disabled, style, smal
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [{
-        backgroundColor: bg, borderRadius: 12, borderWidth: outline ? 1.5 : 0, borderColor: border, paddingVertical: small ? 9 : 13, paddingHorizontal: small ? 12 : 16,
+        backgroundColor: bg, borderRadius: small ? 12 : 14, borderWidth: outline ? 1 : 0, borderColor: border, paddingVertical: small ? 9 : 14, paddingHorizontal: small ? 14 : 18,
         alignItems: "center", justifyContent: "center", opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
+        transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
       }, style]}
     >
-      <Text style={{ color: fg, fontWeight: "700", fontSize: small ? 14 : 15 }}>{title}</Text>
+      <Text style={{ color: fg, fontWeight: "700", fontSize: small ? 14 : 16, letterSpacing: 0.1 }}>{title}</Text>
     </Pressable>
   );
 }
@@ -95,8 +115,8 @@ export function Field(props: React.ComponentProps<typeof TextInput> & { label?: 
         placeholderTextColor={t.textFaint}
         {...rest}
         style={[{
-          borderWidth: 1, borderColor: t.border, backgroundColor: t.surface2, color: t.text, borderRadius: 10,
-          paddingHorizontal: 12, paddingVertical: Platform.OS === "ios" ? 12 : 9, fontSize: 16,
+          borderWidth: StyleSheet.hairlineWidth, borderColor: t.border, backgroundColor: t.surface2, color: t.text, borderRadius: 12,
+          paddingHorizontal: 14, paddingVertical: Platform.OS === "ios" ? 13 : 10, fontSize: 16,
         }, style]}
       />
     </View>
@@ -108,7 +128,7 @@ export function Segmented<T extends string>({ options, value, onChange }: {
 }) {
   const t = useTheme();
   return (
-    <View style={{ flexDirection: "row", backgroundColor: t.surface2, borderRadius: 11, padding: 3, gap: 2 }}>
+    <View style={{ flexDirection: "row", backgroundColor: t.surface2, borderRadius: 12, padding: 3, gap: 2 }}>
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -117,9 +137,10 @@ export function Segmented<T extends string>({ options, value, onChange }: {
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
             onPress={() => onChange(o.value)}
-            style={{ flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: "center", backgroundColor: on ? t.surface : "transparent" }}
+            style={{ flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: "center", backgroundColor: on ? (t.dark ? t.border : t.surface) : "transparent",
+              shadowColor: t.shadow, shadowOpacity: on && !t.dark ? 0.1 : 0, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: on && !t.dark ? 1 : 0 }}
           >
-            <Text style={{ fontWeight: "600", fontSize: 14, color: on ? t.text : t.textDim }}>{o.label}</Text>
+            <Text style={{ fontWeight: on ? "700" : "600", fontSize: 14, color: on ? t.text : t.textDim }}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -143,13 +164,13 @@ export function ToggleRow({ label, value, onChange, sub }: { label: string; valu
 export function MenuRow({ title, sub, onPress, danger, right, center }: { title: string; sub?: string; onPress: () => void; danger?: boolean; right?: string; center?: boolean }) {
   const t = useTheme();
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 12, gap: 10, opacity: pressed ? 0.6 : 1 })}>
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 14, gap: 10, opacity: pressed ? 0.6 : 1 })}>
       <View style={{ flex: 1, alignItems: center ? "center" : "flex-start" }}>
         <Text style={{ color: danger ? t.danger : t.text, fontSize: 15, fontWeight: "600" }}>{title}</Text>
         {sub ? <Dim>{sub}</Dim> : null}
       </View>
       {right ? <Dim>{right}</Dim> : null}
-      {center ? null : <Text style={{ color: t.textFaint, fontSize: 20 }}>›</Text>}
+      {center ? null : <Ionicons name="chevron-forward" size={17} color={t.textFaint} />}
     </Pressable>
   );
 }
@@ -188,11 +209,11 @@ export function Sheet({ visible, onClose, title, children, footer }: {
     <Modal statusBarTranslucent navigationBarTranslucent visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose} onDismiss={() => layer.gone(id)} transparent={Platform.OS === "web"}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: t.bg }}>
         {Platform.OS === "android" ? <StatusBar style={t.dark ? "light" : "dark"} /> : null}
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: Platform.OS === "android" ? insets.top + 12 : 16, paddingBottom: 10, gap: 10 }}>
-          <H2 style={{ flex: 1, fontSize: 20 }}>{title}</H2>
+        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingTop: Platform.OS === "android" ? insets.top + 14 : 20, paddingBottom: 12, gap: 10 }}>
+          <H2 style={{ flex: 1, fontSize: 22 }}>{title}</H2>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={10}
-            style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ color: t.textDim, fontSize: 15, fontWeight: "700" }}>✕</Text>
+            style={({ pressed }) => ({ width: 32, height: 32, borderRadius: 16, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}>
+            <Ionicons name="close" size={18} color={t.textDim} />
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: footer ? 24 : 24 + (Platform.OS === "android" ? insets.bottom : 0) }} keyboardShouldPersistTaps="handled">
@@ -236,7 +257,7 @@ function DialogBox() {
   const { opts, val, setVal, close } = o;
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "center", padding: 28 }}>
-      <View style={{ backgroundColor: t.surface, borderRadius: 18, padding: 18 }}>
+      <View style={{ backgroundColor: t.surface, borderRadius: 22, padding: 20 }}>
         <H2 style={{ marginBottom: opts.message ? 6 : 12 }}>{opts.title}</H2>
         {opts.message ? <Text style={{ color: t.textDim, fontSize: 14, marginBottom: 14, lineHeight: 20 }}>{opts.message}</Text> : null}
         {opts.input ? (

@@ -4,10 +4,11 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { Button, Card, Dim, Divider, Field, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
-import { employmentOf, fmtHours } from "../lib/model";
+import { employmentOf, fmtHours, mkId } from "../lib/model";
+import { rebalanceAllExtras } from "../lib/partTime";
 import {
-  payFormFromConfig, paySetupDraft, paySummaries, savePaySetup, workTypes,
-  type PayConfig, type PayCycle, type PayForm, type PayTypeRule,
+  fmtMoney, payFormFromConfig, paySetupDraft, paySummaries, savePaySetup, workTypes,
+  type PayAllowance, type PayConfig, type PayCycle, type PayForm, type PayTypeRule,
 } from "../lib/pay";
 import { useStore } from "../lib/store";
 
@@ -21,6 +22,9 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
   const [draft, setDraft] = useState<PayConfig | null>(null);
   const [form, setForm] = useState<PayForm | null>(null);
   const [amounts, setAmounts] = useState<{ [typeId: string]: string }>({});
+  const [allowText, setAllowText] = useState<{ [id: string]: string }>({});
+  const [maxText, setMaxText] = useState<{ [id: string]: string }>({});
+  const th = useTheme();
 
   // A fresh copy of the saved setup every time the sheet opens (like the web's openPaySetup).
   useEffect(() => {
@@ -28,12 +32,14 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
     const c = paySetupDraft(data.settings, data.types);
     const a: { [typeId: string]: string } = {};
     Object.keys(c.typeRules).forEach((id) => { const v = c.typeRules[id].allowance; a[id] = v ? String(v) : ""; });
-    setDraft(c); setForm(payFormFromConfig(c)); setAmounts(a);
+    setDraft(c); setForm(payFormFromConfig(c)); setAmounts(a); setAllowText({}); setMaxText({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   const types = workTypes(data.types);
   const set = <K extends keyof PayForm>(k: K, v: PayForm[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
+  const setAllowance = (id: string, patch: Partial<PayAllowance>) =>
+    setDraft((c) => (c ? { ...c, allowances: c.allowances.map((a) => (a.id === id ? { ...a, ...patch } : a)) } : c));
   const setRule = (id: string, patch: Partial<PayTypeRule>) =>
     setDraft((c) => (c ? { ...c, typeRules: { ...c.typeRules, [id]: { ...(c.typeRules[id] || {}), ...patch } } } : c));
 
@@ -41,9 +47,12 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
     if (!draft || !form) return;
     if (!(parseFloat(form.baseRate) > 0)) { toast("Enter your hourly rate"); return; }
     const c = clone(draft), f = form;
+    c.allowances = c.allowances.filter((a) => a.name.trim()).map((a) => ({ ...a, name: a.name.trim() }));
     update((d) => {
       d.settings = d.settings || { hourlyRate: 0 };
       savePaySetup(d.settings, c, f);
+      // the pay cycle sets the period part-time excess hours are counted over
+      rebalanceAllExtras(d);
     });
     onClose();
     toast("Pay setup saved");
@@ -127,6 +136,32 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         })}
       </Section>
 
+      <Section title="Allowances" summary={allowSummary(draft.allowances)}>
+        {draft.allowances.map((a, i) => (
+          <View key={a.id}>
+            {i ? <Divider /> : null}
+            <View style={{ paddingTop: i ? 12 : 0 }}>
+              <Field label="Name" value={a.name} onChangeText={(v) => setAllowance(a.id, { name: v })} placeholder="e.g. Missed meal" />
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Field label="Amount ($)" value={allowText[a.id] ?? (a.amount ? String(a.amount) : "")} keyboardType={dec} placeholder="e.g. 18.50"
+                    onChangeText={(v) => { setAllowText({ ...allowText, [a.id]: v }); setAllowance(a.id, { amount: parseFloat(v) || 0, kind: "flat" }); }} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Field label="Max per shift" value={maxText[a.id] ?? (a.max ? String(a.max) : "")} keyboardType="number-pad" placeholder="e.g. 2"
+                    onChangeText={(v) => { setMaxText({ ...maxText, [a.id]: v }); setAllowance(a.id, { max: Math.max(0, parseInt(v, 10) || 0) }); }} />
+                </View>
+              </View>
+              <Pressable accessibilityRole="button" onPress={() => setDraft({ ...draft, allowances: draft.allowances.filter((x) => x.id !== a.id) })} style={{ alignSelf: "flex-start", paddingBottom: 12 }}>
+                <Text style={{ color: th.danger, fontWeight: "700" }}>Remove</Text>
+              </Pressable>
+            </View>
+          </View>
+        ))}
+        <Button small kind="outline" title="Add allowance"
+          onPress={() => setDraft({ ...draft, allowances: draft.allowances.concat({ id: mkId(), name: "", kind: "flat", amount: 0, max: 0 }) })} />
+      </Section>
+
       <Section title="Leave" summary={sum.leave}>
         <ToggleRow label="Paid leave at base rate" value={form.payLeave} onChange={(v) => set("payLeave", v)} />
         <Field label="Annual leave loading %" value={form.leaveLoading} onChangeText={(v) => set("leaveLoading", v)} keyboardType={dec} placeholder="e.g. 17.5" />
@@ -139,6 +174,12 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
       </Section>
     </Sheet>
   );
+}
+
+function allowSummary(list: PayAllowance[]) {
+  const named = list.filter((a) => a.name.trim());
+  if (!named.length) return "None";
+  return named.length === 1 ? named[0].name + " · " + fmtMoney(+(named[0].amount || 0)) : named.length + " allowances";
 }
 
 function TypeName({ name }: { name: string }) {

@@ -9,7 +9,7 @@
     "android": "expo run:android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types src/lib/merge.test.ts && node --experimental-strip-types src/lib/roster.test.ts && node --experimental-strip-types src/lib/pay.test.ts",
+    "test": "node --experimental-strip-types src/lib/merge.test.ts && node --experimental-strip-types src/lib/roster.test.ts && node --experimental-strip-types src/lib/pay.test.ts && node --experimental-strip-types src/lib/partTime.test.ts",
     "export:web": "expo export --platform web"
   },
   "dependencies": {

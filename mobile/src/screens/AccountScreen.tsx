@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Linking, Platform, ScrollView, Share, Text, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Card, Dim, Divider, Field, H1, MenuRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
-import { employmentOf, type Employment } from "../lib/model";
+import { DateField } from "../components/DateField";
+import { employmentOf, fmtHours, ymd, type Employment } from "../lib/model";
+import { partTimeOf, rebalanceAllExtras } from "../lib/partTime";
+import { num, payAnchor, payConfig, type PayCycle } from "../lib/pay";
 import { usePremium } from "../lib/premium";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
@@ -24,6 +27,7 @@ export function AccountScreen() {
   const [bdaysOpen, setBdaysOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [empOpen, setEmpOpen] = useState(false);
 
   const signedIn = auth === "signedIn" && !!user;
   const name = (user && user.user_metadata && (user.user_metadata as any).full_name) || "";
@@ -45,7 +49,7 @@ export function AccountScreen() {
 
         <SectionHead title="Account" />
         <Card style={{ paddingVertical: 2 }}>
-          <MenuRow title="Account" sub={signedIn ? name || user!.email || "" : "Not signed in"} onPress={() => setAcctOpen(true)} />
+          <MenuRow title="Settings" sub={signedIn ? name || user!.email || "" : "Not signed in"} onPress={() => setAcctOpen(true)} />
         </Card>
 
         <SectionHead title="Birthdays" />
@@ -55,10 +59,8 @@ export function AccountScreen() {
 
 
         <SectionHead title="Employment" />
-        <Card>
-          <Segmented<Employment> value={employmentOf(data.settings)}
-            onChange={(v) => update((d) => { d.settings = { ...d.settings, employment: v, updatedAt: Date.now() }; })}
-            options={[{ value: "full", label: "Full time" }, { value: "part", label: "Part time" }]} />
+        <Card style={{ paddingVertical: 2 }}>
+          <MenuRow title={employmentOf(data.settings) === "full" ? "Full time" : "Part time"} sub={employmentSub(data.settings)} onPress={() => setEmpOpen(true)} />
         </Card>
 
         <SectionHead title="Appearance" />
@@ -105,6 +107,7 @@ export function AccountScreen() {
       </ScrollView>
 
       <AccountDetail visible={acctOpen} onClose={() => setAcctOpen(false)} />
+      <EmploymentSheet visible={empOpen} onClose={() => setEmpOpen(false)} />
       <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
       <SharingSheet visible={shareOpen} onClose={() => setShareOpen(false)} />
       <Onboarding visible={helpOpen} onClose={() => setHelpOpen(false)} />
@@ -183,7 +186,7 @@ function AccountDetail({ visible, onClose }: { visible: boolean; onClose: () => 
   }
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Account">
+    <Sheet visible={visible} onClose={onClose} title="Settings">
       {signedIn ? (
         <>
           <Card>
@@ -263,5 +266,77 @@ function PremiumSection() {
         </Card>
       </Sheet>
     </>
+  );
+}
+
+const CYCLE_LABEL: { [k in PayCycle]: string } = { weekly: "week", fortnightly: "fortnight", monthly: "month" };
+function employmentSub(settings: any) {
+  if (employmentOf(settings) === "full") return "";
+  const pt = partTimeOf(settings), per = CYCLE_LABEL[payConfig(settings).cycle] || "fortnight";
+  const bits: string[] = [];
+  if (pt.rostered) bits.push(pt.rostered + " rostered shift" + (pt.rostered === 1 ? "" : "s") + " a " + per);
+  if (pt.excessCap) bits.push(fmtHours(pt.excessCap) + "h excess, then overtime");
+  return bits.join(" · ");
+}
+
+// Full or part time. Part time: the pay cycle, rostered shifts and the excess
+// hours allowed each pay period before additional shifts become overtime.
+function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { data, update } = useStore();
+  const { toast } = useUi();
+  const [emp, setEmp] = useState<Employment>("part");
+  const [cycle, setCycle] = useState<PayCycle>("fortnightly");
+  const [start, setStart] = useState("");
+  const [rostered, setRostered] = useState("");
+  const [cap, setCap] = useState("");
+  useEffect(() => {
+    if (!visible) return;
+    const cfg = payConfig(data.settings), pt = partTimeOf(data.settings);
+    setEmp(employmentOf(data.settings)); setCycle(cfg.cycle); setStart(cfg.periodStart || ymd(payAnchor(cfg)));
+    setRostered(pt.rostered ? String(pt.rostered) : ""); setCap(pt.excessCap ? String(pt.excessCap) : "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  function save() {
+    update((d) => {
+      const now = Date.now();
+      const st: any = { ...d.settings, employment: emp, updatedAt: now };
+      if (emp === "part") {
+        st.partTime = { rostered: Math.max(0, Math.round(num(rostered, 0))), excessCap: Math.max(0, num(cap.replace(",", "."), 0)) };
+        // the pay cycle is shared with pay setup
+        st.pay = { ...payConfig(d.settings), cycle, periodStart: start, savedAt: now };
+      }
+      d.settings = st;
+      rebalanceAllExtras(d);
+    });
+    onClose();
+    toast("Saved");
+  }
+
+  const per = CYCLE_LABEL[cycle];
+  return (
+    <Sheet visible={visible} onClose={onClose} title="Employment"
+      footer={<View style={{ flexDirection: "row", gap: 10 }}><Button style={{ flex: 1 }} kind="ghost" title="Cancel" onPress={onClose} /><Button style={{ flex: 1 }} title="Save" onPress={save} /></View>}>
+      <Card>
+        <Segmented<Employment> value={emp} onChange={setEmp} options={[{ value: "full", label: "Full time" }, { value: "part", label: "Part time" }]} />
+      </Card>
+      {emp === "part" ? (
+        <>
+          <SectionHead title="Pay cycle" />
+          <Card>
+            <View style={{ marginBottom: 12 }}>
+              <Segmented<PayCycle> value={cycle} onChange={setCycle}
+                options={[{ value: "weekly", label: "Weekly" }, { value: "fortnightly", label: "Fortnightly" }, { value: "monthly", label: "Monthly" }]} />
+            </View>
+            <DateField label="Pay period start date" value={start} onChange={setStart} />
+          </Card>
+          <SectionHead title="Hours" />
+          <Card>
+            <Field label={"Rostered shifts per " + per} value={rostered} onChangeText={setRostered} keyboardType="number-pad" placeholder="e.g. 4" />
+            <Field label={"Excess hours per " + per + " before overtime"} value={cap} onChangeText={setCap} keyboardType="decimal-pad" placeholder="e.g. 28" />
+          </Card>
+        </>
+      ) : null}
+    </Sheet>
   );
 }

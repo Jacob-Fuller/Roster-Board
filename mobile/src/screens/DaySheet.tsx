@@ -8,7 +8,9 @@ import {
   birthdaysOnDate, employmentOf, entryColor, entryExcessHours, entryName, entryOTHours, fmtHours, isCombo, isSplitEntry, mkId, parseYmd,
   type Rec, type ShiftEntry, type ShiftType, type Snapshot,
 } from "../lib/model";
-import { payTagLabel, payAllowances, payTagsOn } from "../lib/pay";
+import { allowanceAmount, fmtMoney, payAllowances, payConfig, payTagLabel, payTagsOn, rateOn, type PayTag } from "../lib/pay";
+import { applySplit, autoSplitOn, rebalanceExtras } from "../lib/partTime";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { OptionPicker } from "../components/OptionPicker";
 import { usePremium } from "../lib/premium";
 import { askReminderPermission } from "../lib/reminders";
@@ -18,12 +20,6 @@ import { useTypesById } from "./CalendarScreen";
 
 const short = (k: string) => { const d = parseYmd(k); return d.getDate() + " " + MONTHS[d.getMonth()].slice(0, 3); };
 
-// Same rule as the web: overtime keeps any excess on the same entry; excess-only is its own type.
-function applySplit(e: any, ot: number, ex: number) {
-  if (ot > 0) { e.typeId = OVERTIME_ID; e.hours = ot; if (ex > 0) e.excessHours = ex; else delete e.excessHours; }
-  else { e.typeId = EXCESS_ID; e.hours = ex; delete e.excessHours; }
-  e.updatedAt = Date.now();
-}
 
 export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose: () => void }) {
   const t = useTheme();
@@ -31,6 +27,8 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const { dialog, toast } = useUi();
   const typesById = useTypesById();
   const fullTime = employmentOf(data.settings) === "full";
+  // Part time with an excess limit: additional shifts split into excess and overtime by themselves.
+  const autoSplit = autoSplitOn(data.settings);
   // event form
   const [editing, setEditing] = useState<{ id: string; date: string } | null>(null);
   const [text, setText] = useState("");
@@ -59,7 +57,9 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const shifts = data.shifts[key] || [];
   const leave = data.leave[key] || [];
   const swaps = data.swaps[key] || [];
-  const tags = payTagsOn(data, key).map((x) => payTagLabel(x as any, payAllowances(data.settings))).filter(Boolean);
+  const tags = payTagsOn(data, key).filter((x) => x.kind !== "allowance").map((x) => payTagLabel(x as any, payAllowances(data.settings))).filter(Boolean);
+  const allowances = payAllowances(data.settings).filter((a) => a.name);
+  const dayRate = rateOn(payConfig(data.settings), key);
   const events = (data.notes[key] || []).slice().sort((a, b) => (a.allDay ? "" : a.time || "99:99").localeCompare(b.allDay ? "" : b.time || "99:99"));
   const bdays = birthdaysOnDate(data.birthdays, date);
 
@@ -74,6 +74,24 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     });
     toast("Shift added");
   };
+  // An additional shift: excess hours until the pay period's limit, then overtime.
+  const addExtra = (h: number, baseTypeId: string) => {
+    let msg = "Shift added";
+    update((d) => {
+      const e: any = { id: mkId(), typeId: EXCESS_ID, hours: h, addl: h, baseTypeId };
+      (d.shifts[key] = d.shifts[key] || []).push(e);
+      rebalanceExtras(d, [key]);
+      const ot = entryOTHours(e), ex = entryExcessHours(e);
+      if (ot > 0) msg = ex > 0 ? fmtHours(ex) + "h excess + " + fmtHours(ot) + "h overtime" : "Excess limit reached · " + fmtHours(ot) + "h overtime";
+    });
+    toast(msg);
+  };
+  const setExtraHours = (id: string, h: number) => update((d) => {
+    const e: any = (d.shifts[key] || []).find((x) => x.id === id);
+    if (!e) return;
+    e.addl = h; e.updatedAt = Date.now();
+    rebalanceExtras(d, [key]);
+  });
   const pickType = (ty: ShiftType) => {
     if (ty.overtimeEligible !== false || (!fullTime && ty.excessEligible !== false)) setChooser(ty);
     else addShift(ty.id, null, null, ty.kind === "personal" ? ty.notes : null);
@@ -91,6 +109,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       d.shifts[key] = (d.shifts[key] || []).filter((s) => s.id !== id);
       if (!d.shifts[key].length) delete d.shifts[key];
       tomb(id);
+      rebalanceExtras(d, [key]);
       // a removed picked-up shift takes its swap records with it
       const onRec = (d.swaps[key] || []).find((r) => r.kind === "on" && r.shiftEntryId === id);
       if (onRec) {
@@ -101,6 +120,27 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     });
     toast("Shift removed");
   };
+
+  /* ----- allowances ----- */
+  const setAllowanceCount = (allowanceId: string, count: number) => update((d, tomb) => {
+    const list = ((d.payTags[key] || []) as PayTag[]);
+    const mine = list.filter((x) => x.kind === "allowance" && x.allowanceId === allowanceId);
+    if (count > mine.length) {
+      const paid = mine.length > 0 && mine.every((x) => x.paid);
+      for (let i = mine.length; i < count; i++) list.push({ id: mkId(), kind: "allowance", allowanceId, ...(paid ? { paid: true } : {}), updatedAt: Date.now() });
+      d.payTags[key] = list;
+    } else {
+      const drop = mine.slice(count).map((x) => x.id);
+      drop.forEach((id) => tomb(id));
+      d.payTags[key] = list.filter((x) => drop.indexOf(x.id) === -1);
+      if (!d.payTags[key].length) delete d.payTags[key];
+    }
+  });
+  const setAllowancePaid = (allowanceId: string, paid: boolean) => update((d) => {
+    ((d.payTags[key] || []) as PayTag[]).forEach((x) => {
+      if (x.kind === "allowance" && x.allowanceId === allowanceId) { if (paid) x.paid = true; else delete x.paid; x.updatedAt = Date.now(); }
+    });
+  });
 
   /* ----- swaps ----- */
   function undoSwap(clickedId: string) {
@@ -129,10 +169,12 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       const restored: any = { id: restoreId, typeId: src.typeId, updatedAt: Date.now() + 1 };
       if (src.hours != null) restored.hours = src.hours;
       if (src.baseTypeId) restored.baseTypeId = src.baseTypeId;
+      if (src.addl) restored.addl = src.addl;
       (d.shifts[offDate] = d.shifts[offDate] || []).push(restored);
       if (offRec) drop(offDate, offRec.id);
       if (onRec) drop(onDate, onRec.id);
       delete d.tombstones[restoreId];
+      rebalanceExtras(d, [offDate, onDate]);
       msg = "Swap undone";
     });
     if (msg) toast(msg);
@@ -224,7 +266,11 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         return (
           <Item key={s.id} color={col.bg} title={entryName(s, typesById)} sub={detail}
             actions={[
-              combo && fullTime && !entryExcessHours(s) ? { label: "Hours", onPress: () => askHours("Overtime – " + (s.baseTypeId && typesById[s.baseTypeId] ? typesById[s.baseTypeId].name : "shift"), "How many hours of overtime?", (h) => {
+              combo && (s as any).addl > 0 ? { label: "Hours", onPress: () => dialog({
+                title: (s.baseTypeId && typesById[s.baseTypeId] ? typesById[s.baseTypeId].name : "Additional shift"), message: "Total hours worked",
+                input: { keyboard: "decimal-pad", value: String((s as any).addl) }, confirm: "Save",
+                onConfirm: (v) => { const h = parseFloat(v.replace(",", ".")); if (!h || h <= 0) { toast("Enter a number of hours"); return; } setExtraHours(s.id, h); toast("Hours updated"); },
+              }) } : combo && fullTime && !entryExcessHours(s) ? { label: "Hours", onPress: () => askHours("Overtime – " + (s.baseTypeId && typesById[s.baseTypeId] ? typesById[s.baseTypeId].name : "shift"), "How many hours of overtime?", (h) => {
                 update((d) => { const e: any = (d.shifts[key] || []).find((x) => x.id === s.id); if (e) { e.hours = h; e.updatedAt = Date.now(); } }); toast("Hours updated");
               }) } : combo ? { label: "Hours", onPress: () => setSplit({
                 baseTypeId: s.baseTypeId, ot: String(entryOTHours(s) || ""), ex: String(entryExcessHours(s) || ""), label: "Save",
@@ -264,6 +310,33 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
             })} />
         ))}
       </View>
+
+      {allowances.length ? (
+        <>
+          <SectionHead title="Allowances" />
+          {allowances.map((a) => {
+            const mine = payTagsOn(data, key).filter((x) => x.kind === "allowance" && x.allowanceId === a.id);
+            const n = mine.length, max = a.max && a.max > 0 ? a.max : 0;
+            const paid = n > 0 && mine.every((x) => x.paid);
+            return (
+              <View key={a.id}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8 }}>
+                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: paid, disabled: !n }} accessibilityLabel={a.name + " paid"}
+                    disabled={!n} onPress={() => setAllowancePaid(a.id, !paid)} hitSlop={8}>
+                    <Ionicons name={paid ? "checkmark-circle" : "ellipse-outline"} size={24} color={!n ? t.border : paid ? t.good : t.textFaint} />
+                  </Pressable>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{a.name}</Text>
+                    <Dim>{n ? fmtMoney(n * allowanceAmount(a, dayRate)) + (paid ? " · paid" : "") : fmtMoney(allowanceAmount(a, dayRate)) + " each"}</Dim>
+                  </View>
+                  <Stepper value={n} max={max} onChange={(v) => setAllowanceCount(a.id, v)} label={a.name} />
+                </View>
+                <Divider />
+              </View>
+            );
+          })}
+        </>
+      ) : null}
 
       {bdays.length ? (
         <>
@@ -312,11 +385,15 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       ) : null}
       <Button title={editing ? "Save" : "Add"} onPress={saveEvent} />
 
-      <KindChooser type={chooser} fullTime={fullTime} onClose={() => setChooser(null)} onPick={(kind) => {
+      <KindChooser type={chooser} fullTime={fullTime} autoSplit={autoSplit} onClose={() => setChooser(null)} onPick={(kind) => {
         const ty = chooser!;
         setChooser(null);
         if (kind === "normal") addShift(ty.id);
         else if (kind === "ot") askHours("Overtime – " + ty.name, "How many hours of overtime?", (h) => addShift(OVERTIME_ID, h, ty.id));
+        else if (kind === "ex" && autoSplit) dialog({
+          title: "Additional shift – " + ty.name, message: "Total hours worked", input: { keyboard: "decimal-pad", value: ty.hours ? String(ty.hours) : "" }, confirm: "Add",
+          onConfirm: (v) => { const h = parseFloat(v.replace(",", ".")); if (!h || h <= 0) { toast("Enter a number of hours"); return; } addExtra(h, ty.id); },
+        });
         else if (kind === "ex") askHours("Excess Hours – " + ty.name, "How many excess hours?", (h) => addShift(EXCESS_ID, h, ty.id));
         else setSplit({
           baseTypeId: ty.id, ot: "", ex: "", label: "Add shift",
@@ -363,13 +440,13 @@ function Popup({ visible, onClose, children }: { visible: boolean; onClose: () =
   );
 }
 
-function KindChooser({ type, fullTime, onClose, onPick }: { type: ShiftType | null; fullTime: boolean; onClose: () => void; onPick: (k: "normal" | "ot" | "ex" | "split") => void }) {
+function KindChooser({ type, fullTime, autoSplit, onClose, onPick }: { type: ShiftType | null; fullTime: boolean; autoSplit: boolean; onClose: () => void; onPick: (k: "normal" | "ot" | "ex" | "split") => void }) {
   const opts: { k: "normal" | "ot" | "ex" | "split"; tag: string; bg: string; ink: string }[] = [];
   if (type) {
     opts.push({ k: "normal", tag: "", bg: type.color, ink: type.ink });
     if (type.overtimeEligible !== false) opts.push({ k: "ot", tag: "Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
-    if (!fullTime && type.excessEligible !== false) opts.push({ k: "ex", tag: "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
-    if (!fullTime && type.overtimeEligible !== false && type.excessEligible !== false) opts.push({ k: "split", tag: "Excess + Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
+    if (!fullTime && type.excessEligible !== false) opts.push({ k: "ex", tag: autoSplit ? "Additional shift" : "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
+    if (!fullTime && !autoSplit && type.overtimeEligible !== false && type.excessEligible !== false) opts.push({ k: "split", tag: "Excess + Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
   }
   return (
     <Popup visible={!!type} onClose={onClose}>
@@ -452,11 +529,15 @@ function SwapForm({ pending, dateKey, data, typesById, onClose }: {
       if (!list.length) delete d.shifts[dateKey];
       tomb(s.id);
       const ne: any = replace && replace !== effType ? { id: mkId(), typeId: replace } : { id: mkId(), typeId: s.typeId };
-      if (!(replace && replace !== effType)) { if (s.hours != null) ne.hours = s.hours; if (s.baseTypeId) ne.baseTypeId = s.baseTypeId; }
+      if (!(replace && replace !== effType)) {
+        if (s.hours != null) ne.hours = s.hours; if (s.baseTypeId) ne.baseTypeId = s.baseTypeId;
+        if (s.excessHours) ne.excessHours = s.excessHours; if (s.addl) ne.addl = s.addl;
+      }
       (d.shifts[to] = d.shifts[to] || []).push(ne);
       const offId = mkId(), onId = mkId();
-      (d.swaps[dateKey] = d.swaps[dateKey] || []).push({ id: offId, kind: "off", partner: p, note: n, linkedDate: to, linkedSwapId: onId, typeId: s.typeId, baseTypeId: s.baseTypeId || null, hours: s.hours != null ? s.hours : null, shiftEntryId: s.id });
+      (d.swaps[dateKey] = d.swaps[dateKey] || []).push({ id: offId, kind: "off", partner: p, note: n, linkedDate: to, linkedSwapId: onId, typeId: s.typeId, baseTypeId: s.baseTypeId || null, hours: s.hours != null ? s.hours : null, addl: s.addl || null, shiftEntryId: s.id });
       (d.swaps[to] = d.swaps[to] || []).push({ id: onId, kind: "on", partner: p, note: n, linkedDate: dateKey, linkedSwapId: offId, typeId: ne.typeId, baseTypeId: ne.baseTypeId || null, hours: ne.hours != null ? ne.hours : null, shiftEntryId: ne.id });
+      rebalanceExtras(d, [dateKey, to]);
       ok = true;
     });
     if (!ok) { toast("Couldn't find that shift"); return; }
@@ -477,5 +558,23 @@ function SwapForm({ pending, dateKey, data, typesById, onClose }: {
         )) : <Dim>(no shift types yet)</Dim>}
       </View>
     </Sheet>
+  );
+}
+
+function Stepper({ value, max, onChange, label }: { value: number; max: number; onChange: (v: number) => void; label: string }) {
+  const t = useTheme();
+  const btn = (icon: "remove" | "add", disabled: boolean, next: number, a11y: string) => (
+    <Pressable accessibilityRole="button" accessibilityLabel={a11y} disabled={disabled} onPress={() => onChange(next)} hitSlop={6}
+      style={({ pressed }) => ({ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center",
+        backgroundColor: t.surface2, opacity: disabled ? 0.35 : pressed ? 0.7 : 1 })}>
+      <Ionicons name={icon} size={18} color={t.text} />
+    </Pressable>
+  );
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+      {btn("remove", value <= 0, value - 1, "One less " + label)}
+      <Text style={{ color: t.text, fontSize: 16, fontWeight: "700", minWidth: 16, textAlign: "center", fontVariant: ["tabular-nums"] }}>{value}</Text>
+      {btn("add", max > 0 && value >= max, value + 1, "One more " + label)}
+    </View>
   );
 }

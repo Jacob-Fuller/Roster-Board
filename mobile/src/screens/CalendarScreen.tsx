@@ -93,7 +93,7 @@ export function CalendarScreen() {
     <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top }}>
       <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, flexDirection: "row", alignItems: "center", gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <H1>{MONTHS[month.getMonth()]} <Text style={{ color: t.textDim, fontWeight: "400" }}>{month.getFullYear()}</Text></H1>
+          <H1 style={{ fontSize: 28 }}>{MONTHS[month.getMonth()]} <Text style={{ color: t.textDim, fontWeight: "400" }}>{month.getFullYear()}</Text></H1>
           <Text style={{ color: t.textDim, fontSize: 13, marginTop: 2 }}>
             {totals.shifts} shift{totals.shifts === 1 ? "" : "s"} · {fmtHours(totals.hours)}h
           </Text>

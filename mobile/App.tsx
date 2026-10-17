@@ -116,15 +116,17 @@ function Shell() {
       </View>
       <View accessibilityRole="tablist" style={{
         flexDirection: "row", borderTopWidth: 0.5, borderTopColor: t.border, backgroundColor: t.surface,
-        paddingBottom: Math.max(insets.bottom, 8), paddingTop: 8,
+        paddingBottom: Math.max(insets.bottom, 10), paddingTop: 10,
       }}>
         {TABS.map((x) => {
           const on = x.id === tab;
           return (
-            <Pressable key={x.id} accessibilityRole="tab" accessibilityState={{ selected: on }} onPress={() => setTab(x.id)}
-              style={{ flex: 1, alignItems: "center", gap: 2 }}>
-              <Ionicons name={on ? x.iconOn : x.icon} size={23} color={on ? t.accent : t.textFaint} />
-              <Text style={{ fontSize: 11, fontWeight: "700", color: on ? t.accent : t.textFaint }}>{x.label}</Text>
+            <Pressable key={x.id} accessibilityRole="tab" accessibilityLabel={x.label} accessibilityState={{ selected: on }} onPress={() => setTab(x.id)}
+              style={{ flex: 1, alignItems: "center", gap: 3 }}>
+              <View style={{ width: 52, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: on ? t.accentSoft : "transparent" }}>
+                <Ionicons name={on ? x.iconOn : x.icon} size={22} color={on ? t.accent : t.textFaint} />
+              </View>
+              <Text style={{ fontSize: 11, fontWeight: on ? "700" : "600", color: on ? t.text : t.textFaint }}>{x.label}</Text>
             </Pressable>
           );
         })}

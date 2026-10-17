@@ -13,7 +13,8 @@ export type PayCycle = "weekly" | "fortnightly" | "monthly";
 export type PayPenalties = { sat: number; sun: number; ph: number; night: number };
 export type PayTypeRule = { penalties?: boolean; night?: boolean; allowanceKind?: "none" | "pct" | "flat"; allowance?: number };
 // An allowance paid on days tagged with it ("hours" = that many hours at the base rate, otherwise a flat $ amount).
-export type PayAllowance = { id: string; name: string; kind?: string; amount?: number; [k: string]: any };
+// max = how many can be claimed on one day (e.g. 2 missed meals on a full shift); 0 or unset = no limit.
+export type PayAllowance = { id: string; name: string; kind?: string; amount?: number; max?: number; [k: string]: any };
 export type PayRise = { from?: string; rate?: number };
 export type PayConfig = {
   savedAt: number;
@@ -27,8 +28,9 @@ export type PayConfig = {
   superPct: number; showTax: boolean; taxFree: boolean;
   [k: string]: any;
 };
-// Pay tags live in data.payTags: date -> [{id,kind:'holiday'} | {id,kind:'allowance',allowanceId}]
-export type PayTag = Rec & { kind: "holiday" | "allowance" | string; allowanceId?: string };
+// Pay tags live in data.payTags: date -> [{id,kind:'holiday'} | {id,kind:'allowance',allowanceId,paid?}]
+// paid = ticked off once it has shown up on a payslip.
+export type PayTag = Rec & { kind: "holiday" | "allowance" | string; allowanceId?: string; paid?: boolean };
 
 export const PAY_DEFAULTS = {
   baseRate: 0, rises: [] as PayRise[],
@@ -139,6 +141,41 @@ export function payCardRange(cfg: PayConfig, view: "weekly" | "fortnightly", ref
   const len = view === "weekly" ? 7 : 14, a = payAnchor(cfg);
   const st = addDays(a, Math.floor(dayDiff(ref, a) / len) * len);
   return { start: st, end: addDays(st, len) };
+}
+
+// The pay card's range, `offset` periods away from the one holding `ref`.
+// Monthly follows the monthly pay period when that's the pay cycle, otherwise the calendar month.
+export function payCardRangeAt(cfg: PayConfig, view: "weekly" | "fortnightly" | "monthly", ref: Date, offset: number): DateRange & { calendarMonth: boolean } {
+  if (view !== "monthly") {
+    const len = view === "weekly" ? 7 : 14, base = payCardRange(cfg, view, ref);
+    return { start: addDays(base.start, offset * len), end: addDays(base.end, offset * len), calendarMonth: false };
+  }
+  if (cfg.cycle === "monthly" && cfg.periodStart && parseYmd(cfg.periodStart).getDate() !== 1) {
+    let p = payPeriodFor(cfg, ref);
+    for (let i = 0; i < Math.abs(offset); i++) p = shiftPayPeriod(cfg, p, offset > 0 ? 1 : -1);
+    return { ...p, calendarMonth: false };
+  }
+  const start = new Date(ref.getFullYear(), ref.getMonth() + offset, 1);
+  return { start, end: new Date(start.getFullYear(), start.getMonth() + 1, 1), calendarMonth: true };
+}
+
+/* ---------- allowance claims (missed meals, missed breaks …) ---------- */
+export type AllowanceClaim = { dateKey: string; allowance: PayAllowance; tags: PayTag[]; amount: number };
+export function allowanceAmount(a: PayAllowance, rate: number) {
+  return a.kind === "hours" ? num(a.amount, 0) * rate : num(a.amount, 0);
+}
+// Every allowance claimed in [start, end), one row per day and allowance, in date order.
+export function allowanceClaims(d: Pick<Snapshot, "payTags" | "settings">, start: Date, end: Date): AllowanceClaim[] {
+  const cfg = payConfig(d.settings);
+  const sKey = ymd(start), eKey = ymd(end);
+  const out: AllowanceClaim[] = [];
+  Object.keys(d.payTags || {}).filter((k) => k >= sKey && k < eKey).sort().forEach((k) => {
+    cfg.allowances.forEach((a) => {
+      const tags = payTagsOn(d, k).filter((x) => x.kind === "allowance" && x.allowanceId === a.id);
+      if (tags.length) out.push({ dateKey: k, allowance: a, tags, amount: tags.length * allowanceAmount(a, rateOn(cfg, k)) });
+    });
+  });
+  return out;
 }
 
 /* ---------- tax (rough, Australian resident, 2026–27) ---------- */
