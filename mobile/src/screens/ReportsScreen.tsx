@@ -184,7 +184,7 @@ export function ReportsScreen() {
                   <Nav dir={-1} onHero a11y="Previous period" onPress={() => setCardOffset((o) => o - 1)} />
                   <Pressable accessibilityRole="button" accessibilityLabel="Back to current period" disabled={!cardOffset} onPress={() => setCardOffset(0)} style={{ alignItems: "center" }}>
                     <Text style={{ color: t.heroInk, fontSize: 15, fontWeight: "700" }}>{payCard.rangeLabel}</Text>
-                    <Text style={{ color: t.heroDim, fontSize: 12, fontWeight: "600", marginTop: 1 }}>{cardOffset ? "Back to current" : "Current"}</Text>
+                    {cardOffset ? <Text style={{ color: t.heroDim, fontSize: 12, fontWeight: "600", marginTop: 1 }}>Back to current</Text> : null}
                   </Pressable>
                   <Nav dir={1} onHero a11y="Next period" onPress={() => setCardOffset((o) => o + 1)} />
                 </View>

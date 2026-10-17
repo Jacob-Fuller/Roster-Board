@@ -47,20 +47,12 @@ export function AccountScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 10, paddingBottom: 40 }}>
         <H1 style={{ marginBottom: 6 }}>Account</H1>
 
-        <SectionHead title="Account" />
-        <Card style={{ paddingVertical: 2 }}>
+        <Card style={{ paddingVertical: 2, marginTop: 18 }}>
           <MenuRow title="Settings" sub={signedIn ? name || user!.email || "" : "Not signed in"} onPress={() => setAcctOpen(true)} />
-        </Card>
-
-        <SectionHead title="Birthdays" />
-        <Card style={{ paddingVertical: 2 }}>
+          <Divider />
+          <MenuRow title="Employment" sub={(employmentOf(data.settings) === "full" ? "Full time" : "Part time") + (employmentSub(data.settings) ? " · " + employmentSub(data.settings) : "")} onPress={() => setEmpOpen(true)} />
+          <Divider />
           <MenuRow title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
-        </Card>
-
-
-        <SectionHead title="Employment" />
-        <Card style={{ paddingVertical: 2 }}>
-          <MenuRow title={employmentOf(data.settings) === "full" ? "Full time" : "Part time"} sub={employmentSub(data.settings)} onPress={() => setEmpOpen(true)} />
         </Card>
 
         <SectionHead title="Appearance" />

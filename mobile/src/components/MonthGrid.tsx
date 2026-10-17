@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
@@ -191,7 +192,7 @@ export function MonthNav({ month, onChange }: { month: Date; onChange: (d: Date)
     <Pressable accessibilityRole="button" accessibilityLabel={a11y} hitSlop={6}
       onPress={() => onChange(new Date(month.getFullYear(), month.getMonth() + n, 1))}
       style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ color: t.text, fontSize: 22, fontWeight: "600", marginTop: -2 }}>{label}</Text>
+      <Ionicons name={label === "‹" ? "chevron-back" : "chevron-forward"} size={18} color={t.text} />
     </Pressable>
   );
   return (
