@@ -10,6 +10,7 @@ import { askIfRemindersNeedIt, syncReminders } from "./src/lib/reminders";
 import { planContactSync, readContactBirthdays } from "./src/lib/contactBirthdays";
 import { PremiumProvider, usePremium } from "./src/lib/premium";
 import { syncShiftAlarms } from "./src/lib/shiftAlarms";
+import { extrasNeedRebalance, rebalanceAllExtras } from "./src/lib/partTime";
 import { StoreProvider, useStore } from "./src/lib/store";
 import { Paywall } from "./src/screens/Paywall";
 import { AccountScreen } from "./src/screens/AccountScreen";
@@ -93,6 +94,12 @@ function Shell() {
     run();
     const sub = AppState.addEventListener("change", (s) => { if (s === "active") run(); });
     return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
+  // Shifts saved before the excess limit applied to them are re-split once the data has loaded.
+  useEffect(() => {
+    if (!loaded) return;
+    if (extrasNeedRebalance(dataRef.current)) update((d) => { rebalanceAllExtras(d); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
   const [onboarding, setOnboarding] = useState(false);

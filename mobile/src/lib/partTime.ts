@@ -37,6 +37,8 @@ function rebalancePeriod(d: Snapshot, period: DateRange, cap: number): boolean {
   let used = 0, changed = false;
   Object.keys(d.shifts || {}).filter((k) => k >= sKey && k < eKey).sort().forEach((k) => {
     (d.shifts[k] || []).forEach((e: any) => {
+      // excess hours logged on their own (e.g. before the limit was set) count as additional shifts too
+      if (cap !== Infinity && !(e.addl > 0) && e.typeId === EXCESS_ID && num(e.hours, 0) > 0) { e.addl = num(e.hours, 0); changed = true; }
       if (e.addl > 0) {
         const total = num(e.addl, 0);
         const ex = round2(Math.min(total, Math.max(0, cap - used)));
@@ -51,22 +53,28 @@ function rebalancePeriod(d: Snapshot, period: DateRange, cap: number): boolean {
 
 // The pay periods holding these dates are re-split. With autoSplit off, additional
 // shifts go back to being all excess hours.
-export function rebalanceExtras(d: Snapshot, dateKeys: string[]) {
+export function rebalanceExtras(d: Snapshot, dateKeys: string[]): boolean {
   const cfg = payConfig(d.settings);
   const cap = autoSplitOn(d.settings) ? partTimeOf(d.settings).excessCap : Infinity;
   const seen: { [k: string]: true } = {};
+  let changed = false;
   dateKeys.filter(Boolean).forEach((k) => {
     const p = payPeriodFor(cfg, parseYmd(k));
     const id = ymd(p.start);
     if (seen[id]) return;
     seen[id] = true;
-    rebalancePeriod(d, p, cap);
+    if (rebalancePeriod(d, p, cap)) changed = true;
   });
+  return changed;
 }
 // After the setup changes: every pay period with an additional shift.
-export function rebalanceAllExtras(d: Snapshot) {
-  const keys = Object.keys(d.shifts || {}).filter((k) => (d.shifts[k] || []).some((e: any) => e.addl > 0));
-  rebalanceExtras(d, keys);
+export function rebalanceAllExtras(d: Snapshot): boolean {
+  const keys = Object.keys(d.shifts || {}).filter((k) => (d.shifts[k] || []).some((e: any) => e.addl > 0 || e.typeId === EXCESS_ID));
+  return rebalanceExtras(d, keys);
+}
+// True when saved shifts don't follow the excess limit yet (checked on a copy, nothing changes).
+export function extrasNeedRebalance(d: Snapshot): boolean {
+  return rebalanceAllExtras(JSON.parse(JSON.stringify(d)));
 }
 
 /* ---------- this pay period at a glance ---------- */

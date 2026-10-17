@@ -43,5 +43,22 @@ const r = payCardRangeAt(cfg, "fortnightly", new Date(2026, 9, 10), 1);
 eq([ymd(r.start), ymd(r.end)], ["2026-10-19", "2026-11-02"], "next fortnight");
 const m = payCardRangeAt(cfg, "monthly", new Date(2026, 9, 10), -1);
 eq([ymd(m.start), m.calendarMonth], ["2026-09-01", true], "previous month");
+// excess hours logged on their own still stop at the limit
+const e2: any = emptySnapshot();
+e2.types = d.types; e2.settings = JSON.parse(JSON.stringify(d.settings)); e2.settings.pay.allowances = [];
+e2.shifts = { "2026-10-07": [{ id: "p1", typeId: EXCESS_ID, hours: 12, baseTypeId: "day" }], "2026-10-08": [{ id: "p2", typeId: EXCESS_ID, hours: 12, baseTypeId: "day" }],
+  "2026-10-09": [{ id: "p3", typeId: EXCESS_ID, hours: 6, baseTypeId: "day" }] };
+eq(rebalanceAllExtras(JSON.parse(JSON.stringify(e2))), true, "plain excess needs re-split");
+rebalanceAllExtras(e2);
+const p3 = e2.shifts["2026-10-09"][0];
+eq([p3.typeId, entryExcessHours(p3), entryOTHours(p3)], [OVERTIME_ID, 4, 2], "plain excess capped at 28h");
+eq(rebalanceAllExtras(e2), false, "second pass changes nothing");
+// % shift allowance on excess hours (ordinary + excess, not overtime)
+e2.shifts["2026-10-05"] = [{ id: "o1", typeId: "day" }];
+e2.settings.pay.typeRules = { day: { allowanceKind: "pct", allowance: 31.5 } };
+const range: [Date, Date] = [new Date(2026, 9, 5), new Date(2026, 9, 19)];
+eq(Math.round(computePay(e2, typesById, range[0], range[1], 26).shiftAllowance * 100) / 100, 126, "allowance on ordinary only");
+e2.settings.pay.typeRules.day.excessAllowance = true;
+eq(Math.round(computePay(e2, typesById, range[0], range[1], 26).shiftAllowance * 100) / 100, 478.8, "allowance on ordinary + 28h excess");
 console.log(fails ? fails + " part-time checks failed" : "part-time, allowances and pay card ranges: all checks pass");
 if (fails) process.exit(1);

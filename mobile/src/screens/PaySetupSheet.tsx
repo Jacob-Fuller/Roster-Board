@@ -131,6 +131,9 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
                 <Field label="Amount" value={amounts[t.id] || ""} keyboardType={dec} placeholder="e.g. 31.5"
                   onChangeText={(v) => { setAmounts({ ...amounts, [t.id]: v }); setRule(t.id, { allowance: parseFloat(v) || 0 }); }} />
               ) : null}
+              {kind === "pct" && !fullTime ? (
+                <ToggleRow label="Applies to excess hours" value={!!rule.excessAllowance} onChange={(v) => setRule(t.id, { excessAllowance: v })} />
+              ) : null}
             </View>
           );
         })}

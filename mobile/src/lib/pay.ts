@@ -11,7 +11,7 @@ import {
 
 export type PayCycle = "weekly" | "fortnightly" | "monthly";
 export type PayPenalties = { sat: number; sun: number; ph: number; night: number };
-export type PayTypeRule = { penalties?: boolean; night?: boolean; allowanceKind?: "none" | "pct" | "flat"; allowance?: number };
+export type PayTypeRule = { penalties?: boolean; night?: boolean; allowanceKind?: "none" | "pct" | "flat"; allowance?: number; excessAllowance?: boolean };
 // An allowance paid on days tagged with it ("hours" = that many hours at the base rate, otherwise a flat $ amount).
 // max = how many can be claimed on one day (e.g. 2 missed meals on a full shift); 0 or unset = no limit.
 export type PayAllowance = { id: string; name: string; kind?: string; amount?: number; max?: number; [k: string]: any };
@@ -241,6 +241,11 @@ export function computePay(
   const allowById: { [id: string]: PayAllowance } = {};
   cfg.allowances.forEach((a) => { allowById[a.id] = a; });
 
+  // A % shift allowance can also be paid on excess hours worked on that shift type.
+  const excessAllowance = (s: { baseTypeId?: string | null }, hours: number, rate: number) => {
+    const rule: PayTypeRule = (s.baseTypeId && cfg.typeRules[s.baseTypeId]) || {};
+    if (hours > 0 && rule.allowanceKind === "pct" && rule.excessAllowance) r.shiftAllowance += hours * rate * num(rule.allowance, 0) / 100;
+  };
   Object.keys(d.shifts || {}).forEach((k) => {
     if (!inRange(k)) return;
     const rate = rateOn(cfg, k);
@@ -256,12 +261,14 @@ export function computePay(
         const exPart = entryExcessHours(s);
         r.excessHours += exPart;
         r.excess += exPart * rate * num(cfg.exMult, 1);
+        excessAllowance(s, exPart, rate);
         return;
       }
       if (s.typeId === EXCESS_ID) {
         const ex = entryExcessHours(s) || effectiveHours(s, typesById);
         r.excessHours += ex;
         r.excess += ex * rate * num(cfg.exMult, 1);
+        excessAllowance(s, ex, rate);
         return;
       }
       const h = effectiveHours(s, typesById);
