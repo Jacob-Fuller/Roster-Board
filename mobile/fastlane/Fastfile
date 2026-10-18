@@ -6,6 +6,7 @@ require "base64"
 default_platform(:ios)
 
 APP_ID = "net.rosterboard.app"
+WIDGET_ID = "net.rosterboard.app.widget"
 
 platform :ios do
   def asc_key
@@ -34,6 +35,29 @@ platform :ios do
       readonly: true
     )
 
+    # The home screen widget is its own small app inside Roster Board, with its own
+    # identifier and provisioning profile. Register the identifier once, then make
+    # (or download) its App Store profile signed with the same certificate.
+    widget_target = nil
+    if Dir.exist?("../ios") && Dir.glob("../ios/*.xcodeproj/project.pbxproj").any? { |f| File.read(f).include?("RosterBoardWidget") }
+      widget_target = "RosterBoardWidget"
+      unless Spaceship::ConnectAPI::BundleId.find(WIDGET_ID)
+        Spaceship::ConnectAPI::BundleId.create(name: "Roster Board Widget", platform: "IOS", identifier: WIDGET_ID)
+        UI.message("Registered #{WIDGET_ID}")
+      end
+      cert = Spaceship::ConnectAPI::Certificate.all.find { |c| c.certificate_type.to_s.include?("DISTRIBUTION") && c.expiration_date.to_s > Time.now.utc.iso8601 }
+      get_provisioning_profile(
+        api_key: api_key,
+        app_identifier: WIDGET_ID,
+        provisioning_name: "Roster Board Widget AppStore",
+        ignore_profiles_with_different_name: true,
+        cert_id: cert && cert.id,
+        force: false,
+        filename: "widget.mobileprovision"
+      )
+      widget_profile = lane_context[SharedValues::SIGH_NAME]
+    end
+
     # Expo names the Xcode project after the app ("RosterBoard").
     project = Dir.glob("../ios/*.xcodeproj").first or UI.user_error!("No iOS project. Run expo prebuild first.")
     workspace = Dir.glob("../ios/*.xcworkspace").first
@@ -53,16 +77,35 @@ platform :ios do
       targets: [scheme]
     )
 
+    if widget_target
+      update_code_signing_settings(
+        use_automatic_signing: false,
+        path: project,
+        team_id: team_id,
+        bundle_identifier: WIDGET_ID,
+        profile_name: widget_profile,
+        code_sign_identity: "Apple Distribution",
+        targets: [widget_target]
+      )
+    end
+
     last = latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, initial_build_number: 0)
     # Expo writes the build number straight into Info.plist.
     set_info_plist_value(path: "ios/#{scheme}/Info.plist", key: "CFBundleVersion", value: (last.to_i + 1).to_s)
+    if widget_target
+      # the widget's version and build number must match the app's
+      app_version = get_info_plist_value(path: "ios/#{scheme}/Info.plist", key: "CFBundleShortVersionString")
+      widget_plist = "targets/widget/Info.plist" # actions run from mobile/, Ruby here runs from mobile/fastlane
+      set_info_plist_value(path: widget_plist, key: "CFBundleVersion", value: (last.to_i + 1).to_s)
+      set_info_plist_value(path: widget_plist, key: "CFBundleShortVersionString", value: app_version.to_s)
+    end
 
     build_app(
       workspace: workspace,
       scheme: scheme,
       configuration: "Release",
       export_method: "app-store",
-      export_options: { provisioningProfiles: { APP_ID => profile } },
+      export_options: { provisioningProfiles: widget_target ? { APP_ID => profile, WIDGET_ID => widget_profile } : { APP_ID => profile } },
       output_directory: "build",
       clean: true
     )

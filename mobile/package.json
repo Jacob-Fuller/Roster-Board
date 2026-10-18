@@ -13,6 +13,7 @@
     "export:web": "expo export --platform web"
   },
   "dependencies": {
+    "@bacons/apple-targets": "4.0.6",
     "@expo-google-fonts/fraunces": "*",
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.2",

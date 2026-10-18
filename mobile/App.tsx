@@ -12,6 +12,7 @@ import { PremiumProvider, usePremium } from "./src/lib/premium";
 import { syncShiftAlarms } from "./src/lib/shiftAlarms";
 import { paydayNotes } from "./src/lib/payday";
 import { syncCalendar } from "./src/lib/calendarSync";
+import { syncWidget } from "./src/lib/widget";
 import { EXCESS_TYPE, OVERTIME_TYPE, type ShiftType } from "./src/lib/model";
 import { extrasNeedRebalance, rebalanceAllExtras } from "./src/lib/partTime";
 import { StoreProvider, useStore } from "./src/lib/store";
@@ -45,6 +46,7 @@ function Shell() {
   const { auth, data, sync, update, prefs } = useStore();
   const [fontsLoaded, fontError] = useFonts({ Fraunces_700Bold });
   const fontsReady = fontsLoaded || !!fontError;
+  const { locked } = usePremium();
   const dataRef2 = useRef(data); dataRef2.current = data;
   const payTypes = useMemo(() => {
     const m: { [id: string]: ShiftType } = { [OVERTIME_TYPE.id]: OVERTIME_TYPE, [EXCESS_TYPE.id]: EXCESS_TYPE };
@@ -52,6 +54,16 @@ function Shell() {
     return m;
   }, [data.types]);
   useEffect(() => { if (auth !== "loading") syncReminders(data.notes, paydayNotes(data, payTypes)); }, [auth, data, payTypes]);
+  // Home screen widget: refreshed after changes and whenever the app comes back.
+  useEffect(() => {
+    if (auth === "loading") return;
+    const timer = setTimeout(() => syncWidget(dataRef2.current, payTypes, !locked), 1500);
+    return () => clearTimeout(timer);
+  }, [auth, data.shifts, data.leave, data.settings, payTypes, locked]);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (st) => { if (st === "active") syncWidget(dataRef2.current, payTypes, !locked); });
+    return () => sub.remove();
+  }, [payTypes, locked]);
   // Shifts copied to the phone's Calendar app (when turned on in Account → Appearance).
   useEffect(() => {
     if (auth === "loading") return;
@@ -59,7 +71,6 @@ function Shell() {
     return () => clearTimeout(timer);
   }, [auth, data.shifts, data.leave, payTypes, prefs.calendarSync]);
   // Alarms follow the calendar: refresh shortly after any change, and when the app comes back.
-  const { locked } = usePremium();
   const alarmData = useRef(data); alarmData.current = data;
   useEffect(() => {
     if (auth === "loading") return;

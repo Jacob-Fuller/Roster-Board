@@ -17,7 +17,8 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSAlarmKitUsageDescription": "Roster Board sets an alarm before your shifts so you never miss one."
+        "NSAlarmKitUsageDescription": "Roster Board sets an alarm before your shifts so you never miss one.",
+        "RBKeychainGroup": "$(AppIdentifierPrefix)net.rosterboard.shared"
       },
       "privacyManifests": {
         "NSPrivacyTracking": false,
@@ -46,6 +47,11 @@
               "E174.1"
             ]
           }
+        ]
+      },
+      "entitlements": {
+        "keychain-access-groups": [
+          "$(AppIdentifierPrefix)net.rosterboard.shared"
         ]
       }
     },
@@ -85,7 +91,8 @@
         {
           "calendarPermission": "Roster Board adds your shifts to a Roster Board calendar in the Calendar app."
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ]
   }
 }
