@@ -48,7 +48,9 @@ jobs:
           ls -R dist | head -40
       - name: Desktop screenshots
         working-directory: mobile
+        continue-on-error: true
         run: |
+          mkdir -p web-check
           npm install --no-save --no-audit --no-fund playwright@1
           npx playwright install --with-deps chromium
           (cd dist && python3 -m http.server 8091 >/dev/null 2>&1 &)
