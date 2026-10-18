@@ -53,14 +53,66 @@ export function HeroCard({ children, style }: { children: React.ReactNode; style
   const t = useTheme();
   return (
     <View style={[{
-      backgroundColor: t.hero, borderRadius: 22, padding: 18,
+      backgroundColor: t.hero, borderRadius: 24, padding: 18, overflow: "hidden",
       borderColor: t.dark ? t.border : "transparent", borderWidth: t.dark ? StyleSheet.hairlineWidth : 0,
       shadowColor: t.shadow, shadowOpacity: t.dark ? 0 : 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: t.dark ? 0 : 6,
     }, style]}>
+      <Glow color={t.glowB} size={260} style={{ bottom: -170, right: -70 }} />
+      <Glow color={t.glowA} size={220} style={{ top: -150, left: -80 }} />
       {children}
     </View>
   );
 }
+/* ---------- header band ---------- */
+// Layered circles read as a soft glow without an image or gradient library.
+export function Glow({ color, size, style }: { color: string; size: number; style: ViewStyle }) {
+  return (
+    <View pointerEvents="none" style={[{ position: "absolute", width: size, height: size, alignItems: "center", justifyContent: "center" }, style]}>
+      {[1, 0.78, 0.58, 0.4].map((f, i) => (
+        <View key={i} style={{ position: "absolute", width: size * f, height: size * f, borderRadius: size * f / 2, backgroundColor: color, opacity: 0.1 + i * 0.04 }} />
+      ))}
+    </View>
+  );
+}
+export function Masthead({ title, sub, right, children }: { title: React.ReactNode; sub?: string; right?: React.ReactNode; children?: React.ReactNode }) {
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={{ backgroundColor: t.mast, paddingTop: insets.top + 14, paddingBottom: 18, paddingHorizontal: 18, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: "hidden" }}>
+      <Glow color={t.glowA} size={340} style={{ top: -190, left: -120 }} />
+      <Glow color={t.glowB} size={300} style={{ bottom: -200, right: -90 }} />
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View style={{ flex: 1 }}>
+          {typeof title === "string" ? <Text style={{ fontFamily: SERIF, fontSize: 32, letterSpacing: -0.6, color: t.mastInk }} numberOfLines={1}>{title}</Text> : title}
+          {sub ? <Text style={{ color: t.mastDim, fontSize: 14, fontWeight: "500", marginTop: 3 }}>{sub}</Text> : null}
+        </View>
+        {right}
+      </View>
+      {children}
+    </View>
+  );
+}
+// Round button for the header band.
+export function MastButton({ icon, label, onPress, a11y }: { icon?: React.ComponentProps<typeof Ionicons>["name"]; label?: string; onPress: () => void; a11y?: string }) {
+  const t = useTheme();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={a11y || label} onPress={onPress} hitSlop={6}
+      style={({ pressed }) => ({ height: 38, minWidth: 38, paddingHorizontal: label ? 14 : 0, borderRadius: 19, backgroundColor: t.mastBtn, flexDirection: "row", gap: 6,
+        alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}>
+      {icon ? <Ionicons name={icon} size={label ? 16 : 19} color={t.mastInk} /> : null}
+      {label ? <Text style={{ color: t.mastInk, fontWeight: "700", fontSize: 14 }}>{label}</Text> : null}
+    </Pressable>
+  );
+}
+// A coloured rounded square holding an icon (menu rows, stat tiles).
+export function IconTile({ icon, color, size = 32 }: { icon: React.ComponentProps<typeof Ionicons>["name"]; color: string; size?: number }) {
+  return (
+    <View style={{ width: size, height: size, borderRadius: size * 0.3, backgroundColor: color, alignItems: "center", justifyContent: "center" }}>
+      <Ionicons name={icon} size={size * 0.56} color="#FFFFFF" />
+    </View>
+  );
+}
+
 export function SectionHead({ title, right }: { title: string; right?: React.ReactNode }) {
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 26, marginBottom: 10, paddingHorizontal: 2 }}>
@@ -123,12 +175,12 @@ export function Field(props: React.ComponentProps<typeof TextInput> & { label?: 
   );
 }
 
-export function Segmented<T extends string>({ options, value, onChange }: {
-  options: { value: T; label: string }[]; value: T; onChange: (v: T) => void;
+export function Segmented<T extends string>({ options, value, onChange, onMast }: {
+  options: { value: T; label: string }[]; value: T; onChange: (v: T) => void; onMast?: boolean;
 }) {
   const t = useTheme();
   return (
-    <View style={{ flexDirection: "row", backgroundColor: t.surface2, borderRadius: 12, padding: 3, gap: 2 }}>
+    <View style={{ flexDirection: "row", backgroundColor: onMast ? t.mastBtn : t.surface2, borderRadius: 12, padding: 3, gap: 2 }}>
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -137,10 +189,10 @@ export function Segmented<T extends string>({ options, value, onChange }: {
             accessibilityRole="button"
             accessibilityState={{ selected: on }}
             onPress={() => onChange(o.value)}
-            style={{ flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: "center", backgroundColor: on ? (t.dark ? t.border : t.surface) : "transparent",
+            style={{ flex: 1, paddingVertical: 8, borderRadius: 10, alignItems: "center", backgroundColor: on ? (onMast ? t.mastInk : t.dark ? t.border : t.surface) : "transparent",
               shadowColor: t.shadow, shadowOpacity: on && !t.dark ? 0.1 : 0, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: on && !t.dark ? 1 : 0 }}
           >
-            <Text style={{ fontWeight: on ? "700" : "600", fontSize: 14, color: on ? t.text : t.textDim }}>{o.label}</Text>
+            <Text style={{ fontWeight: on ? "700" : "600", fontSize: 14, color: onMast ? (on ? t.mast : t.mastDim) : on ? t.text : t.textDim }}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -161,10 +213,14 @@ export function ToggleRow({ label, value, onChange, sub }: { label: string; valu
   );
 }
 
-export function MenuRow({ title, sub, onPress, danger, right, center }: { title: string; sub?: string; onPress: () => void; danger?: boolean; right?: string; center?: boolean }) {
+export function MenuRow({ title, sub, onPress, danger, right, center, icon, iconColor }: {
+  title: string; sub?: string; onPress: () => void; danger?: boolean; right?: string; center?: boolean;
+  icon?: React.ComponentProps<typeof Ionicons>["name"]; iconColor?: string;
+}) {
   const t = useTheme();
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 14, gap: 10, opacity: pressed ? 0.6 : 1 })}>
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", paddingVertical: 13, gap: 12, opacity: pressed ? 0.6 : 1 })}>
+      {icon ? <IconTile icon={icon} color={iconColor || t.accent} /> : null}
       <View style={{ flex: 1, alignItems: center ? "center" : "flex-start" }}>
         <Text style={{ color: danger ? t.danger : t.text, fontSize: 15, fontWeight: "600" }}>{title}</Text>
         {sub ? <Dim>{sub}</Dim> : null}

@@ -70,7 +70,7 @@ try {
   await p.getByRole("tab", { name: /Types/ }).click();
   await p.waitForTimeout(500);
   await shot(p, "04-types");
-  await p.getByText("+ New type").click();
+  await p.getByText("New type", { exact: true }).click();
   await p.waitForTimeout(800);
   await shot(p, "05-new-type");
   await p.getByLabel("Close").first().click();

@@ -121,22 +121,25 @@ function Shell() {
       <View style={{ flex: 1 }}>
         {React.createElement(SCREENS[tab])}
       </View>
-      <View accessibilityRole="tablist" style={{
-        flexDirection: "row", borderTopWidth: 0.5, borderTopColor: t.border, backgroundColor: t.surface,
-        paddingBottom: Math.max(insets.bottom, 10), paddingTop: 10,
-      }}>
-        {TABS.map((x) => {
-          const on = x.id === tab;
-          return (
-            <Pressable key={x.id} accessibilityRole="tab" accessibilityLabel={x.label} accessibilityState={{ selected: on }} onPress={() => setTab(x.id)}
-              style={{ flex: 1, alignItems: "center", gap: 3 }}>
-              <View style={{ width: 52, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: on ? t.accentSoft : "transparent" }}>
-                <Ionicons name={on ? x.iconOn : x.icon} size={22} color={on ? t.accent : t.textFaint} />
-              </View>
-              <Text style={{ fontSize: 11, fontWeight: on ? "700" : "600", color: on ? t.text : t.textFaint }}>{x.label}</Text>
-            </Pressable>
-          );
-        })}
+      <View style={{ backgroundColor: t.bg, paddingHorizontal: 14, paddingTop: 6, paddingBottom: Math.max(insets.bottom - 6, 10) }}>
+        <View accessibilityRole="tablist" style={{
+          flexDirection: "row", backgroundColor: t.surface, borderRadius: 28, paddingVertical: 8, paddingHorizontal: 6,
+          borderWidth: t.dark ? 0.5 : 0, borderColor: t.border,
+          shadowColor: t.shadow, shadowOpacity: t.dark ? 0 : 0.12, shadowRadius: 18, shadowOffset: { width: 0, height: 6 }, elevation: 8,
+        }}>
+          {TABS.map((x) => {
+            const on = x.id === tab;
+            return (
+              <Pressable key={x.id} accessibilityRole="tab" accessibilityLabel={x.label} accessibilityState={{ selected: on }} onPress={() => setTab(x.id)}
+                style={{ flex: 1, alignItems: "center", gap: 3 }}>
+                <View style={{ width: 48, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: on ? t.mast : "transparent" }}>
+                  <Ionicons name={on ? x.iconOn : x.icon} size={20} color={on ? t.mastInk : t.textFaint} />
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: on ? "700" : "600", color: on ? t.text : t.textFaint }}>{x.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );

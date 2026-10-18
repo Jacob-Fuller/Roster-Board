@@ -1,7 +1,7 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useEffect, useState } from "react";
 import { Linking, Platform, ScrollView, Share, Text, View, useColorScheme } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Card, Dim, Divider, Field, H1, MenuRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, Divider, Field, Masthead, MenuRow, SERIF, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { DateField } from "../components/DateField";
 import { employmentOf, fmtHours, ymd, type Employment } from "../lib/model";
 import { partTimeOf, rebalanceAllExtras } from "../lib/partTime";
@@ -19,7 +19,6 @@ const SHOW_HIDE = [{ value: "show" as ShowHide, label: "Show" }, { value: "hide"
 // Laid out like the website's Account tab.
 export function AccountScreen() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   const sys = useColorScheme();
   const { auth, user, showSignIn, data, update, prefs, setPrefs } = useStore();
   const { dialog, toast } = useUi();
@@ -44,15 +43,28 @@ export function AccountScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 10, paddingBottom: 40 }}>
-        <H1 style={{ marginBottom: 6 }}>Account</H1>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <Masthead title="Account">
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 16 }}>
+            <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: t.mastBtn, borderWidth: 1.5, borderColor: t.glowB, alignItems: "center", justifyContent: "center" }}>
+              {signedIn && (name || user!.email)
+                ? <Text style={{ fontFamily: SERIF, fontSize: 22, color: t.mastInk }}>{String(name || user!.email).trim().charAt(0).toUpperCase()}</Text>
+                : <Ionicons name="person" size={24} color={t.mastInk} />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: t.mastInk, fontSize: 17, fontWeight: "700" }} numberOfLines={1}>{signedIn ? name || user!.email : "Not signed in"}</Text>
+              {signedIn && name ? <Text style={{ color: t.mastDim, fontSize: 14 }} numberOfLines={1}>{user!.email}</Text> : null}
+            </View>
+          </View>
+        </Masthead>
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
 
-        <Card style={{ paddingVertical: 2, marginTop: 18 }}>
-          <MenuRow title="Settings" sub={signedIn ? name || user!.email || "" : "Not signed in"} onPress={() => setAcctOpen(true)} />
+        <Card style={{ paddingVertical: 2 }}>
+          <MenuRow icon="settings" iconColor="#5B6B82" title="Settings" sub={signedIn ? name || user!.email || "" : "Not signed in"} onPress={() => setAcctOpen(true)} />
           <Divider />
-          <MenuRow title="Employment" sub={(employmentOf(data.settings) === "full" ? "Full time" : "Part time") + (employmentSub(data.settings) ? " · " + employmentSub(data.settings) : "")} onPress={() => setEmpOpen(true)} />
+          <MenuRow icon="briefcase" iconColor="#4C8DFF" title="Employment" sub={(employmentOf(data.settings) === "full" ? "Full time" : "Part time") + (employmentSub(data.settings) ? " · " + employmentSub(data.settings) : "")} onPress={() => setEmpOpen(true)} />
           <Divider />
-          <MenuRow title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
+          <MenuRow icon="gift" iconColor="#A76BF0" title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
         </Card>
 
         <SectionHead title="Appearance" />
@@ -72,7 +84,7 @@ export function AccountScreen() {
           <>
             <SectionHead title="Share your roster" />
             <Card style={{ paddingVertical: 2 }}>
-              <MenuRow title="Shared rosters" onPress={() => setShareOpen(true)} />
+              <MenuRow icon="people" iconColor="#3FC5C0" title="Shared rosters" onPress={() => setShareOpen(true)} />
             </Card>
             <SectionHead title="Invite a friend" />
             <Card><Button title="Share invite" onPress={shareInvite} /></Card>
@@ -88,14 +100,15 @@ export function AccountScreen() {
 
         <SectionHead title="About" />
         <Card style={{ paddingVertical: 2 }}>
-          <MenuRow title="Help" onPress={() => setHelpOpen(true)} />
+          <MenuRow icon="help-circle" iconColor="#4C8DFF" title="Help" onPress={() => setHelpOpen(true)} />
           <Divider />
-          <MenuRow title="Send feedback" onPress={feedback} />
+          <MenuRow icon="chatbubble-ellipses" iconColor="#2FA36B" title="Send feedback" onPress={feedback} />
           <Divider />
-          <MenuRow title="Contact us" sub="contact@rosterboard.net" onPress={() => Linking.openURL("mailto:contact@rosterboard.net?subject=Roster%20Board")} />
+          <MenuRow icon="mail" iconColor="#E8A33C" title="Contact us" sub="contact@rosterboard.net" onPress={() => Linking.openURL("mailto:contact@rosterboard.net?subject=Roster%20Board")} />
           <Divider />
-          <MenuRow title="Privacy Policy" onPress={() => Linking.openURL(WEB_URL + "privacy.html")} />
+          <MenuRow icon="shield-checkmark" iconColor="#5B6B82" title="Privacy Policy" onPress={() => Linking.openURL(WEB_URL + "privacy.html")} />
         </Card>
+        </View>
       </ScrollView>
 
       <AccountDetail visible={acctOpen} onClose={() => setAcctOpen(false)} />

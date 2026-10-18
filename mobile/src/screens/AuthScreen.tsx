@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Dim, Field, H1, LinkText, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, Field, Glow, LinkText, SERIF, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 
@@ -57,11 +57,15 @@ export function AuthScreen() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: 24, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }} keyboardShouldPersistTaps="handled">
-        <View style={{ alignItems: "center", marginBottom: 28 }}>
-          <Image source={require("../../assets/icon.png")} style={{ width: 76, height: 76, borderRadius: 18, marginBottom: 14 }} />
-          <H1>Roster Board</H1>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 24 }} keyboardShouldPersistTaps="handled">
+        <View style={{ backgroundColor: t.mast, paddingTop: insets.top + 48, paddingBottom: 76, alignItems: "center", borderBottomLeftRadius: 34, borderBottomRightRadius: 34, overflow: "hidden" }}>
+          <Glow color={t.glowA} size={380} style={{ top: -200, left: -140 }} />
+          <Glow color={t.glowB} size={340} style={{ bottom: -220, right: -110 }} />
+          <Image source={require("../../assets/icon.png")} style={{ width: 84, height: 84, borderRadius: 20, marginBottom: 16 }} />
+          <Text style={{ fontFamily: SERIF, fontSize: 34, letterSpacing: -0.6, color: t.mastInk }}>Roster Board</Text>
+          <Text style={{ color: t.mastDim, fontSize: 15, marginTop: 4 }}>Shifts, rosters and pay in one calendar</Text>
         </View>
+        <Card style={{ marginHorizontal: 18, marginTop: -44, padding: 20 }}>
         <Field label="Email" value={email} onChangeText={setEmail} autoCapitalize="none" autoComplete="email"
           keyboardType="email-address" textContentType="emailAddress" placeholder="you@example.com" />
         <Field label="Password" value={pw} onChangeText={setPw} secureTextEntry autoComplete={mode === "login" ? "current-password" : "new-password"}
@@ -72,7 +76,8 @@ export function AuthScreen() {
           <LinkText title={mode === "login" ? "Create an account" : "I have an account"} onPress={() => { setMode(mode === "login" ? "signup" : "login"); setMsg(null); }} />
           {mode === "login" ? <LinkText title="Forgot password?" onPress={forgot} /> : null}
         </View>
-        <View style={{ alignItems: "center", marginTop: 34 }}>
+        </Card>
+        <View style={{ alignItems: "center", marginTop: 28, paddingHorizontal: 24 }}>
           <LinkText title="Use without an account" color={t.textDim} onPress={useWithoutAccount} />
           <Dim style={{ marginTop: 6, textAlign: "center" }}>Your roster stays on this phone only.</Dim>
         </View>

@@ -1,9 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useMemo, useRef, useState } from "react";
 import { PanResponder, Pressable, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
-import { Chip, H1, useTheme, useUi } from "../components/ui";
+import { Chip, Masthead, SERIF, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
 import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, addMonths, effectiveHours, fmtHours, mkId, parseYmd, startOfMonth, type ShiftType } from "../lib/model";
 import { DaySheet } from "./DaySheet";
@@ -19,7 +18,6 @@ export function useTypesById() {
 
 export function CalendarScreen() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   const { data, prefs, update } = useStore();
   const { toast } = useUi();
   const typesById = useTypesById();
@@ -90,16 +88,12 @@ export function CalendarScreen() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top }}>
-      <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8, flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <View style={{ flex: 1 }}>
-          <H1 style={{ fontSize: 28 }}>{MONTHS[month.getMonth()]} <Text style={{ color: t.textDim, fontWeight: "400" }}>{month.getFullYear()}</Text></H1>
-          <Text style={{ color: t.textDim, fontSize: 13, marginTop: 2 }}>
-            {totals.shifts} shift{totals.shifts === 1 ? "" : "s"} · {fmtHours(totals.hours)}h
-          </Text>
-        </View>
-        <MonthNav month={month} onChange={setMonth} />
-      </View>
+    <View style={{ flex: 1, backgroundColor: t.bg }}>
+      <Masthead
+        title={<Text style={{ fontFamily: SERIF, fontSize: 30, letterSpacing: -0.6, color: t.mastInk }} numberOfLines={1} adjustsFontSizeToFit>{MONTHS[month.getMonth()]}</Text>}
+        sub={month.getFullYear() + " · " + totals.shifts + " shift" + (totals.shifts === 1 ? "" : "s") + " · " + fmtHours(totals.hours) + "h"}
+        right={<MonthNav month={month} onChange={setMonth} onMast />} />
+      <View style={{ height: 10 }} />
       <View style={{ flex: 1 }} {...pan.panHandlers}>
         <MonthGrid month={month} data={gridData} typesById={typesById} selected={bulk ? bulkSel : undefined}
           onDayPress={(k) => (bulk ? bulkToggle(k) : setOpenDay(k))} />

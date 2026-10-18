@@ -2,8 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
 import { PanResponder, Pressable, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Card, Dim, Divider, H1, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
+import { Button, Card, Dim, Divider, IconTile, MastButton, Masthead, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
 import { EXCESS_ID, MONTHS, WEEKDAYS_FULL, parseYmd, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
 import {
   allowanceClaims, computePay, fmtMoney, fmtMoneyShort, payCardRangeAt, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
@@ -27,7 +26,6 @@ type Mode = "month" | "year";
 
 export function ReportsScreen() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   const { data } = useStore();
   const typesById = useTypesById();
   const [mode, setMode] = useState<Mode>("month");
@@ -136,24 +134,28 @@ export function ReportsScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 10, paddingBottom: 40 }}>
-        <H1 style={{ marginBottom: 12 }}>Reports</H1>
-        <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 14 }}>
-          <Nav dir={-1} a11y="Previous" onPress={() => step(-1)} />
-          <Text style={{ color: t.text, fontSize: 17, fontWeight: "700" }}>{label}</Text>
-          <Nav dir={1} a11y="Next" onPress={() => step(1)} />
-        </View>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <Masthead title="Reports">
+          <View style={{ marginTop: 16 }}>
+            <Segmented<Mode> onMast value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
+            <MastButton icon="chevron-back" a11y="Previous" onPress={() => step(-1)} />
+            <Text style={{ color: t.mastInk, fontSize: 17, fontWeight: "700" }}>{label}</Text>
+            <MastButton icon="chevron-forward" a11y="Next" onPress={() => step(1)} />
+          </View>
+        </Masthead>
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
 
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <Stat label="Hours" value={fmtHours(stats.totalHours)} />
-          <Stat label="Overtime" value={fmtHours(stats.otHours)} />
-          {fullTime ? <Stat label="Days worked" value={String(stats.daysWorked)} /> : <Stat label="Excess" value={fmtHours(stats.excessHours)} />}
+          <Stat icon="time" color="#4C8DFF" label="Hours" value={fmtHours(stats.totalHours)} />
+          <Stat icon="flash" color={OVERTIME_TYPE.color} label="Overtime" value={fmtHours(stats.otHours)} />
+          {fullTime ? <Stat icon="calendar" color="#3FC5C0" label="Days worked" value={String(stats.daysWorked)} /> : <Stat icon="add-circle" color="#A76BF0" label="Excess" value={fmtHours(stats.excessHours)} />}
         </View>
         <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-          {fullTime ? null : <Stat label="Days worked" value={String(stats.daysWorked)} />}
-          <Stat label="Leave days" value={String(stats.leaveDays)} />
-          <Stat label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} />
+          {fullTime ? null : <Stat icon="calendar" color="#3FC5C0" label="Days worked" value={String(stats.daysWorked)} />}
+          <Stat icon="airplane" color="#7E8B99" label="Leave days" value={String(stats.leaveDays)} />
+          <Stat icon="cash" color="#2FA36B" label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} />
         </View>
 
         {ptProgress ? (
@@ -251,6 +253,7 @@ export function ReportsScreen() {
         ) : null}
         </>}
         <Button small kind="ghost" style={{ marginTop: 22 }} title="PDF roster" onPress={() => (locked ? openPaywall("PDF export is part of Premium.") : setExportOpen(true))} />
+        </View>
       </ScrollView>
       <ExportSheet visible={exportOpen} onClose={() => setExportOpen(false)} initialMode={mode} initialMonth={month} initialYear={year} />
       <PaySetupSheet visible={setupOpen && !payScreen} onClose={() => setSetupOpen(false)} />
@@ -433,11 +436,14 @@ function PayLine({ label, amount, kind, detail }: { label: string; amount: numbe
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, icon, color }: { label: string; value: string; icon: React.ComponentProps<typeof Ionicons>["name"]; color: string }) {
   const t = useTheme();
   return (
     <Card style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 14 }}>
-      <Text style={{ color: t.textDim, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
+        <IconTile icon={icon} color={color} size={22} />
+        <Text style={{ color: t.textDim, fontSize: 12, fontWeight: "600", flexShrink: 1 }} numberOfLines={1}>{label}</Text>
+      </View>
       <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: SERIF, color: t.text, fontSize: 24, marginTop: 4, fontVariant: ["tabular-nums"] }}>{value}</Text>
     </Card>
   );

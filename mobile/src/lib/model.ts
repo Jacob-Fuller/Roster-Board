@@ -26,7 +26,7 @@ export type ShiftType = Rec & {
   isBuiltin?: boolean;
 };
 export type ShiftEntry = Rec & { typeId: string; hours?: number; baseTypeId?: string; tag?: string };
-export type LeaveEntry = Rec & { kind: string; hours?: number };
+export type LeaveEntry = Rec & { kind: string; hours?: number; baseTypeId?: string };
 export type EventEntry = Rec & { text: string; category?: string; time?: string; allDay?: boolean; remind?: boolean; notified?: boolean; alarms?: number[] };
 export type Birthday = Rec & { name: string; day: number; month: number; year?: number | null };
 export type Buckets<T> = { [dateKey: string]: T[] };
@@ -96,6 +96,8 @@ export const LEAVE_KINDS: { [k: string]: { color: string; ink: string; label: st
   sick: { color: "#C24444", ink: "#FFFFFF", label: "Sick Leave" },
   excess: { color: "#F0679E", ink: "#FFFFFF", label: "Excess Hours" },
 };
+// Short titles for the banner strip when leave is taken on a shift.
+export const LEAVE_STRIP: { [k: string]: string } = { annual: "Annual leave", sick: "Sick leave", excess: "Excess" };
 export const EVENT_CATS: { [k: string]: { color: string; ink: string; label: string } } = {
   appointment: { color: "#3FC5C0", ink: "#062523", label: "Appointment" },
   family: { color: "#F0679E", ink: "#FFFFFF", label: "Social" },

@@ -77,7 +77,8 @@ function dayEntries(data: PdfData, typesById: TypesById, key: string): PdfEntry[
   (data.leave[key] || []).forEach((l) => {
     const def = LEAVE_KINDS[l.kind];
     if (!def) return;
-    out.push({ name: def.label, detail: "All day", color: def.color, typeId: "leave_" + l.kind, hours: 0 });
+    const bt = l.baseTypeId ? typesById[l.baseTypeId] : null;
+    out.push({ name: bt ? def.label + " – " + bt.name : def.label, detail: l.hours ? fmtHours(l.hours) + "h" : "All day", color: def.color, typeId: "leave_" + l.kind, hours: 0 });
   });
   return out;
 }

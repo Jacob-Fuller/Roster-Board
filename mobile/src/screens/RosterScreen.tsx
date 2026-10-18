@@ -1,9 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DateField } from "../components/DateField";
-import { Button, Card, Chip, Dim, H1, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Card, Chip, Dim, Masthead, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { TYPE_ICONS, WEEKDAYS_SHORT, ymd } from "../lib/model";
 import { applyRosterPattern, ensurePatternShape, patternHasContent } from "../lib/roster";
 import { useStore } from "../lib/store";
@@ -15,7 +14,6 @@ type Months = "3" | "6" | "12" | "24";
 
 export function RosterScreen() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   const { data, update } = useStore();
   const { dialog, toast } = useUi();
   const { locked, openPaywall } = usePremium();
@@ -74,8 +72,9 @@ export function RosterScreen() {
   const current = cell ? pattern[cell.w][cell.d] : [];
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 10, paddingBottom: 40 }}>
-        <H1 style={{ marginBottom: 14 }}>Roster pattern</H1>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <Masthead title="Roster pattern" sub={weeks + (weeks === 1 ? " week rotation" : " week rotation")} />
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <Card>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
             <Text style={{ flex: 1, color: t.text, fontSize: 15 }}>Rotation length</Text>
@@ -124,6 +123,7 @@ export function RosterScreen() {
             options={[{ value: "3", label: "3 mo" }, { value: "6", label: "6 mo" }, { value: "12", label: "1 yr" }, { value: "24", label: "2 yrs" }]} />
           <Button style={{ marginTop: 14 }} title="Fill calendar from pattern" onPress={fill} />
         </Card>
+        </View>
       </ScrollView>
 
       <Sheet visible={!!cell} onClose={() => setCell(null)} title={cell ? "Week " + (cell.w + 1) + " · " + DAY_NAMES[cell.d] : ""}>

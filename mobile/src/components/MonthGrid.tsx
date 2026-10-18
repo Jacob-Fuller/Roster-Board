@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
-  EVENT_CATS, LEAVE_KINDS, WEEKDAYS_SHORT, birthdaysOnDate, buildMonthCells, entryColor, entryName, isCombo, isSameDay, isSplitEntry, ymd,
+  EVENT_CATS, LEAVE_KINDS, LEAVE_STRIP, WEEKDAYS_SHORT, birthdaysOnDate, buildMonthCells, entryColor, entryName, isCombo, isSameDay, isSplitEntry, ymd,
   type Birthday, type Buckets, type EventEntry, type LeaveEntry, type Rec, type ShiftEntry, type ShiftType,
 } from "../lib/model";
 import { payConfig, payIsSetUp, payPeriodIsAlt } from "../lib/pay";
@@ -72,7 +72,10 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               });
               (data.leave[key] || []).forEach((l) => {
                 const k = LEAVE_KINDS[l.kind] || LEAVE_KINDS.annual;
-                items.push(<Pill ts={ts} key={l.id} label={k.label.replace(" Leave", "")} bg={k.color} fg={k.ink} />);
+                const bt = l.baseTypeId ? typesById[l.baseTypeId] : null;
+                if (bt) items.push(<Pill ts={ts} key={l.id} strip={LEAVE_STRIP[l.kind] || k.label} stripBg={k.color} stripFg={k.ink}
+                  label={bt.name} bg={bt.color} fg={bt.ink} border={bt.border} />);
+                else items.push(<Pill ts={ts} key={l.id} label={k.label.replace(" Leave", "")} bg={k.color} fg={k.ink} />);
               });
               ((data.notes && data.notes[key]) || []).forEach((n) => {
                 const cat = EVENT_CATS[n.category || "other"] || EVENT_CATS.other;
@@ -89,12 +92,15 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                 <Pressable key={key} disabled={!onDayPress} onPress={() => onDayPress && onDayPress(key)}
                   accessibilityRole={onDayPress ? "button" : undefined} accessibilityLabel={c.date.toDateString()}
                   style={({ pressed }) => ({
-                    flex: 1, margin: 1.5, borderRadius: 8, padding: 3, overflow: "hidden",
+                    flex: 1, margin: 2, borderRadius: 10, padding: 3, overflow: "hidden",
                     backgroundColor: !c.inMonth ? "transparent" : alt ? t.surface2 : t.surface, opacity: pressed ? 0.7 : c.inMonth ? 1 : 0.45,
-                    borderWidth: isToday || sel ? 2 : StyleSheet.hairlineWidth, borderColor: sel ? t.accent : isToday ? t.todayRing : t.border,
+                    borderWidth: isToday || sel ? 2 : t.dark ? StyleSheet.hairlineWidth : 0, borderColor: sel ? t.accent : isToday ? t.todayRing : t.border,
+                    shadowColor: t.shadow, shadowOpacity: c.inMonth && !t.dark ? 0.04 : 0, shadowRadius: 3, shadowOffset: { width: 0, height: 1 },
                   })}>
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2, marginLeft: 2 }}>
-                    <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accent : t.text }}>{c.date.getDate()}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2, marginLeft: 1 }}>
+                    <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 3, alignItems: "center", justifyContent: "center", backgroundColor: isToday ? t.accent : "transparent" }}>
+                      <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accentInk : t.text, fontVariant: ["tabular-nums"] }}>{c.date.getDate()}</Text>
+                    </View>
                     {ph ? <Text accessibilityLabel="Public holiday" style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
                   </View>
                   <View style={{ gap: 3 }}>
@@ -117,8 +123,8 @@ const SWAP_OFF = "#F2843A", SWAP_ON = "#22A06B";
 
 // Every banner is the same height. All descriptions share one size: the largest
 // that fits "Psychologist" in a day cell. All titles share one size: the largest
-// that fits "APPOINTMENT"; "EXCESS + OVERTIME" is the one exception and gets the
-// largest size that fits it. Sizes come from measuring the words on the phone.
+// that fits "APPOINTMENT"; "EXCESS + OVERTIME" and the leave titles are the
+// exceptions and get the largest size that fits them. Sizes come from measuring the words on the phone.
 const BANNER_H = 28, STRIP_H = 10;
 // Every title strip sits this far in from the banner's top and sides, so a type's
 // border (drawn within this margin) runs around the strip too. Same on all banners.
@@ -128,17 +134,20 @@ const SAMPLES = {
   label: { text: "Psychologist", weight: "700" as const, est: 6.3 },
   title: { text: "APPOINTMENT", weight: "800" as const, est: 7.6 },
   combo: { text: COMBO.toUpperCase(), weight: "800" as const, est: 11.6 },
+  leave: { text: "ANNUAL LEAVE", weight: "800" as const, est: 8.3 },
 };
-type Sizes = { label: number; title: number; combo: number };
+type Sizes = { label: number; title: number; combo: number; leave: number };
 function bannerSizes(gridW: number, w100: { [k in keyof typeof SAMPLES]?: number }): Sizes {
-  if (!gridW) return { label: 7, title: 5.5, combo: 4 };
+  if (!gridW) return { label: 7, title: 5.5, combo: 4, leave: 5 };
   const content = (gridW - 12) / 7 - 3 - 6 - 4; // cell margin, padding, thickest border
   const fit = (k: keyof typeof SAMPLES, room: number, max: number) => {
     const em = w100[k] ? w100[k]! / 100 : SAMPLES[k].est;
     return Math.max(3.5, Math.min(max, Math.floor((room / em) * 10) / 10));
   };
   const strip = content - 2 * STRIP_INSET - 4 - 1;
-  return { label: fit("label", content - 6 - 1, 12), title: fit("title", strip, 8), combo: fit("combo", strip, 8) };
+  // "Annual leave" and "Sick leave" share one size, the largest that fits "ANNUAL LEAVE" (never bigger than other titles)
+  const title = fit("title", strip, 8);
+  return { label: fit("label", content - 6 - 1, 12), title, combo: fit("combo", strip, 8), leave: Math.min(title, fit("leave", strip, 8)) };
 }
 
 // Party bunting and confetti for birthdays.
@@ -172,7 +181,7 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { l
       {strip ? (
         <View style={{ height: STRIP_H, marginTop: STRIP_INSET, marginHorizontal: STRIP_INSET, borderRadius: 3, overflow: "hidden", backgroundColor: stripBg, justifyContent: "center" }}>
           <Text numberOfLines={1} ellipsizeMode="clip"
-            style={{ color: stripFg, fontSize: strip === COMBO ? ts.combo : ts.title, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
+            style={{ color: stripFg, fontSize: strip === COMBO ? ts.combo : / leave$/.test(strip) ? ts.leave : ts.title, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
         </View>
       ) : null}
       <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3, paddingTop: party ? 3 : 0 }}>
@@ -186,21 +195,22 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { l
 }
 
 
-export function MonthNav({ month, onChange }: { month: Date; onChange: (d: Date) => void }) {
+export function MonthNav({ month, onChange, onMast }: { month: Date; onChange: (d: Date) => void; onMast?: boolean }) {
   const t = useTheme();
+  const bg = onMast ? t.mastBtn : t.surface2, fg = onMast ? t.mastInk : t.text;
   const btn = (label: string, a11y: string, n: number) => (
     <Pressable accessibilityRole="button" accessibilityLabel={a11y} hitSlop={6}
       onPress={() => onChange(new Date(month.getFullYear(), month.getMonth() + n, 1))}
-      style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center" }}>
-      <Ionicons name={label === "‹" ? "chevron-back" : "chevron-forward"} size={18} color={t.text} />
+      style={({ pressed }) => ({ width: 38, height: 38, borderRadius: 19, backgroundColor: bg, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1 })}>
+      <Ionicons name={label === "‹" ? "chevron-back" : "chevron-forward"} size={18} color={fg} />
     </Pressable>
   );
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
       {btn("‹", "Previous month", -1)}
       <Pressable accessibilityRole="button" onPress={() => { const n = new Date(); onChange(new Date(n.getFullYear(), n.getMonth(), 1)); }}
-        style={{ paddingHorizontal: 12, height: 36, borderRadius: 18, backgroundColor: t.surface2, justifyContent: "center" }}>
-        <Text style={{ color: t.text, fontWeight: "700", fontSize: 13 }}>Today</Text>
+        style={({ pressed }) => ({ paddingHorizontal: 14, height: 38, borderRadius: 19, backgroundColor: bg, justifyContent: "center", opacity: pressed ? 0.7 : 1 })}>
+        <Text style={{ color: fg, fontWeight: "700", fontSize: 13 }}>Today</Text>
       </Pressable>
       {btn("›", "Next month", 1)}
     </View>

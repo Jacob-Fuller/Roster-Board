@@ -46,6 +46,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const [chooser, setChooser] = useState<ShiftType | null>(null);
   const [split, setSplit] = useState<{ baseTypeId?: string; ot: string; ex: string; label: string; onSave: (ot: number, ex: number) => void } | null>(null);
   const [swap, setSwap] = useState<{ shift: ShiftEntry } | null>(null);
+  const [leavePick, setLeavePick] = useState<"annual" | "sick" | null>(null);
 
   const resetForm = () => { setEditing(null); setText(""); setCat("other"); setAllDay(false); setTime(""); setRemind(false); setAlerts([-1, -1]); };
   useEffect(() => { resetForm(); }, [dateKey]);
@@ -120,6 +121,47 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     });
     toast("Shift removed");
   };
+
+  /* ----- leave ----- */
+  // Leave is taken on a shift (e.g. Dayshift), so the calendar shows that shift with an Annual/Sick leave title.
+  const leaveTypes = data.types.filter((x) => x.kind !== "personal");
+  const addLeave = (kind: "annual" | "sick", ty: ShiftType | null) => dialog({
+    title: LEAVE_KINDS[kind].label + (ty ? " – " + ty.name : ""), message: "How many hours?",
+    input: { placeholder: "e.g. 10", keyboard: "decimal-pad", value: ty && ty.hours ? String(ty.hours) : "" }, confirm: "Add",
+    onConfirm: (v) => {
+      const h = parseFloat(v.replace(",", "."));
+      if (!h || h <= 0) { toast("Enter a number of hours"); return; }
+      update((d, tomb) => {
+        const e: any = { id: mkId(), kind, hours: h };
+        if (ty) {
+          e.baseTypeId = ty.id;
+          // the rostered shift is taken as leave: it comes off the day, and comes back if the leave is removed
+          const list = d.shifts[key] || [];
+          const i = list.findIndex((x) => x.typeId === ty.id);
+          if (i >= 0) {
+            const sh: any = list[i];
+            e.replaced = { id: sh.id, typeId: sh.typeId, ...(sh.hours != null ? { hours: sh.hours } : {}) };
+            list.splice(i, 1); tomb(sh.id);
+            if (!list.length) delete d.shifts[key];
+          }
+        }
+        (d.leave[key] = d.leave[key] || []).push(e);
+      });
+      toast(LEAVE_KINDS[kind].label + " added");
+    },
+  });
+
+  const removeLeave = (id: string) => update((d, tomb) => {
+    const l: any = (d.leave[key] || []).find((x) => x.id === id);
+    d.leave[key] = (d.leave[key] || []).filter((x) => x.id !== id);
+    if (!d.leave[key].length) delete d.leave[key];
+    tomb(id);
+    const r = l && l.replaced;
+    if (r && r.id && !(d.shifts[key] || []).some((x) => x.id === r.id)) {
+      (d.shifts[key] = d.shifts[key] || []).push({ ...r, updatedAt: Date.now() + 1 });
+      delete d.tombstones[r.id];
+    }
+  });
 
   /* ----- allowances ----- */
   const setAllowanceCount = (allowanceId: string, count: number) => update((d, tomb) => {
@@ -299,15 +341,13 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       <SectionHead title="Leave" />
       {leave.length ? leave.map((l) => {
         const k = LEAVE_KINDS[l.kind] || LEAVE_KINDS.annual;
-        return <Item key={l.id} color={k.color} title={k.label} sub={l.hours != null ? fmtHours(l.hours) + "h" : undefined} actions={[{ label: "Remove", danger: true, onPress: () => removeFrom("leave", l.id) }]} />;
+        const lb = l.baseTypeId ? typesById[l.baseTypeId] : null;
+        return <Item key={l.id} color={lb ? lb.color : k.color} title={k.label + (lb ? " – " + lb.name : "")} sub={l.hours != null ? fmtHours(l.hours) + "h" : undefined} actions={[{ label: "Remove", danger: true, onPress: () => removeLeave(l.id) }]} />;
       }) : null}
       <View style={{ flexDirection: "row", gap: 8, marginTop: 6 }}>
         {(["annual", "sick"] as const).map((k) => (
           <Chip key={k} label={"+ " + LEAVE_KINDS[k].label} color={LEAVE_KINDS[k].color} ink={LEAVE_KINDS[k].ink}
-            onPress={() => askHours(LEAVE_KINDS[k].label, "How many hours?", (h) => {
-              update((d) => { (d.leave[key] = d.leave[key] || []).push({ id: mkId(), kind: k, hours: h }); });
-              toast(LEAVE_KINDS[k].label + " added");
-            })} />
+            onPress={() => (leaveTypes.length ? setLeavePick(k) : addLeave(k, null))} />
         ))}
       </View>
 
@@ -400,6 +440,18 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
           onSave: (ot, ex) => { update((d) => { const e: any = { id: mkId(), baseTypeId: ty.id }; applySplit(e, ot, ex); (d.shifts[key] = d.shifts[key] || []).push(e); }); toast("Shift added"); },
         });
       }} />
+      <Popup visible={!!leavePick} onClose={() => setLeavePick(null)}>
+        <H2 style={{ marginBottom: 12 }}>{leavePick ? LEAVE_KINDS[leavePick].label : ""}</H2>
+        <View style={{ gap: 8 }}>
+          {leaveTypes.map((ty) => (
+            <Pressable key={ty.id} accessibilityRole="button" onPress={() => { const k = leavePick!; setLeavePick(null); setTimeout(() => addLeave(k, ty), 250); }}
+              style={({ pressed }) => ({ backgroundColor: ty.color, borderRadius: 12, paddingVertical: 13, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", opacity: pressed ? 0.85 : 1 })}>
+              <Text style={{ color: ty.ink, fontWeight: "700", fontSize: 15 }}>{ty.name}</Text>
+              <Text style={{ color: ty.ink, fontWeight: "700", fontSize: 12, opacity: 0.9 }}>{leavePick ? LEAVE_KINDS[leavePick].label : ""}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </Popup>
       <SplitEditor state={split} typesById={typesById} onClose={() => setSplit(null)} />
       <SwapForm pending={swap} dateKey={key} data={data} typesById={typesById} onClose={() => setSwap(null)} />
     </Sheet>

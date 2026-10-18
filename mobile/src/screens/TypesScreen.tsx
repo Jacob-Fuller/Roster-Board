@@ -1,10 +1,9 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
-import { Button, Card, Dim, Divider, Field, H1, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, Divider, Field, MastButton, Masthead, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import { BannerBorder } from "../components/BannerBorder";
 import { OptionPicker } from "../components/OptionPicker";
 import { requestAlarmPermission, SHIFT_ALARM_OPTIONS, useAlarmsAvailable } from "../lib/shiftAlarms";
@@ -26,7 +25,6 @@ const blank = (): Draft => ({
 
 export function TypesScreen() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   const { data, update } = useStore();
   const { dialog, toast } = useUi();
   const { locked, openPaywall } = usePremium();
@@ -133,25 +131,23 @@ export function TypesScreen() {
   const hours = calcDuration(draft.start, draft.end);
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingTop: insets.top + 10, paddingBottom: 40 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <H1>Shift types</H1>
-          <Button small title="+ New type" onPress={() => open()} />
-        </View>
+      <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+        <Masthead title="Shift types" right={<MastButton icon="add" label="New type" onPress={() => open()} />} />
+        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         {types.length ? (
           <Card style={{ paddingVertical: 2 }}>
             {types.map((ty, i) => (
               <View key={ty.id}>
                 {i ? <Divider /> : null}
                 <Pressable accessibilityRole="button" onPress={() => open(ty)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13, opacity: pressed ? 0.6 : 1 })}>
-                  <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: ty.color, alignItems: "center", justifyContent: "center" }}>
+                  <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: ty.color, alignItems: "center", justifyContent: "center" }}>
                     <TypeBadgeContent ty={ty} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{ty.name}</Text>
                     <Dim>{ty.kind === "personal" ? "Personal · " + typeLabel(ty) : typeLabel(ty)}</Dim>
                   </View>
-                  <Text style={{ color: t.textFaint, fontSize: 20 }}>›</Text>
+                  <Ionicons name="chevron-forward" size={17} color={t.textFaint} />
                 </Pressable>
               </View>
             ))}
@@ -159,6 +155,7 @@ export function TypesScreen() {
         ) : (
           <Card><Dim>No shift types yet.</Dim></Card>
         )}
+        </View>
       </ScrollView>
 
       <Sheet visible={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "New shift type" : "Edit shift type"}
