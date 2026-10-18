@@ -10,7 +10,6 @@ import { askIfRemindersNeedIt, syncReminders } from "./src/lib/reminders";
 import { planContactSync, readContactBirthdays } from "./src/lib/contactBirthdays";
 import { PremiumProvider, usePremium } from "./src/lib/premium";
 import { syncShiftAlarms } from "./src/lib/shiftAlarms";
-import { autoSplitOn, rebalanceAllExtras } from "./src/lib/partTime";
 import { paydayNotes } from "./src/lib/payday";
 import { syncCalendar } from "./src/lib/calendarSync";
 import { EXCESS_TYPE, OVERTIME_TYPE, type ShiftType } from "./src/lib/model";
@@ -118,13 +117,6 @@ function Shell() {
     if (extrasNeedRebalance(dataRef.current)) update((d) => { rebalanceAllExtras(d); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
-  // Part time: make sure every pay period's excess stays within the limit (older entries included).
-  useEffect(() => {
-    if (!loaded || !autoSplitOn(dataRef.current.settings)) return;
-    const copy = JSON.parse(JSON.stringify(dataRef.current));
-    if (rebalanceAllExtras(copy)) update((d) => { rebalanceAllExtras(d); });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded, data.settings]);
   const [onboarding, setOnboarding] = useState(false);
   const ready = auth === "signedIn" || auth === "localOnly";
   useEffect(() => { if (ready) hasSeenOnboarding().then((seen) => { if (!seen) setOnboarding(true); }); }, [ready]);
