@@ -526,8 +526,9 @@ function KindChooser({ type, fullTime, autoSplit, allowances, onClose, onPick }:
   const opts: { k: "normal" | "ot" | "ex" | "split"; tag: string; bg: string; ink: string }[] = [];
   if (type) {
     opts.push({ k: "normal", tag: "", bg: type.color, ink: type.ink });
-    if (!fullTime && type.excessEligible !== false) opts.push({ k: "ex", tag: autoSplit ? "Additional shift" : "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
-    if (type.overtimeEligible !== false) opts.push({ k: "ot", tag: "Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
+    if (!fullTime && (type.excessEligible !== false || (autoSplit && type.overtimeEligible !== false))) opts.push({ k: "ex", tag: autoSplit ? "Additional shift" : "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
+    // with an excess limit, additional shifts are split into excess and overtime automatically
+    if (type.overtimeEligible !== false && !autoSplit) opts.push({ k: "ot", tag: "Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
     if (!fullTime && !autoSplit && type.overtimeEligible !== false && type.excessEligible !== false) opts.push({ k: "split", tag: "Excess + Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
   }
   const showAllowances = !!type && type.kind !== "personal" && allowances.length > 0;
