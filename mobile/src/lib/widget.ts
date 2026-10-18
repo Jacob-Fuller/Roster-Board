@@ -1,5 +1,5 @@
 // Data for the home screen widget: the next three weeks of shifts and leave, and
-// this pay period's estimate (Premium only). Sent whenever it changes.
+// this pay period's estimate (Premium only). Sent whenever it changes or the app reopens.
 import { Platform } from "react-native";
 import { WidgetBridge } from "../../modules/widget-bridge";
 import { LEAVE_KINDS, MONTHS, addDays, isCombo, isSplitEntry, ymd, type ShiftType, type Snapshot } from "./model";
