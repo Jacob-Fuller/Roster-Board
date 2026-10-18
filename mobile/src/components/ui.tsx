@@ -77,7 +77,7 @@ function MastBackground({ t }: { t: Theme }) {
   return (
     <>
       <LinearGradient pointerEvents="none" colors={[t.mastFrom, t.mastTo]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-      <LinearGradient pointerEvents="none" colors={[t.glowB + "00", t.glowB + "40"]} start={{ x: 0.35, y: 0.2 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      <LinearGradient pointerEvents="none" colors={[t.glowB + "00", t.glowB + (t.dark ? "38" : "2E")]} start={{ x: 0.6, y: 0.5 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
     </>
   );
 }
