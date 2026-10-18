@@ -68,6 +68,7 @@ const GROUPS: Group[] = [
       { title: "Employment", text: "Choose full time or part time. Part time lets you set your pay cycle, rostered shifts per pay period and the excess hours allowed before overtime." },
       { title: "Birthdays", text: "Add birthdays yourself, or let the app show your contacts' birthdays. Contact birthdays update by themselves each time you open the app." },
       { title: "Appearance", text: "Choose light or dark, and whether personal events and birthdays show on the calendar." },
+      { title: "Home screen widget", text: "Press and hold your home screen, tap Edit then Add Widget, and choose Roster Board. The small widget shows your next shift. The medium one adds the next few shifts and, with Premium, this pay period's estimate." },
       { title: "Calendar app", text: "Turn on Add shifts to the Calendar app and your shifts and leave appear in a Roster Board calendar in the iPhone Calendar app, from last month to a year ahead. It updates whenever your roster changes, and turning it off removes it." },
       { title: "Settings", text: "Change your name, email or password, sign out, clear your calendar or delete your account." },
     ],
