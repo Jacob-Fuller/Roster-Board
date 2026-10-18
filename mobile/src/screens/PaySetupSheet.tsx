@@ -83,10 +83,11 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         <DateField label="Pay period start date" value={form.periodStart} onChange={(v) => set("periodStart", v)} />
       </Section>
 
-      <Section title={fullTime ? "Overtime" : "Overtime & excess"} summary={fullTime ? sum.ot.replace(/ · [^·]*excess$/, "") : sum.ot}>
+      <Section title={fullTime ? "Overtime" : "Excess & overtime"} summary={fullTime ? sum.ot.replace(/^[^·]*excess · /, "") : sum.ot}>
         <View style={{ flexDirection: "row", gap: 10 }}>
+          {fullTime ? null : <View style={{ flex: 1 }}><Field label="Excess rate ×" value={form.exMult} onChangeText={(v) => set("exMult", v)} keyboardType={dec} placeholder="1" /></View>}
           <View style={{ flex: 1 }}><Field label="Overtime rate ×" value={form.otMult} onChangeText={(v) => set("otMult", v)} keyboardType={dec} placeholder="1.5" /></View>
-          {fullTime ? <View style={{ flex: 1 }} /> : <View style={{ flex: 1 }}><Field label="Excess rate ×" value={form.exMult} onChangeText={(v) => set("exMult", v)} keyboardType={dec} placeholder="1" /></View>}
+          {fullTime ? <View style={{ flex: 1 }} /> : null}
         </View>
         <ToggleRow label="Tiered overtime" value={form.otTiered} onChange={(v) => set("otTiered", v)} />
         {form.otTiered ? (

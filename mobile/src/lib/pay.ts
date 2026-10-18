@@ -372,7 +372,7 @@ export function payFormFromConfig(c: PayConfig): PayForm {
 export function paySummaries(f: PayForm, cycle: string, workTypeCount: number) {
   const rate = parseFloat(f.baseRate);
   const cyc = cycle || "fortnightly";
-  const ot = (f.otMult || "1.5") + "× overtime · " + (f.exMult || "1") + "× excess";
+  const ot = (f.exMult || "1") + "× excess · " + (f.otMult || "1.5") + "× overtime";
   const pens = ([[f.penSat, "Sat"], [f.penSun, "Sun"], [f.penNight, "Night"]] as [string, string][])
     .filter((x) => parseFloat(x[0]) > 0)
     .map((x) => x[1] + " " + x[0] + "%");

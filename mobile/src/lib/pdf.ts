@@ -110,8 +110,8 @@ function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: 
   });
 
   const summary = [shifts + (shifts === 1 ? " shift" : " shifts"), fmtHours(hours) + " hours"];
-  if (totals[OVERTIME_ID]) summary.push(fmtHours(totals[OVERTIME_ID].hours) + "h overtime");
   if (totals[EXCESS_ID]) summary.push(fmtHours(totals[EXCESS_ID].hours) + "h excess");
+  if (totals[OVERTIME_ID]) summary.push(fmtHours(totals[OVERTIME_ID].hours) + "h overtime");
 
   const gridLeft = margin, gridW = W - margin * 2, colW = gridW / 7;
   const headY = margin + 58;

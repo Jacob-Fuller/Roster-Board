@@ -66,6 +66,9 @@ export function ReportsScreen() {
   if (!fullTime && !byType[EXCESS_ID]) byType[EXCESS_ID] = { name: "Excess", color: "#F7B3CE", count: 0, hours: 0, rank: 1 };
   if (!byType[OVERTIME_ID]) byType[OVERTIME_ID] = { name: OVERTIME_TYPE.name, color: OVERTIME_TYPE.color, count: 0, hours: 0, rank: 2 };
   const rows: TypeRow[] = Object.values(byType).sort((a, b) => b.hours - a.hours || a.rank - b.rank);
+  // excess always sits directly ahead of overtime
+  const exRow = byType[EXCESS_ID], otRow = byType[OVERTIME_ID];
+  if (exRow && otRow && rows.indexOf(otRow) < rows.indexOf(exRow)) { rows.splice(rows.indexOf(exRow), 1); rows.splice(rows.indexOf(otRow), 0, exRow); }
   const maxType = Math.max(1, ...rows.map((r) => r.hours));
   const wwTotal = stats.weekdayHours + stats.weekendHours;
   const pct = (v: number, of: number) => (of > 0 ? Math.round((v / of) * 100) : 0);
@@ -122,8 +125,8 @@ export function ReportsScreen() {
 
   const reviewRows: [string, string][] = [
     ["Total hours worked", fmtHours(stats.totalHours) + " h"],
-    ["Total overtime", fmtHours(stats.otHours) + " h"],
     ...(fullTime && !stats.excessHours ? [] : [["Total excess hours", fmtHours(stats.excessHours) + " h"] as [string, string]]),
+    ["Total overtime", fmtHours(stats.otHours) + " h"],
     ["Busiest month", busiest ? MONTHS[+String(busiest).split("-")[1] - 1] + " (" + fmtHours(busiestVal) + " h)" : "—"],
     ["Leave days taken", String(stats.leaveDays)],
   ];
@@ -149,8 +152,9 @@ export function ReportsScreen() {
 
         <View style={{ flexDirection: "row", gap: 8 }}>
           <Stat icon="time" color="#4C8DFF" label="Hours" value={fmtHours(stats.totalHours)} />
+          {fullTime ? null : <Stat icon="add-circle" color="#A76BF0" label="Excess" value={fmtHours(stats.excessHours)} />}
           <Stat icon="flash" color={OVERTIME_TYPE.color} label="Overtime" value={fmtHours(stats.otHours)} />
-          {fullTime ? <Stat icon="calendar" color="#3FC5C0" label="Days worked" value={String(stats.daysWorked)} /> : <Stat icon="add-circle" color="#A76BF0" label="Excess" value={fmtHours(stats.excessHours)} />}
+          {fullTime ? <Stat icon="calendar" color="#3FC5C0" label="Days worked" value={String(stats.daysWorked)} /> : null}
         </View>
         <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
           {fullTime ? null : <Stat icon="calendar" color="#3FC5C0" label="Days worked" value={String(stats.daysWorked)} />}
@@ -398,8 +402,8 @@ function PayLines({ p, superPct }: { p: PayResult; superPct: number }) {
   const add = (label: string, amount: number | string, kind?: "sub" | "total" | "muted", detail?: string) =>
     rows.push(<PayLine key={rows.length} label={label} amount={amount} kind={kind} detail={detail} />);
   add("Ordinary", p.ordinary, undefined, fmtHours(p.ordinaryHours) + "h");
-  if (p.overtime) add("Overtime", p.overtime, undefined, fmtHours(p.otHours) + "h");
   if (p.excess) add("Excess hours", p.excess, undefined, fmtHours(p.excessHours) + "h");
+  if (p.overtime) add("Overtime", p.overtime, undefined, fmtHours(p.otHours) + "h");
   if (p.penalties) {
     add("Penalty rates", p.penalties);
     Object.keys(p.penaltyLines).forEach((k) => add(k, p.penaltyLines[k], "sub"));
