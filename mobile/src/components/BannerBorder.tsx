@@ -50,9 +50,9 @@ export function BannerBorder({ kind, bg, ink, radius = 5, s = 1 }: { kind?: stri
     // glossy top: a soft white sheen fading down the banner
     case "glow": return (
       <>
-        <LinearGradient pointerEvents="none" colors={["rgba(255,255,255,0.45)", "rgba(255,255,255,0)"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.6 }}
+        <LinearGradient pointerEvents="none" colors={["rgba(255,255,255,0.32)", "rgba(255,255,255,0)"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 0.55 }}
           style={[at(0), { borderRadius: r(0) }]} />
-        {line(0.5, 0.75, "rgba(255,255,255,0.55)")}
+        {line(0, 0.75, deep(bg, 0.5))}
       </>
     );
     // shaded: lighter at the top, deeper at the bottom

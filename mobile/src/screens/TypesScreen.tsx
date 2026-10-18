@@ -31,6 +31,7 @@ export function TypesScreen() {
   const fullTime = employmentOf(data.settings) === "full";
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [draft, setDraft] = useState<Draft>(blank());
+  const [pickW, setPickW] = useState(0);
   const types = data.types.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
   const alarmsOk = useAlarmsAvailable();
@@ -197,13 +198,13 @@ export function TypesScreen() {
           ))}
         </View>
         <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 8, fontWeight: "600" }}>Border</Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+        <View onLayout={(e) => setPickW(e.nativeEvent.layout.width)} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
           {BANNER_BORDERS.map((b) => {
             const on = draft.border === b;
             return (
               <Pressable key={b} accessibilityRole="button" accessibilityLabel={b === "none" ? "No border" : b + " border"} accessibilityState={{ selected: on }}
                 onPress={() => set({ border: b })}
-                style={{ width: "23%", flexGrow: 1, height: 44, borderRadius: 12, padding: 3, borderWidth: 2, borderColor: on ? t.accent : "transparent" }}>
+                style={{ width: pickW ? Math.floor((pickW - 24) / 4) : "23%", height: 44, borderRadius: 12, padding: 3, borderWidth: 2, borderColor: on ? t.accent : "transparent" }}>
                 <View style={{ flex: 1, borderRadius: 8, overflow: "hidden", backgroundColor: b === "none" ? t.surface2 : draft.color, alignItems: "center", justifyContent: "center" }}>
                   {b === "none"
                     ? <Text style={{ color: t.textDim, fontWeight: "700", fontSize: 12 }}>None</Text>
