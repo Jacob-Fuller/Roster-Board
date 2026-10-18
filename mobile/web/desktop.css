@@ -1,0 +1,8 @@
+/* On a computer screen the app sits in a centred column instead of stretching edge to edge. */
+html, body { height: 100%; }
+body { background: #DCDFE4; }
+@media (prefers-color-scheme: dark) { body { background: #0A0908; } }
+@media (min-width: 760px) {
+  #root { max-width: 640px; width: 100%; margin: 0 auto; box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 24px 70px rgba(0,0,0,.18); }
+  [aria-modal="true"] { left: calc(50% - 320px) !important; right: calc(50% - 320px) !important; }
+}

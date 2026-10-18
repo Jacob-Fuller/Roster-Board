@@ -1,0 +1,79 @@
+# Builds the native app (mobile/) for the browser and publishes it to the website.
+# Every push to native-app builds it and saves desktop screenshots to the
+# web-check branch. Commits tagged [testflight] or [web] also publish it: the build
+# replaces the website files on main, which Render deploys to rosterboard.net.
+name: Website
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [native-app]
+    paths: ["mobile/**", ".github/workflows/web-publish.yml"]
+
+concurrency:
+  group: web-publish
+  cancel-in-progress: false
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        working-directory: mobile
+        run: |
+          npm install --no-audit --no-fund
+          npx expo install --fix
+      - name: Tests and type-check
+        working-directory: mobile
+        run: |
+          npm test
+          npx tsc --noEmit
+      - name: Build for the browser
+        working-directory: mobile
+        run: |
+          npx expo export --platform web --output-dir dist
+          node -e '
+            const fs = require("fs"); const f = "dist/index.html";
+            let h = fs.readFileSync(f, "utf8");
+            const css = fs.readFileSync("web/desktop.css", "utf8");
+            const head = "<link rel=\"manifest\" href=\"/manifest.json\"><link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\"><meta name=\"description\" content=\"Shifts, rosters and pay in one calendar.\"><style id=\"rb-desktop\">" + css + "</style>";
+            h = h.replace("</head>", head + "</head>");
+            fs.writeFileSync(f, h);
+          '
+          ls -R dist | head -40
+      - name: Desktop screenshots
+        working-directory: mobile
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1
+          npx playwright install --with-deps chromium
+          (cd dist && python3 -m http.server 8091 >/dev/null 2>&1 &)
+          sleep 1
+          node scripts/web-desktop.mjs web-check 2>&1 | tee web-check/log.txt
+          cd web-check
+          git init -q -b web-check
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          echo "${{ github.sha }}" > RESULT.txt
+          git add -A && git commit -qm "Website check for ${{ github.sha }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" web-check
+      - name: Publish to the website (main)
+        if: contains(github.event.head_commit.message, '[testflight]') || contains(github.event.head_commit.message, '[web]')
+        run: |
+          git clone -q --depth 1 --branch main "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" site
+          cd site
+          # the old web app's page and build are replaced; privacy policy, icons and manifest stay
+          rm -rf _expo assets index.html favicon.ico metadata.json
+          cp -R ../mobile/dist/. .
+          cp ../mobile/web/sw.js sw.js
+          cp ../mobile/web/server.js server.js
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add -A -f .
+          if git diff --cached --quiet; then echo "Website already up to date"; exit 0; fi
+          git commit -qm "Website: app build from native-app ${{ github.sha }}"
+          git push -q origin main
