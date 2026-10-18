@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Image, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Card, Dim, Field, Glow, LinkText, SERIF, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, Field, MastBackground, LinkText, SERIF, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 
@@ -59,8 +59,7 @@ export function AuthScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 24 }} keyboardShouldPersistTaps="handled">
         <View style={{ backgroundColor: t.mast, paddingTop: insets.top + 48, paddingBottom: 76, alignItems: "center", borderBottomLeftRadius: 34, borderBottomRightRadius: 34, overflow: "hidden" }}>
-          <Glow color={t.glowA} size={380} style={{ top: -200, left: -140 }} />
-          <Glow color={t.glowB} size={340} style={{ bottom: -220, right: -110 }} />
+          <MastBackground t={t} />
           <Image source={require("../../assets/icon.png")} style={{ width: 84, height: 84, borderRadius: 20, marginBottom: 16 }} />
           <Text style={{ fontFamily: SERIF, fontSize: 34, letterSpacing: -0.6, color: t.mastInk }}>Roster Board</Text>
           <Text style={{ color: t.mastDim, fontSize: 15, marginTop: 4 }}>Shifts, rosters and pay in one calendar</Text>

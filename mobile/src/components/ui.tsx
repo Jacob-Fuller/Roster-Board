@@ -1,3 +1,4 @@
+import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -57,30 +58,36 @@ export function HeroCard({ children, style }: { children: React.ReactNode; style
       borderColor: t.dark ? t.border : "transparent", borderWidth: t.dark ? StyleSheet.hairlineWidth : 0,
       shadowColor: t.shadow, shadowOpacity: t.dark ? 0 : 0.22, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: t.dark ? 0 : 6,
     }, style]}>
-      <Glow color={t.glowB} size={260} style={{ bottom: -170, right: -70 }} />
-      <Glow color={t.glowA} size={220} style={{ top: -150, left: -80 }} />
+      <MastBackground t={t} />
       {children}
     </View>
   );
 }
 /* ---------- header band ---------- */
-// Layered circles read as a soft glow without an image or gradient library.
+// A soft glow: a gradient that fades from the colour to transparent, diagonally.
 export function Glow({ color, size, style }: { color: string; size: number; style: ViewStyle }) {
   return (
-    <View pointerEvents="none" style={[{ position: "absolute", width: size, height: size, alignItems: "center", justifyContent: "center" }, style]}>
-      {[1, 0.78, 0.58, 0.4].map((f, i) => (
-        <View key={i} style={{ position: "absolute", width: size * f, height: size * f, borderRadius: size * f / 2, backgroundColor: color, opacity: 0.1 + i * 0.04 }} />
-      ))}
-    </View>
+    <LinearGradient pointerEvents="none" colors={[color + "00", color + "55", color + "00"]} locations={[0, 0.5, 1]}
+      start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+      style={[{ position: "absolute", width: size, height: size, borderRadius: size / 2 }, style]} />
   );
 }
+// The header band's background: deep navy shading darker to the bottom right, with a warm glow low on the right.
+function MastBackground({ t }: { t: Theme }) {
+  return (
+    <>
+      <LinearGradient pointerEvents="none" colors={[t.mastFrom, t.mastTo]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      <LinearGradient pointerEvents="none" colors={[t.glowB + "00", t.glowB + "40"]} start={{ x: 0.35, y: 0.2 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+    </>
+  );
+}
+export { MastBackground };
 export function Masthead({ title, sub, right, children }: { title: React.ReactNode; sub?: string; right?: React.ReactNode; children?: React.ReactNode }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View style={{ backgroundColor: t.mast, paddingTop: insets.top + 14, paddingBottom: 18, paddingHorizontal: 18, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: "hidden" }}>
-      <Glow color={t.glowA} size={340} style={{ top: -190, left: -120 }} />
-      <Glow color={t.glowB} size={300} style={{ bottom: -200, right: -90 }} />
+      <MastBackground t={t} />
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <View style={{ flex: 1 }}>
           {typeof title === "string" ? <Text style={{ fontFamily: SERIF, fontSize: 32, letterSpacing: -0.6, color: t.mastInk }} numberOfLines={1}>{title}</Text> : title}

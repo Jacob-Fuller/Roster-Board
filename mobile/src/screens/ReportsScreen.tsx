@@ -440,11 +440,9 @@ function Stat({ label, value, icon, color }: { label: string; value: string; ico
   const t = useTheme();
   return (
     <Card style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 14 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 7 }}>
-        <IconTile icon={icon} color={color} size={22} />
-        <Text style={{ color: t.textDim, fontSize: 12, fontWeight: "600", flexShrink: 1 }} numberOfLines={1}>{label}</Text>
-      </View>
-      <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: SERIF, color: t.text, fontSize: 24, marginTop: 4, fontVariant: ["tabular-nums"] }}>{value}</Text>
+      <IconTile icon={icon} color={color} size={26} />
+      <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: SERIF, color: t.text, fontSize: 24, marginTop: 8, fontVariant: ["tabular-nums"] }}>{value}</Text>
+      <Text style={{ color: t.textDim, fontSize: 12, fontWeight: "600", marginTop: 1 }} numberOfLines={1}>{label}</Text>
     </Card>
   );
 }

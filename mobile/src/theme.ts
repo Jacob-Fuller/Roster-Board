@@ -10,6 +10,7 @@ export type Theme = {
   shadow: string;
   // the header band at the top of every tab: deep night-shift navy with a sunrise glow
   mast: string; mastInk: string; mastDim: string; mastBtn: string; glowA: string; glowB: string;
+  mastFrom: string; mastTo: string; tabOn: string; tabOnInk: string;
 };
 
 export const light: Theme = {
@@ -21,6 +22,7 @@ export const light: Theme = {
   hero: "#1B3354", heroInk: "#FFFFFF", heroDim: "#B9C6D8",
   shadow: "#0B1A30",
   mast: "#132849", mastInk: "#FFFFFF", mastDim: "#AEBFD7", mastBtn: "rgba(255,255,255,0.14)", glowA: "#3F73B8", glowB: "#E7A75C",
+  mastFrom: "#1E3D69", mastTo: "#0D1D36", tabOn: "#132849", tabOnInk: "#FFFFFF",
 };
 
 export const dark: Theme = {
@@ -31,5 +33,6 @@ export const dark: Theme = {
   danger: "#D98272", todayRing: "#C8975F", good: "#8DB57F",
   hero: "#2A2119", heroInk: "#F7E9D6", heroDim: "#C7B39A",
   shadow: "#000000",
-  mast: "#211A13", mastInk: "#F7E9D6", mastDim: "#C2AE95", mastBtn: "rgba(255,255,255,0.10)", glowA: "#4A3A6A", glowB: "#C8975F",
+  mast: "#211A13", mastInk: "#F7E9D6", mastDim: "#C2AE95", mastBtn: "rgba(255,255,255,0.10)", glowA: "#3A2B1C", glowB: "#C8975F",
+  mastFrom: "#33271B", mastTo: "#17120D", tabOn: "#C8975F", tabOnInk: "#1A140D",
 };

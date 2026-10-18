@@ -132,8 +132,8 @@ function Shell() {
             return (
               <Pressable key={x.id} accessibilityRole="tab" accessibilityLabel={x.label} accessibilityState={{ selected: on }} onPress={() => setTab(x.id)}
                 style={{ flex: 1, alignItems: "center", gap: 3 }}>
-                <View style={{ width: 48, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: on ? t.mast : "transparent" }}>
-                  <Ionicons name={on ? x.iconOn : x.icon} size={20} color={on ? t.mastInk : t.textFaint} />
+                <View style={{ width: 48, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: on ? t.tabOn : "transparent" }}>
+                  <Ionicons name={on ? x.iconOn : x.icon} size={20} color={on ? t.tabOnInk : t.textFaint} />
                 </View>
                 <Text style={{ fontSize: 11, fontWeight: on ? "700" : "600", color: on ? t.text : t.textFaint }}>{x.label}</Text>
               </Pressable>
