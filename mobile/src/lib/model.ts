@@ -85,10 +85,13 @@ export const TYPE_ICONS = [
   "sunny", "moon", "partly-sunny", "alarm", "briefcase", "medkit", "call", "home",
   "bed", "school", "airplane", "barbell", "people", "restaurant", "construct", "checkmark-circle",
 ] as const;
-// Borders drawn around the inside of a type's calendar banners (two rows of 8 in the editor).
+// Borders drawn around the inside of a type's calendar banners (four rows of 4 in the editor).
+// The ids are stored on each type, so they never change; the editor shows them in this order.
 export const BANNER_BORDERS = [
-  "none", "thin", "thick", "double", "dashed", "dotted", "white", "dark",
-  "corners", "rails", "sides", "left", "stitched", "glow", "frame", "dots",
+  "none", "thin", "thick", "double",
+  "white", "dark", "corners", "sides",
+  "rails", "left", "stitched", "dashed",
+  "frame", "dots", "dotted", "glow",
 ] as const;
 export type BannerBorder = (typeof BANNER_BORDERS)[number];
 export const LEAVE_KINDS: { [k: string]: { color: string; ink: string; label: string } } = {

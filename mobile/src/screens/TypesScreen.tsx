@@ -197,23 +197,22 @@ export function TypesScreen() {
           ))}
         </View>
         <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 8, fontWeight: "600" }}>Border</Text>
-        <View style={{ gap: 10, marginBottom: 16 }}>
-          {[BANNER_BORDERS.slice(0, 8), BANNER_BORDERS.slice(8)].map((row, r) => (
-            <View key={r} style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              {row.map((b) => {
-                const on = draft.border === b;
-                return (
-                  <Pressable key={b} accessibilityRole="button" accessibilityLabel={b === "none" ? "No border" : b + " border"} accessibilityState={{ selected: on }}
-                    onPress={() => set({ border: b })}
-                    style={{ width: 34, height: 34, borderRadius: 10, padding: 2, borderWidth: 2, borderColor: on ? t.text : "transparent" }}>
-                    <View style={{ flex: 1, borderRadius: 6, overflow: "hidden", backgroundColor: b === "none" ? t.surface2 : draft.color, alignItems: "center", justifyContent: "center" }}>
-                      {b === "none" ? <Ionicons name="close" size={16} color={t.textDim} /> : <BannerBorder kind={b} ink={draft.ink} radius={6} s={1.3} />}
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          ))}
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+          {BANNER_BORDERS.map((b) => {
+            const on = draft.border === b;
+            return (
+              <Pressable key={b} accessibilityRole="button" accessibilityLabel={b === "none" ? "No border" : b + " border"} accessibilityState={{ selected: on }}
+                onPress={() => set({ border: b })}
+                style={{ width: "23%", flexGrow: 1, height: 44, borderRadius: 12, padding: 3, borderWidth: 2, borderColor: on ? t.accent : "transparent" }}>
+                <View style={{ flex: 1, borderRadius: 8, overflow: "hidden", backgroundColor: b === "none" ? t.surface2 : draft.color, alignItems: "center", justifyContent: "center" }}>
+                  {b === "none"
+                    ? <Text style={{ color: t.textDim, fontWeight: "700", fontSize: 12 }}>None</Text>
+                    : <Text numberOfLines={1} style={{ color: draft.ink, fontWeight: "700", fontSize: 12, paddingHorizontal: 6 }}>{draft.name.trim() || "Shift"}</Text>}
+                  {b === "none" ? null : <BannerBorder kind={b} bg={draft.color} ink={draft.ink} radius={8} s={1.25} />}
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
         {draft.kind === "work" ? (
           <>

@@ -10,7 +10,7 @@ import { usePremium } from "../lib/premium";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
-import { Onboarding } from "./Onboarding";
+import { HelpSheet } from "./HelpSheet";
 import { SharingSheet } from "./SharingSheet";
 
 type ShowHide = "show" | "hide";
@@ -115,7 +115,7 @@ export function AccountScreen() {
       <EmploymentSheet visible={empOpen} onClose={() => setEmpOpen(false)} />
       <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
       <SharingSheet visible={shareOpen} onClose={() => setShareOpen(false)} />
-      <Onboarding visible={helpOpen} onClose={() => setHelpOpen(false)} />
+      <HelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </View>
   );
 }

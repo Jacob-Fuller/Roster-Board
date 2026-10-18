@@ -8,7 +8,7 @@ import {
   birthdaysOnDate, employmentOf, entryColor, entryExcessHours, entryName, entryOTHours, fmtHours, isCombo, isSplitEntry, mkId, parseYmd,
   type Rec, type ShiftEntry, type ShiftType, type Snapshot,
 } from "../lib/model";
-import { allowanceAmount, fmtMoney, payAllowances, payConfig, payTagLabel, payTagsOn, rateOn, type PayTag } from "../lib/pay";
+import { allowanceAmount, fmtMoney, payAllowances, payConfig, payTagLabel, payTagsOn, rateOn, type PayAllowance, type PayTag } from "../lib/pay";
 import { applySplit, autoSplitOn, rebalanceExtras } from "../lib/partTime";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { OptionPicker } from "../components/OptionPicker";
@@ -94,7 +94,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     rebalanceExtras(d, [key]);
   });
   const pickType = (ty: ShiftType) => {
-    if (ty.overtimeEligible !== false || (!fullTime && ty.excessEligible !== false)) setChooser(ty);
+    if (ty.overtimeEligible !== false || (!fullTime && ty.excessEligible !== false) || (ty.kind !== "personal" && allowances.length)) setChooser(ty);
     else addShift(ty.id, null, null, ty.kind === "personal" ? ty.notes : null);
   };
   const askHours = (titleText: string, msg: string, then: (h: number) => void) => dialog({
@@ -178,6 +178,16 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       if (!d.payTags[key].length) delete d.payTags[key];
     }
   });
+  // Allowances chosen while adding a shift are added to the day's count.
+  const addAllowances = (counts: { [allowanceId: string]: number }) => {
+    const ids = Object.keys(counts).filter((id) => counts[id] > 0);
+    if (!ids.length) return;
+    update((d) => {
+      const list = ((d.payTags[key] || []) as PayTag[]);
+      ids.forEach((allowanceId) => { for (let i = 0; i < counts[allowanceId]; i++) list.push({ id: mkId(), kind: "allowance", allowanceId, updatedAt: Date.now() }); });
+      d.payTags[key] = list;
+    });
+  };
   const setAllowancePaid = (allowanceId: string, paid: boolean) => update((d) => {
     ((d.payTags[key] || []) as PayTag[]).forEach((x) => {
       if (x.kind === "allowance" && x.allowanceId === allowanceId) { if (paid) x.paid = true; else delete x.paid; x.updatedAt = Date.now(); }
@@ -356,7 +366,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
           <SectionHead title="Allowances" />
           {allowances.map((a) => {
             const mine = payTagsOn(data, key).filter((x) => x.kind === "allowance" && x.allowanceId === a.id);
-            const n = mine.length, max = a.max && a.max > 0 ? a.max : 0;
+            const n = mine.length;
             const paid = n > 0 && mine.every((x) => x.paid);
             return (
               <View key={a.id}>
@@ -369,7 +379,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
                     <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{a.name}</Text>
                     <Dim>{n ? fmtMoney(n * allowanceAmount(a, dayRate)) + (paid ? " · paid" : "") : fmtMoney(allowanceAmount(a, dayRate)) + " each"}</Dim>
                   </View>
-                  <Stepper value={n} max={max} onChange={(v) => setAllowanceCount(a.id, v)} label={a.name} />
+                  <Stepper value={n} onChange={(v) => setAllowanceCount(a.id, v)} label={a.name} />
                 </View>
                 <Divider />
               </View>
@@ -425,9 +435,10 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       ) : null}
       <Button title={editing ? "Save" : "Add"} onPress={saveEvent} />
 
-      <KindChooser type={chooser} fullTime={fullTime} autoSplit={autoSplit} onClose={() => setChooser(null)} onPick={(kind) => {
+      <KindChooser type={chooser} fullTime={fullTime} autoSplit={autoSplit} allowances={allowances} onClose={() => setChooser(null)} onPick={(kind, counts) => {
         const ty = chooser!;
         setChooser(null);
+        addAllowances(counts);
         if (kind === "normal") addShift(ty.id);
         else if (kind === "ot") askHours("Overtime – " + ty.name, "How many hours of overtime?", (h) => addShift(OVERTIME_ID, h, ty.id));
         else if (kind === "ex" && autoSplit) dialog({
@@ -492,7 +503,13 @@ function Popup({ visible, onClose, children }: { visible: boolean; onClose: () =
   );
 }
 
-function KindChooser({ type, fullTime, autoSplit, onClose, onPick }: { type: ShiftType | null; fullTime: boolean; autoSplit: boolean; onClose: () => void; onPick: (k: "normal" | "ot" | "ex" | "split") => void }) {
+function KindChooser({ type, fullTime, autoSplit, allowances, onClose, onPick }: {
+  type: ShiftType | null; fullTime: boolean; autoSplit: boolean; allowances: PayAllowance[];
+  onClose: () => void; onPick: (k: "normal" | "ot" | "ex" | "split", counts: { [allowanceId: string]: number }) => void;
+}) {
+  const t = useTheme();
+  const [counts, setCounts] = useState<{ [id: string]: number }>({});
+  useEffect(() => { setCounts({}); }, [type]);
   const opts: { k: "normal" | "ot" | "ex" | "split"; tag: string; bg: string; ink: string }[] = [];
   if (type) {
     opts.push({ k: "normal", tag: "", bg: type.color, ink: type.ink });
@@ -500,12 +517,26 @@ function KindChooser({ type, fullTime, autoSplit, onClose, onPick }: { type: Shi
     if (type.overtimeEligible !== false) opts.push({ k: "ot", tag: "Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
     if (!fullTime && !autoSplit && type.overtimeEligible !== false && type.excessEligible !== false) opts.push({ k: "split", tag: "Excess + Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
   }
+  const showAllowances = !!type && type.kind !== "personal" && allowances.length > 0;
   return (
     <Popup visible={!!type} onClose={onClose}>
       <H2 style={{ marginBottom: 12 }}>{type ? type.name : ""}</H2>
+      {showAllowances ? (
+        <View style={{ marginBottom: 14 }}>
+          {allowances.map((a, i) => (
+            <View key={a.id}>
+              {i ? <Divider /> : null}
+              <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, gap: 10 }}>
+                <Text style={{ flex: 1, color: t.text, fontSize: 15, fontWeight: "600" }} numberOfLines={1}>{a.name}</Text>
+                <Stepper value={counts[a.id] || 0} label={a.name} onChange={(v) => setCounts({ ...counts, [a.id]: Math.max(0, v) })} />
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
       <View style={{ gap: 8 }}>
         {opts.map((o) => (
-          <Pressable key={o.k} accessibilityRole="button" onPress={() => onPick(o.k)}
+          <Pressable key={o.k} accessibilityRole="button" onPress={() => onPick(o.k, counts)}
             style={({ pressed }) => ({ backgroundColor: o.bg, borderRadius: 12, paddingVertical: 13, paddingHorizontal: 14, flexDirection: "row", justifyContent: "space-between", opacity: pressed ? 0.85 : 1 })}>
             <Text style={{ color: o.ink, fontWeight: "700", fontSize: 15 }}>{type ? type.name : ""}</Text>
             {o.tag ? <Text style={{ color: o.ink, fontWeight: "700", fontSize: 12, opacity: 0.9 }}>{o.tag}</Text> : null}
@@ -613,7 +644,7 @@ function SwapForm({ pending, dateKey, data, typesById, onClose }: {
   );
 }
 
-function Stepper({ value, max, onChange, label }: { value: number; max: number; onChange: (v: number) => void; label: string }) {
+function Stepper({ value, onChange, label }: { value: number; onChange: (v: number) => void; label: string }) {
   const t = useTheme();
   const btn = (icon: "remove" | "add", disabled: boolean, next: number, a11y: string) => (
     <Pressable accessibilityRole="button" accessibilityLabel={a11y} disabled={disabled} onPress={() => onChange(next)} hitSlop={6}
@@ -626,7 +657,7 @@ function Stepper({ value, max, onChange, label }: { value: number; max: number; 
     <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
       {btn("remove", value <= 0, value - 1, "One less " + label)}
       <Text style={{ color: t.text, fontSize: 16, fontWeight: "700", minWidth: 16, textAlign: "center", fontVariant: ["tabular-nums"] }}>{value}</Text>
-      {btn("add", max > 0 && value >= max, value + 1, "One more " + label)}
+      {btn("add", false, value + 1, "One more " + label)}
     </View>
   );
 }

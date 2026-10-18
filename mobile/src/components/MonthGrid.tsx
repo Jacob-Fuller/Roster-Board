@@ -189,7 +189,7 @@ function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { l
         <Text numberOfLines={1} ellipsizeMode="tail"
           style={{ color: fg, fontSize: ts.label, fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
-      <BannerBorder kind={border} ink={fg} radius={5} />
+      <BannerBorder kind={border} bg={bg} ink={fg} radius={5} />
     </View>
   );
 }

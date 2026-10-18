@@ -23,7 +23,6 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
   const [form, setForm] = useState<PayForm | null>(null);
   const [amounts, setAmounts] = useState<{ [typeId: string]: string }>({});
   const [allowText, setAllowText] = useState<{ [id: string]: string }>({});
-  const [maxText, setMaxText] = useState<{ [id: string]: string }>({});
   const th = useTheme();
 
   // A fresh copy of the saved setup every time the sheet opens (like the web's openPaySetup).
@@ -32,7 +31,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
     const c = paySetupDraft(data.settings, data.types);
     const a: { [typeId: string]: string } = {};
     Object.keys(c.typeRules).forEach((id) => { const v = c.typeRules[id].allowance; a[id] = v ? String(v) : ""; });
-    setDraft(c); setForm(payFormFromConfig(c)); setAmounts(a); setAllowText({}); setMaxText({});
+    setDraft(c); setForm(payFormFromConfig(c)); setAmounts(a); setAllowText({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
@@ -146,16 +145,8 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
             {i ? <Divider /> : null}
             <View style={{ paddingTop: i ? 12 : 0 }}>
               <Field label="Name" value={a.name} onChangeText={(v) => setAllowance(a.id, { name: v })} placeholder="e.g. Missed meal" />
-              <View style={{ flexDirection: "row", gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Field label="Amount ($)" value={allowText[a.id] ?? (a.amount ? String(a.amount) : "")} keyboardType={dec} placeholder="e.g. 18.50"
-                    onChangeText={(v) => { setAllowText({ ...allowText, [a.id]: v }); setAllowance(a.id, { amount: parseFloat(v) || 0, kind: "flat" }); }} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Field label="Max per shift" value={maxText[a.id] ?? (a.max ? String(a.max) : "")} keyboardType="number-pad" placeholder="e.g. 2"
-                    onChangeText={(v) => { setMaxText({ ...maxText, [a.id]: v }); setAllowance(a.id, { max: Math.max(0, parseInt(v, 10) || 0) }); }} />
-                </View>
-              </View>
+              <Field label="Amount ($)" value={allowText[a.id] ?? (a.amount ? String(a.amount) : "")} keyboardType={dec} placeholder="e.g. 18.50"
+                onChangeText={(v) => { setAllowText({ ...allowText, [a.id]: v }); setAllowance(a.id, { amount: parseFloat(v) || 0, kind: "flat" }); }} />
               <Pressable accessibilityRole="button" onPress={() => setDraft({ ...draft, allowances: draft.allowances.filter((x) => x.id !== a.id) })} style={{ alignSelf: "flex-start", paddingBottom: 12 }}>
                 <Text style={{ color: th.danger, fontWeight: "700" }}>Remove</Text>
               </Pressable>
@@ -163,7 +154,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
           </View>
         ))}
         <Button small kind="outline" title="Add allowance"
-          onPress={() => setDraft({ ...draft, allowances: draft.allowances.concat({ id: mkId(), name: "", kind: "flat", amount: 0, max: 0 }) })} />
+          onPress={() => setDraft({ ...draft, allowances: draft.allowances.concat({ id: mkId(), name: "", kind: "flat", amount: 0 }) })} />
       </Section>
 
       <Section title="Leave" summary={sum.leave}>
