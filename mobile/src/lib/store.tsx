@@ -25,8 +25,8 @@ const K = {
 };
 
 export type ThemeChoice = "system" | "light" | "dark";
-export type Prefs = { theme: ThemeChoice; hideEvents: boolean; hideBirthdays: boolean };
-const DEFAULT_PREFS: Prefs = { theme: "system", hideEvents: false, hideBirthdays: false };
+export type Prefs = { theme: ThemeChoice; hideEvents: boolean; hideBirthdays: boolean; calendarSync?: boolean };
+const DEFAULT_PREFS: Prefs = { theme: "system", hideEvents: false, hideBirthdays: false, calendarSync: false };
 
 export type AuthState = "loading" | "signedOut" | "signedIn" | "localOnly";
 export type SyncState = "idle" | "syncing" | "ok" | "failed" | "authLost";

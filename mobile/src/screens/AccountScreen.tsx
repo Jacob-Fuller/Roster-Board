@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useEffect, useState } from "react";
 import { Linking, Platform, ScrollView, Share, Text, View, useColorScheme } from "react-native";
-import { Button, Card, Dim, Divider, Field, Masthead, MenuRow, SERIF, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, Divider, Field, Masthead, MenuRow, SERIF, ToggleRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { DateField } from "../components/DateField";
 import { employmentOf, fmtHours, ymd, type Employment } from "../lib/model";
 import { partTimeOf, rebalanceAllExtras } from "../lib/partTime";
@@ -11,6 +11,7 @@ import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 import { BirthdaysSheet } from "./BirthdaysSheet";
 import { HelpSheet } from "./HelpSheet";
+import { askCalendarPermission } from "../lib/calendarSync";
 import { SharingSheet } from "./SharingSheet";
 
 type ShowHide = "show" | "hide";
@@ -78,6 +79,12 @@ export function AccountScreen() {
             <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Birthdays on the calendar</Text>
             <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.hideBirthdays ? "hide" : "show"} onChange={(v) => setPrefs({ hideBirthdays: v === "hide" })} />
           </View>
+          {Platform.OS !== "web" ? (
+            <ToggleRow label="Add shifts to the Calendar app" value={!!prefs.calendarSync} onChange={async (v) => {
+              if (v && !(await askCalendarPermission())) { toast("Allow calendar access for Roster Board in Settings"); return; }
+              setPrefs({ calendarSync: v });
+            }} />
+          ) : null}
         </Card>
 
         {signedIn ? (

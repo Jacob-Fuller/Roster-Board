@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { Fraunces_700Bold, useFonts } from "@expo-google-fonts/fraunces";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AppState, Pressable, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { UiProvider, useTheme } from "./src/components/ui";
@@ -10,6 +10,10 @@ import { askIfRemindersNeedIt, syncReminders } from "./src/lib/reminders";
 import { planContactSync, readContactBirthdays } from "./src/lib/contactBirthdays";
 import { PremiumProvider, usePremium } from "./src/lib/premium";
 import { syncShiftAlarms } from "./src/lib/shiftAlarms";
+import { autoSplitOn, rebalanceAllExtras } from "./src/lib/partTime";
+import { paydayNotes } from "./src/lib/payday";
+import { syncCalendar } from "./src/lib/calendarSync";
+import { EXCESS_TYPE, OVERTIME_TYPE, type ShiftType } from "./src/lib/model";
 import { extrasNeedRebalance, rebalanceAllExtras } from "./src/lib/partTime";
 import { StoreProvider, useStore } from "./src/lib/store";
 import { Paywall } from "./src/screens/Paywall";
@@ -39,10 +43,22 @@ const SCREENS: { [k in Tab]: () => React.JSX.Element } = {
 function Shell() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const { auth, data, sync, update } = useStore();
+  const { auth, data, sync, update, prefs } = useStore();
   const [fontsLoaded, fontError] = useFonts({ Fraunces_700Bold });
   const fontsReady = fontsLoaded || !!fontError;
-  useEffect(() => { if (auth !== "loading") syncReminders(data.notes); }, [auth, data.notes]);
+  const dataRef2 = useRef(data); dataRef2.current = data;
+  const payTypes = useMemo(() => {
+    const m: { [id: string]: ShiftType } = { [OVERTIME_TYPE.id]: OVERTIME_TYPE, [EXCESS_TYPE.id]: EXCESS_TYPE };
+    data.types.forEach((x) => { m[x.id] = x; });
+    return m;
+  }, [data.types]);
+  useEffect(() => { if (auth !== "loading") syncReminders(data.notes, paydayNotes(data, payTypes)); }, [auth, data, payTypes]);
+  // Shifts copied to the phone's Calendar app (when turned on in Account → Appearance).
+  useEffect(() => {
+    if (auth === "loading") return;
+    const timer = setTimeout(() => syncCalendar(dataRef2.current, payTypes, !!prefs.calendarSync), 2500);
+    return () => clearTimeout(timer);
+  }, [auth, data.shifts, data.leave, payTypes, prefs.calendarSync]);
   // Alarms follow the calendar: refresh shortly after any change, and when the app comes back.
   const { locked } = usePremium();
   const alarmData = useRef(data); alarmData.current = data;
@@ -57,7 +73,7 @@ function Shell() {
   }, [locked]);
   useEffect(() => {
     if (auth === "loading") return;
-    askIfRemindersNeedIt(data.notes).then(() => syncReminders(data.notes));
+    askIfRemindersNeedIt(data.notes).then(() => syncReminders(data.notes, paydayNotes(data, payTypes)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth]);
   const [tab, setTab] = useState<Tab>("calendar");
@@ -102,6 +118,13 @@ function Shell() {
     if (extrasNeedRebalance(dataRef.current)) update((d) => { rebalanceAllExtras(d); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
+  // Part time: make sure every pay period's excess stays within the limit (older entries included).
+  useEffect(() => {
+    if (!loaded || !autoSplitOn(dataRef.current.settings)) return;
+    const copy = JSON.parse(JSON.stringify(dataRef.current));
+    if (rebalanceAllExtras(copy)) update((d) => { rebalanceAllExtras(d); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, data.settings]);
   const [onboarding, setOnboarding] = useState(false);
   const ready = auth === "signedIn" || auth === "localOnly";
   useEffect(() => { if (ready) hasSeenOnboarding().then((seen) => { if (!seen) setOnboarding(true); }); }, [ready]);

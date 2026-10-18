@@ -27,12 +27,13 @@ const GROUPS: Group[] = [
   {
     title: "Calendar", icon: "calendar", color: "#4C8DFF", topics: [
       { title: "Adding a shift", text: "Tap a day, then tap one of your shift types. If the shift can have excess or overtime, choose a plain shift, excess, overtime or both, and enter the hours." },
-      { title: "Additional shifts (part time)", text: "When part time is set up with an excess limit, add extra shifts as Additional shift and just enter the hours worked. The app counts them as excess until you reach your limit for the pay period, and anything after that as overtime." },
+      { title: "Additional shifts (part time)", text: "When part time is set up with an excess limit, add extra shifts as Additional shift and just enter the hours worked. All excess hours in a pay period count toward the limit, and anything past it becomes overtime automatically." },
       { title: "Leave", text: "Tap + Annual Leave or + Sick Leave, pick the shift you're taking off and confirm the hours. The calendar shows that shift with a leave title on it. If the shift was already rostered, the leave replaces it, and removing the leave puts the shift back." },
       { title: "Allowances", text: "Set up your allowances in Pay setup, such as missed meals and missed breaks. Add them to a day when you add a shift, or with the − and + counters on the day. Each one is added to your estimated pay." },
       { title: "Swaps", text: "Tap Swap next to a shift to move it to another date and note who you swapped with. Both days show the swap on the calendar, and Undo swap puts everything back." },
       { title: "Personal events", text: "Add appointments, social plans and reminders to any day, all day or at a set time. With Premium on iOS 26 or later, set an alert and a second alert from the time of the event up to a week before." },
       { title: "Filling many days at once", text: "Tap the wand button, choose a shift type, then tap days to add or remove it. Tap Done when you're finished." },
+      { title: "Public holidays", text: "Open a day and turn on Public holiday. Shifts that day are paid at your public holiday penalty rate from Pay setup." },
       { title: "Moving between months", text: "Swipe left or right, or use the arrows. Today takes you back to this month. Every second pay period is shaded once pay is set up." },
     ],
   },
@@ -56,8 +57,9 @@ const GROUPS: Group[] = [
     title: "Pay setup", icon: "cash", color: "#2FA36B", topics: [
       { title: "Rates", text: "Enter your hourly rate, your excess and overtime rates, and tiered overtime if the rate goes up after a number of hours." },
       { title: "Pay cycle", text: "Choose weekly, fortnightly or monthly and the date a pay period starts. This sets the pay periods used for estimated pay, shading and part-time limits." },
-      { title: "Penalties and shift allowances", text: "Add Saturday, Sunday and night shift penalty rates, then choose for each shift type whether penalties apply and whether it earns a shift allowance, either a percentage or a set amount per shift." },
+      { title: "Penalties and shift allowances", text: "Add Saturday, Sunday, public holiday and night shift penalty rates, then choose for each shift type whether penalties apply and whether it earns a shift allowance, either a percentage or a set amount per shift." },
       { title: "Allowances", text: "Add each allowance you can claim, like a missed meal or missed break, with the amount it pays." },
+      { title: "Payday reminder", text: "Turn on Payday reminder under Pay cycle. When each pay period ends you get a notification with its estimated pay and how many allowances you still need to check on your payslip." },
       { title: "Leave, super and tax", text: "Choose whether leave is paid and your annual leave loading, your employer super rate, and whether to show estimated tax and take-home using Australian resident rates." },
     ],
   },
@@ -66,6 +68,7 @@ const GROUPS: Group[] = [
       { title: "Employment", text: "Choose full time or part time. Part time lets you set your pay cycle, rostered shifts per pay period and the excess hours allowed before overtime." },
       { title: "Birthdays", text: "Add birthdays yourself, or let the app show your contacts' birthdays. Contact birthdays update by themselves each time you open the app." },
       { title: "Appearance", text: "Choose light or dark, and whether personal events and birthdays show on the calendar." },
+      { title: "Calendar app", text: "Turn on Add shifts to the Calendar app and your shifts and leave appear in a Roster Board calendar in the iPhone Calendar app, from last month to a year ahead. It updates whenever your roster changes, and turning it off removes it." },
       { title: "Settings", text: "Change your name, email or password, sign out, clear your calendar or delete your account." },
     ],
   },

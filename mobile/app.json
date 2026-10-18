@@ -79,6 +79,12 @@
         {
           "contactsPermission": "Roster Board shows your contacts' birthdays on your calendar."
         }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Roster Board adds your shifts to a Roster Board calendar in the Calendar app."
+        }
       ]
     ]
   }

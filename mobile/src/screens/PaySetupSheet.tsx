@@ -11,6 +11,7 @@ import {
   type PayAllowance, type PayConfig, type PayCycle, type PayForm, type PayTypeRule,
 } from "../lib/pay";
 import { useStore } from "../lib/store";
+import { askReminderPermission } from "../lib/reminders";
 
 type AllowanceKind = "none" | "pct" | "flat";
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -80,6 +81,10 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
             options={[{ value: "weekly", label: "Weekly" }, { value: "fortnightly", label: "Fortnightly" }, { value: "monthly", label: "Monthly" }]} />
         </View>
         <DateField label="Pay period start date" value={form.periodStart} onChange={(v) => set("periodStart", v)} />
+        <ToggleRow label="Payday reminder" value={!!draft.paydayReminder} onChange={async (v) => {
+          if (v && !(await askReminderPermission())) { toast("Allow notifications for Roster Board in Settings to get payday reminders"); return; }
+          setDraft({ ...draft, paydayReminder: v });
+        }} />
       </Section>
 
       <Section title={fullTime ? "Overtime" : "Excess & overtime"} summary={fullTime ? sum.ot.replace(/^[^·]*excess · /, "") : sum.ot}>
@@ -103,8 +108,8 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
           <View style={{ flex: 1 }}><Field label="Sunday %" value={form.penSun} onChangeText={(v) => set("penSun", v)} keyboardType={dec} placeholder="e.g. 100" /></View>
         </View>
         <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flex: 1 }}><Field label="Public holiday %" value={form.penPh} onChangeText={(v) => set("penPh", v)} keyboardType={dec} placeholder="e.g. 150" /></View>
           <View style={{ flex: 1 }}><Field label="Night shift %" value={form.penNight} onChangeText={(v) => set("penNight", v)} keyboardType={dec} placeholder="e.g. 15" /></View>
-          <View style={{ flex: 1 }} />
         </View>
       </Section>
 
@@ -120,7 +125,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
                 <TypeName name={t.name} />
                 <Dim>{fmtHours(t.hours || 0) + "h"}</Dim>
               </View>
-              <ToggleRow label="Weekend penalties apply" value={rule.penalties !== false} onChange={(v) => setRule(t.id, { penalties: v })} />
+              <ToggleRow label="Penalty rates apply" value={rule.penalties !== false} onChange={(v) => setRule(t.id, { penalties: v })} />
               <ToggleRow label="Night shift (night penalty applies)" value={!!rule.night} onChange={(v) => setRule(t.id, { night: v })} />
               <Dim style={{ fontWeight: "600", marginBottom: 6 }}>Shift allowance</Dim>
               <View style={{ marginBottom: 12 }}>

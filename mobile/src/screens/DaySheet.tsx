@@ -58,7 +58,6 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const shifts = data.shifts[key] || [];
   const leave = data.leave[key] || [];
   const swaps = data.swaps[key] || [];
-  const tags = payTagsOn(data, key).filter((x) => x.kind !== "allowance").map((x) => payTagLabel(x as any, payAllowances(data.settings))).filter(Boolean);
   const allowances = payAllowances(data.settings).filter((a) => a.name);
   const dayRate = rateOn(payConfig(data.settings), key);
   const events = (data.notes[key] || []).slice().sort((a, b) => (a.allDay ? "" : a.time || "99:99").localeCompare(b.allDay ? "" : b.time || "99:99"));
@@ -160,6 +159,19 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     if (r && r.id && !(d.shifts[key] || []).some((x) => x.id === r.id)) {
       (d.shifts[key] = d.shifts[key] || []).push({ ...r, updatedAt: Date.now() + 1 });
       delete d.tombstones[r.id];
+    }
+  });
+
+  /* ----- public holiday ----- */
+  // The public holiday penalty rate (Pay setup) is paid on shifts on these days.
+  const isHoliday = payTagsOn(data, key).some((x) => x.kind === "holiday");
+  const setHoliday = (on: boolean) => update((d, tomb) => {
+    const list = ((d.payTags[key] || []) as PayTag[]);
+    if (on) { if (!list.some((x) => x.kind === "holiday")) list.push({ id: mkId(), kind: "holiday", updatedAt: Date.now() }); d.payTags[key] = list; }
+    else {
+      list.filter((x) => x.kind === "holiday").forEach((x) => tomb(x.id));
+      d.payTags[key] = list.filter((x) => x.kind !== "holiday");
+      if (!d.payTags[key].length) delete d.payTags[key];
     }
   });
 
@@ -305,7 +317,6 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
 
   return (
     <Sheet visible onClose={onClose} title={title}>
-      {tags.length ? <Dim style={{ marginTop: -4, marginBottom: 4 }}>{tags.join(" · ")}</Dim> : null}
       <SectionHead title="Shifts" />
       {shifts.length ? shifts.map((s) => {
         const ty = typesById[s.typeId];
@@ -361,6 +372,8 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         ))}
       </View>
 
+      <SectionHead title="Pay" />
+      <ToggleRow label="Public holiday" value={isHoliday} onChange={setHoliday} />
       {allowances.length ? (
         <>
           <SectionHead title="Allowances" />

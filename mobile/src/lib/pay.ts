@@ -41,6 +41,7 @@ export const PAY_DEFAULTS = {
   allowances: [] as PayAllowance[],
   payLeave: true, leaveLoading: 0,
   superPct: 12, showTax: true, taxFree: true,
+  paydayReminder: false,
 };
 type DefaultKey = keyof typeof PAY_DEFAULTS;
 const DEFAULT_KEYS = Object.keys(PAY_DEFAULTS) as DefaultKey[];
@@ -351,7 +352,7 @@ export function paySetupDraft(settings: Settings | null | undefined, types: Shif
 export type PayForm = {
   baseRate: string; periodStart: string;
   otMult: string; otTiered: boolean; otTierHours: string; otMult2: string; exMult: string;
-  penSat: string; penSun: string; penNight: string;
+  penSat: string; penSun: string; penPh: string; penNight: string;
   payLeave: boolean; leaveLoading: string;
   superPct: string; showTax: boolean; taxFree: boolean;
 };
@@ -362,7 +363,7 @@ export function payFormFromConfig(c: PayConfig): PayForm {
     periodStart: sv(c.periodStart || ymd(payAnchor(c))),
     otMult: sv(c.otMult), otTiered: !!c.otTiered, otTierHours: sv(c.otTierHours), otMult2: sv(c.otMult2),
     exMult: sv(c.exMult),
-    penSat: sv(c.pen.sat || ""), penSun: sv(c.pen.sun || ""), penNight: sv(c.pen.night || ""),
+    penSat: sv(c.pen.sat || ""), penSun: sv(c.pen.sun || ""), penPh: sv(c.pen.ph || ""), penNight: sv(c.pen.night || ""),
     payLeave: c.payLeave !== false, leaveLoading: sv(c.leaveLoading || ""),
     superPct: sv(c.superPct), showTax: !!c.showTax, taxFree: c.taxFree !== false,
   };
@@ -373,7 +374,7 @@ export function paySummaries(f: PayForm, cycle: string, workTypeCount: number) {
   const rate = parseFloat(f.baseRate);
   const cyc = cycle || "fortnightly";
   const ot = (f.exMult || "1") + "× excess · " + (f.otMult || "1.5") + "× overtime";
-  const pens = ([[f.penSat, "Sat"], [f.penSun, "Sun"], [f.penNight, "Night"]] as [string, string][])
+  const pens = ([[f.penSat, "Sat"], [f.penSun, "Sun"], [f.penPh, "Public hol"], [f.penNight, "Night"]] as [string, string][])
     .filter((x) => parseFloat(x[0]) > 0)
     .map((x) => x[1] + " " + x[0] + "%");
   const n = workTypeCount;
@@ -407,7 +408,7 @@ export function savePaySetup(settings: Settings, draft: PayConfig, f: PayForm, n
   c.pen = {
     sat: Math.max(0, num(f.penSat, 0)),
     sun: Math.max(0, num(f.penSun, 0)),
-    ph: 0,
+    ph: Math.max(0, num(f.penPh, 0)),
     night: Math.max(0, num(f.penNight, 0)),
   };
   c.payLeave = f.payLeave;

@@ -39,6 +39,8 @@ function rebalancePeriod(d: Snapshot, period: DateRange, cap: number): boolean {
     (d.shifts[k] || []).forEach((e: any) => {
       // excess hours logged on their own (e.g. before the limit was set) count as additional shifts too
       if (cap !== Infinity && !(e.addl > 0) && e.typeId === EXCESS_ID && num(e.hours, 0) > 0) { e.addl = num(e.hours, 0); changed = true; }
+      // so do shifts split by hand into excess + overtime: the limit decides the split
+      if (cap !== Infinity && !(e.addl > 0) && e.typeId === OVERTIME_ID && num(e.excessHours, 0) > 0) { e.addl = round2(num(e.hours, 0) + num(e.excessHours, 0)); changed = true; }
       if (e.addl > 0) {
         const total = num(e.addl, 0);
         const ex = round2(Math.min(total, Math.max(0, cap - used)));
@@ -69,7 +71,8 @@ export function rebalanceExtras(d: Snapshot, dateKeys: string[]): boolean {
 }
 // After the setup changes: every pay period with an additional shift.
 export function rebalanceAllExtras(d: Snapshot): boolean {
-  const keys = Object.keys(d.shifts || {}).filter((k) => (d.shifts[k] || []).some((e: any) => e.addl > 0 || e.typeId === EXCESS_ID));
+  const keys = Object.keys(d.shifts || {}).filter((k) => (d.shifts[k] || []).some((e: any) =>
+    e.addl > 0 || e.typeId === EXCESS_ID || (e.typeId === OVERTIME_ID && e.excessHours > 0)));
   return rebalanceExtras(d, keys);
 }
 // True when saved shifts don't follow the excess limit yet (checked on a copy, nothing changes).

@@ -4,6 +4,7 @@
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { parseYmd, type Buckets, type EventEntry } from "./model";
+import type { ScheduledNote } from "./payday";
 
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
@@ -49,7 +50,8 @@ export async function askIfRemindersNeedIt(notes: Buckets<EventEntry>) {
 }
 
 let timer: ReturnType<typeof setTimeout> | null = null;
-export function syncReminders(notes: Buckets<EventEntry>) {
+// `extra` are other notifications to keep scheduled alongside the events (payday reminders).
+export function syncReminders(notes: Buckets<EventEntry>, extra: ScheduledNote[] = []) {
   if (Platform.OS === "web") return;
   if (timer) clearTimeout(timer);
   timer = setTimeout(async () => {
@@ -68,6 +70,14 @@ export function syncReminders(notes: Buckets<EventEntry>) {
       }));
       upcoming.sort((a, b) => a.at.getTime() - b.at.getTime());
       await Notifications.cancelAllScheduledNotificationsAsync();
+      for (const x of extra) {
+        if (x.at.getTime() <= now) continue;
+        await Notifications.scheduleNotificationAsync({
+          identifier: x.id,
+          content: { title: x.title, body: x.body, sound: "default", interruptionLevel: "active" },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: x.at, channelId: CHANNEL },
+        });
+      }
       for (const u of upcoming.slice(0, 60)) {
         await Notifications.scheduleNotificationAsync({
           identifier: u.n.id,

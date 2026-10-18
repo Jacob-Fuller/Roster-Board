@@ -63,5 +63,13 @@ eq(Math.round(computePay(e2, typesById, range[0], range[1], 26).shiftAllowance *
 // super includes excess pay and its shift allowance, not overtime
 e2.settings.pay.superPct = 12.75;
 eq(Math.round(computePay(e2, typesById, range[0], range[1], 26).superAmt * 100) / 100, 254.85, "super on ordinary + excess + allowance");
+// a shift split by hand into excess + overtime also counts toward the limit
+const d2: any = emptySnapshot();
+d2.types = d.types; d2.settings = d.settings;
+d2.shifts = { "2026-11-02": [{ id: "x1", typeId: EXCESS_ID, hours: 20, baseTypeId: "day" }], "2026-11-03": [{ id: "x2", typeId: OVERTIME_ID, hours: 2, excessHours: 10, baseTypeId: "day" }] };
+eq(rebalanceAllExtras(d2), true, "existing entries rebalanced");
+const x2 = d2.shifts["2026-11-03"][0];
+eq([entryExcessHours(x2), entryOTHours(x2)], [8, 4], "hand split re-split at the limit");
+eq(rebalanceAllExtras(d2), false, "nothing more to change");
 console.log(fails ? fails + " part-time checks failed" : "part-time, allowances and pay card ranges: all checks pass");
 if (fails) process.exit(1);
