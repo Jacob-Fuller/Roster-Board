@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useMemo, useRef, useState } from "react";
-import { PanResponder, Pressable, ScrollView, Text, View } from "react-native";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, PanResponder, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
 import { Chip, Masthead, SERIF, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
@@ -50,16 +50,50 @@ export function CalendarScreen() {
     birthdays: prefs.hideBirthdays ? [] : data.birthdays,
   }), [data, prefs.hideEvents, prefs.hideBirthdays]);
 
-  // swipe left/right to change month
+  // Swipe left/right to change month: the month follows the finger, slides off,
+  // and the next one slides in from the other side. The arrows animate the same way.
   const monthRef = useRef(month); monthRef.current = month;
   const bulkRef = useRef(bulk); bulkRef.current = bulk;
+  const x = useRef(new Animated.Value(0)).current;
+  const widthRef = useRef(390);
+  const busy = useRef(false);
+  const incoming = useRef(0);
+  const ND = Platform.OS !== "web";
+  const finishOut = (dir: number, next: Date) => {
+    incoming.current = dir;
+    setMonth(next);
+  };
+  const slideOut = (dir: number, next: Date) => {
+    busy.current = true;
+    Animated.timing(x, { toValue: -dir * widthRef.current, duration: 170, easing: Easing.in(Easing.quad), useNativeDriver: ND })
+      .start(() => finishOut(dir, next));
+  };
+  useLayoutEffect(() => {
+    const dir = incoming.current;
+    if (!dir) return;
+    incoming.current = 0;
+    x.setValue(dir * widthRef.current);
+    Animated.timing(x, { toValue: 0, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: ND })
+      .start(() => { busy.current = false; });
+  }, [month]); // eslint-disable-line react-hooks/exhaustive-deps
+  const goTo = (next: Date) => {
+    const cur = monthRef.current;
+    if (next.getTime() === cur.getTime()) return;
+    if (busy.current) { setMonth(next); return; }
+    slideOut(next > cur ? 1 : -1, next);
+  };
   const pan = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (_, g) => !bulkRef.current && Math.abs(g.dx) > 30 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+    onMoveShouldSetPanResponder: (_, g) => !bulkRef.current && !busy.current && Math.abs(g.dx) > 14 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+    onPanResponderMove: (_, g) => { if (!busy.current) x.setValue(g.dx); },
     onPanResponderRelease: (_, g) => {
-      if (Math.abs(g.dx) < 60 || Math.abs(g.dx) < Math.abs(g.dy) * 1.5) return;
-      setMonth(addMonths(monthRef.current, g.dx < 0 ? 1 : -1));
+      if (busy.current) return;
+      const far = Math.abs(g.dx) > widthRef.current * 0.22 || Math.abs(g.vx) > 0.45;
+      if (!far) { Animated.spring(x, { toValue: 0, useNativeDriver: ND, bounciness: 4 }).start(); return; }
+      const dir = g.dx < 0 ? 1 : -1;
+      slideOut(dir, addMonths(monthRef.current, dir));
     },
-  }), []);
+    onPanResponderTerminate: () => { Animated.spring(x, { toValue: 0, useNativeDriver: ND }).start(); },
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startBulk() {
     if (!data.types.length) { toast("Add a shift type first"); return; }
@@ -92,11 +126,13 @@ export function CalendarScreen() {
       <Masthead
         title={<Text style={{ fontFamily: SERIF, fontSize: 30, letterSpacing: -0.6, color: t.mastInk }} numberOfLines={1} adjustsFontSizeToFit>{MONTHS[month.getMonth()]}</Text>}
         sub={month.getFullYear() + " · " + totals.shifts + " shift" + (totals.shifts === 1 ? "" : "s") + " · " + fmtHours(totals.hours) + "h"}
-        right={<MonthNav month={month} onChange={setMonth} onMast />} />
+        right={<MonthNav month={month} onChange={goTo} onMast />} />
       <View style={{ height: 10 }} />
-      <View style={{ flex: 1 }} {...pan.panHandlers}>
-        <MonthGrid month={month} data={gridData} typesById={typesById} selected={bulk ? bulkSel : undefined}
-          onDayPress={(k) => (bulk ? bulkToggle(k) : setOpenDay(k))} />
+      <View style={{ flex: 1, overflow: "hidden" }} {...pan.panHandlers} onLayout={(e) => { widthRef.current = e.nativeEvent.layout.width || 390; }}>
+        <Animated.View style={{ flex: 1, transform: [{ translateX: x }] }}>
+          <MonthGrid month={month} data={gridData} typesById={typesById} selected={bulk ? bulkSel : undefined}
+            onDayPress={(k) => (bulk ? bulkToggle(k) : setOpenDay(k))} />
+        </Animated.View>
       </View>
 
       {bulk ? (
