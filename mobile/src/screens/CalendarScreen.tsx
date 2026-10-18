@@ -1,7 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, PanResponder, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
+import { SwipeMonths, useMonthSwipe } from "../components/SwipeMonths";
 import { Chip, Masthead, SERIF, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
 import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, addMonths, effectiveHours, fmtHours, mkId, parseYmd, startOfMonth, type ShiftType } from "../lib/model";
@@ -50,46 +51,8 @@ export function CalendarScreen() {
     birthdays: prefs.hideBirthdays ? [] : data.birthdays,
   }), [data, prefs.hideEvents, prefs.hideBirthdays]);
 
-  // Swipe left/right to change month. The months either side sit just off screen
-  // and move with the finger, so the next month slides into view as this one leaves.
-  const monthRef = useRef(month); monthRef.current = month;
-  const bulkRef = useRef(bulk); bulkRef.current = bulk;
-  const x = useRef(new Animated.Value(0)).current;
-  const [w, setW] = useState(0);
-  const widthRef = useRef(0);
-  const busy = useRef(false);
-  const settle = useRef(false);
-  const ND = Platform.OS !== "web";
-  // After the month changes, the new month is already in the middle, so the strip jumps back without moving visibly.
-  useLayoutEffect(() => {
-    if (!settle.current) return;
-    settle.current = false;
-    x.setValue(0);
-    busy.current = false;
-  }, [month]); // eslint-disable-line react-hooks/exhaustive-deps
-  const slide = (dir: number, velocity = 0) => {
-    if (!widthRef.current) { setMonth(addMonths(monthRef.current, dir)); return; }
-    busy.current = true;
-    Animated.timing(x, { toValue: -dir * widthRef.current, duration: velocity > 1 ? 180 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: ND })
-      .start(() => { settle.current = true; setMonth(addMonths(monthRef.current, dir)); });
-  };
-  const goTo = (next: Date) => {
-    const cur = monthRef.current;
-    const diff = (next.getFullYear() - cur.getFullYear()) * 12 + next.getMonth() - cur.getMonth();
-    if (!diff || busy.current) return;
-    if (Math.abs(diff) === 1) slide(diff); else setMonth(next);
-  };
-  const pan = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (_, g) => !bulkRef.current && !busy.current && Math.abs(g.dx) > 12 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
-    onPanResponderMove: (_, g) => { if (!busy.current) x.setValue(g.dx); },
-    onPanResponderRelease: (_, g) => {
-      if (busy.current) return;
-      const far = Math.abs(g.dx) > widthRef.current * 0.25 || Math.abs(g.vx) > 0.4;
-      if (!far) { Animated.spring(x, { toValue: 0, useNativeDriver: ND, bounciness: 3 }).start(); return; }
-      slide(g.dx < 0 ? 1 : -1, Math.abs(g.vx));
-    },
-    onPanResponderTerminate: () => { if (!busy.current) Animated.spring(x, { toValue: 0, useNativeDriver: ND }).start(); },
-  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  const swipe = useMonthSwipe(month, setMonth, bulk);
+  const goTo = swipe.goTo;
 
   function startBulk() {
     if (!data.types.length) { toast("Add a shift type first"); return; }
@@ -124,21 +87,10 @@ export function CalendarScreen() {
         sub={month.getFullYear() + " · " + totals.shifts + " shift" + (totals.shifts === 1 ? "" : "s") + " · " + fmtHours(totals.hours) + "h"}
         right={<MonthNav month={month} onChange={goTo} onMast />} />
       <View style={{ height: 10 }} />
-      <View style={{ flex: 1, overflow: "hidden" }} {...pan.panHandlers}
-        onLayout={(e) => { const v = e.nativeEvent.layout.width; widthRef.current = v; setW(v); }}>
-        <Animated.View style={{ flex: 1, transform: [{ translateX: x }] }}>
-          {w ? (
-            <View style={{ position: "absolute", top: 0, bottom: 0, left: -w, width: w * 3, flexDirection: "row" }}>
-              <View style={{ width: w }}><MonthGrid month={addMonths(month, -1)} data={gridData} typesById={typesById} /></View>
-              <View style={{ width: w }}>
-                <MonthGrid month={month} data={gridData} typesById={typesById} selected={bulk ? bulkSel : undefined}
-                  onDayPress={(k) => (bulk ? bulkToggle(k) : setOpenDay(k))} />
-              </View>
-              <View style={{ width: w }}><MonthGrid month={addMonths(month, 1)} data={gridData} typesById={typesById} /></View>
-            </View>
-          ) : null}
-        </Animated.View>
-      </View>
+      <SwipeMonths swipe={swipe} renderMonth={(m, current) => current
+        ? <MonthGrid month={m} data={gridData} typesById={typesById} selected={bulk ? bulkSel : undefined}
+            onDayPress={(k) => (bulk ? bulkToggle(k) : setOpenDay(k))} />
+        : <MonthGrid month={m} data={gridData} typesById={typesById} />} />
 
       {bulk ? (
         <View style={{ backgroundColor: t.surface, borderTopWidth: 0.5, borderTopColor: t.border, paddingTop: 10, paddingBottom: 10 }}>

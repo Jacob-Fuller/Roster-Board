@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, Pressable, Share, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { SwipeMonths, useMonthSwipe } from "../components/SwipeMonths";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
 import { Button, Dim, Divider, Field, H1, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, startOfMonth, type ShiftType } from "../lib/model";
@@ -152,6 +153,7 @@ function SharedRosterView({ shared, onClose }: { shared: Shared | null; onClose:
   const insets = useSafeAreaInsets();
   const [month, setMonth] = useState(startOfMonth(new Date()));
   const data = useMemo(() => (shared ? shared.data : { shifts: {}, leave: {} }), [shared]);
+  const swipe = useMonthSwipe(month, setMonth);
   return (
     <Modal statusBarTranslucent navigationBarTranslucent visible={!!shared} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: t.bg, paddingTop: insets.top, paddingBottom: insets.bottom }}>
@@ -163,10 +165,10 @@ function SharedRosterView({ shared, onClose }: { shared: Shared | null; onClose:
           <Dim numberOfLines={1}>{shared ? shared.email : ""}</Dim>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
             <H1 style={{ flex: 1 }}>{MONTHS[month.getMonth()]} <Text style={{ color: t.textDim, fontWeight: "400" }}>{month.getFullYear()}</Text></H1>
-            <MonthNav month={month} onChange={setMonth} />
+            <MonthNav month={month} onChange={swipe.goTo} />
           </View>
         </View>
-        {shared ? <MonthGrid month={month} data={data} typesById={shared.typesById} /> : null}
+        {shared ? <SwipeMonths swipe={swipe} renderMonth={(m) => <MonthGrid month={m} data={data} typesById={shared.typesById} />} /> : null}
       </View>
     </Modal>
   );
