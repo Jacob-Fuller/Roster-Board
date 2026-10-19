@@ -14,7 +14,7 @@ const cut = (a: string, b: string) => {
   return html.slice(i, j);
 };
 const engineSrc = cut("  /* ---------------- pay estimate ---------------- */", "  /* ---- reports: compact pay card");
-const setupSrc = cut("  /* ---- Pay setup screen ---- */", "  document.getElementById(\"payRatesBtn\")");
+const setupSrc = cut("  /* ---- Pay Setup screen ---- */", "  document.getElementById(\"payRatesBtn\")");
 
 // A tiny fake DOM, enough for the web's pay setup screen.
 function fakeEl(): any {
@@ -225,7 +225,7 @@ for (let i = 0; i < CASES; i++) {
   const err = savePaySetup(snap.settings, draft, form, Date.now());
   els.paySetupSave.listeners.click();
   Date.now = realNow;
-  if ((err || "") !== toasted.replace("Pay setup saved", "")) fail("save error", i, err, toasted);
+  if ((err || "") !== toasted.replace("Pay Setup saved", "")) fail("save error", i, err, toasted);
   if (JSON.stringify(snap.settings) !== JSON.stringify(webState.settings)) fail("saved settings", i, snap.settings, webState.settings);
   const a = computePay(snap, typesById, new Date(2026, 0, 1), new Date(2027, 0, 1), 1);
   const b = web.computePay(new Date(2026, 0, 1), new Date(2027, 0, 1), 1);

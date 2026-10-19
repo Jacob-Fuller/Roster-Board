@@ -32,6 +32,17 @@ export function TypesScreen() {
   const [editing, setEditing] = useState<string | "new" | null>(null);
   const [draft, setDraft] = useState<Draft>(blank());
   const [pickW, setPickW] = useState(0);
+  const [reorder, setReorder] = useState(false);
+  // Moves a type up or down; the new order is used everywhere types are listed.
+  const move = (id: string, dir: number) => update((d) => {
+    const list = d.types.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const i = list.findIndex((x) => x.id === id), j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+    const now = Date.now();
+    list.forEach((x, k) => { if (x.order !== k) { x.order = k; x.updatedAt = now; } });
+    d.types = list;
+  });
   const types = data.types.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
   const alarmsOk = useAlarmsAvailable();
@@ -133,14 +144,19 @@ export function TypesScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Masthead title="Shift types" right={<MastButton icon="add" label="New type" onPress={() => open()} />} />
+        <Masthead title="Shift Types" sub={types.length + (types.length === 1 ? " type" : " types")} right={
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            {types.length > 1 ? <MastButton icon={reorder ? "checkmark" : "swap-vertical"} a11y={reorder ? "Done reordering" : "Reorder"} onPress={() => setReorder(!reorder)} /> : null}
+            {reorder ? null : <MastButton icon="add" label="New Type" onPress={() => open()} />}
+          </View>
+        } />
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         {types.length ? (
           <Card style={{ paddingVertical: 2 }}>
             {types.map((ty, i) => (
               <View key={ty.id}>
                 {i ? <Divider /> : null}
-                <Pressable accessibilityRole="button" onPress={() => open(ty)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13, opacity: pressed ? 0.6 : 1 })}>
+                <Pressable accessibilityRole="button" disabled={reorder} onPress={() => open(ty)} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 13, opacity: pressed ? 0.6 : 1 })}>
                   <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: ty.color, alignItems: "center", justifyContent: "center" }}>
                     <TypeBadgeContent ty={ty} />
                   </View>
@@ -148,7 +164,12 @@ export function TypesScreen() {
                     <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{ty.name}</Text>
                     <Dim>{ty.kind === "personal" ? "Personal · " + typeLabel(ty) : typeLabel(ty)}</Dim>
                   </View>
-                  <Ionicons name="chevron-forward" size={17} color={t.textFaint} />
+                  {reorder ? (
+                    <View style={{ flexDirection: "row", gap: 6 }}>
+                      <MoveButton icon="chevron-up" disabled={i === 0} a11y={"Move " + ty.name + " up"} onPress={() => move(ty.id, -1)} />
+                      <MoveButton icon="chevron-down" disabled={i === types.length - 1} a11y={"Move " + ty.name + " down"} onPress={() => move(ty.id, 1)} />
+                    </View>
+                  ) : <Ionicons name="chevron-forward" size={17} color={t.textFaint} />}
                 </Pressable>
               </View>
             ))}
@@ -159,7 +180,7 @@ export function TypesScreen() {
         </View>
       </ScrollView>
 
-      <Sheet visible={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "New shift type" : "Edit shift type"}
+      <Sheet visible={editing !== null} onClose={() => setEditing(null)} title={editing === "new" ? "New Shift Type" : "Edit Shift Type"}
         footer={
           <View style={{ flexDirection: "row", gap: 10 }}>
             {editing && editing !== "new" ? <Button kind="danger" title="Delete" onPress={remove} /> : null}
@@ -248,4 +269,14 @@ export function TypesScreen() {
 function TypeBadgeContent({ ty }: { ty: ShiftType }) {
   if (ty.icon && (TYPE_ICONS as readonly string[]).includes(ty.icon)) return <Ionicons name={ty.icon as any} size={18} color={ty.ink} />;
   return <Text style={{ color: ty.ink, fontWeight: "800" }}>{ty.name.slice(0, 1).toUpperCase()}</Text>;
+}
+
+function MoveButton({ icon, disabled, onPress, a11y }: { icon: "chevron-up" | "chevron-down"; disabled: boolean; onPress: () => void; a11y: string }) {
+  const t = useTheme();
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={a11y} disabled={disabled} onPress={onPress} hitSlop={4}
+      style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, backgroundColor: t.surface2, alignItems: "center", justifyContent: "center", opacity: disabled ? 0.3 : pressed ? 0.6 : 1 })}>
+      <Ionicons name={icon} size={18} color={t.text} />
+    </Pressable>
+  );
 }

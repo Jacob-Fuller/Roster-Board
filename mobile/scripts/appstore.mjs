@@ -160,7 +160,7 @@ const shots = [
   { eyebrow: "SHIFTS, EVENTS, BIRTHDAYS", title: "The only shift app you'll ever need", img: await capture("light", async () => {}) },
   { eyebrow: "ROSTER SHARING", title: "See your family and friends' rosters", img: await capture("light", async (p) => {
     await tab(/Account/)(p);
-    await click(p, p.getByText("Shared rosters", { exact: true }));
+    await click(p, p.getByText("Shared Rosters", { exact: true }));
     await click(p, p.getByText("alex@rosterboard.net", { exact: true }));
   }) },
   { eyebrow: "SHIFT SWAPS", title: "Swap shifts and keep track", img: await capture("light", async (p) => {
@@ -168,7 +168,7 @@ const shots = [
   }) },
   { eyebrow: "FULL REPORTS", title: "Every hour tracked and compared", img: await capture("light", async (p) => {
     await tab(/Reports/)(p);
-    await scrollTo(p, "By shift type");
+    await scrollTo(p, "By Shift Type");
   }) },
   { eyebrow: "ESTIMATED PAY", title: "Know your pay before payday", img: await capture("light", async (p) => {
     await tab(/Reports/)(p);

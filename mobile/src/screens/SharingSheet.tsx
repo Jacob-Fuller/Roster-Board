@@ -91,17 +91,17 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
   const shareApp = () => Share.share({ message: "I'm using Roster Board to manage my shifts and roster. Check it out: " + WEB_URL }).catch(() => {});
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Share your roster">
+    <Sheet visible={visible} onClose={onClose} title="Share Your Roster">
       <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Personal events</Text>
       <Segmented<"show" | "hide"> value={shareEvents ? "show" : "hide"}
         onChange={(v) => update((d) => { d.settings = { ...d.settings, shareEvents: v === "show", updatedAt: Date.now() }; })}
         options={[{ value: "show", label: "Show" }, { value: "hide", label: "Hide" }]} />
-      <SectionHead title="Invite someone" />
+      <SectionHead title="Invite Someone" />
       <Field value={email} onChangeText={setEmail} placeholder="Their Roster Board email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" onSubmitEditing={invite} />
       {err ? <Text style={{ color: t.danger, marginBottom: 10 }}>{err}</Text> : null}
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Button style={{ flex: 1 }} title={busy ? "Sending…" : "Send request"} onPress={invite} disabled={busy} />
-        <Button kind="ghost" title="Share app link" onPress={shareApp} />
+        <Button kind="ghost" title="Share App Link" onPress={shareApp} />
       </View>
 
       {incoming.length ? <SectionHead title="Requests" /> : null}

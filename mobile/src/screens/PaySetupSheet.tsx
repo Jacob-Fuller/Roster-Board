@@ -1,4 +1,4 @@
-// Pay setup, ported from the web app's pay setup screen (index.html, "Pay setup screen").
+// Pay Setup, ported from the web app's pay setup screen (index.html, "Pay Setup screen").
 // Saves into data.settings exactly as the web does (see savePaySetup in lib/pay.ts).
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -55,7 +55,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
       rebalanceAllExtras(d);
     });
     onClose();
-    toast("Pay setup saved");
+    toast("Pay Setup saved");
   };
 
   const footer = (
@@ -65,17 +65,17 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
     </View>
   );
 
-  if (!draft || !form) return <Sheet visible={visible} onClose={onClose} title="Pay setup" footer={footer}><View /></Sheet>;
+  if (!draft || !form) return <Sheet visible={visible} onClose={onClose} title="Pay Setup" footer={footer}><View /></Sheet>;
   const sum = paySummaries(form, draft.cycle, types.length);
   const dec = "decimal-pad" as const;
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="Pay setup" footer={footer}>
-      <Section title="Base rate" summary={sum.rate} initiallyOpen>
+    <Sheet visible={visible} onClose={onClose} title="Pay Setup" footer={footer}>
+      <Section title="Base Rate" summary={sum.rate} initiallyOpen>
         <Field label="Hourly rate ($)" value={form.baseRate} onChangeText={(v) => set("baseRate", v)} keyboardType={dec} placeholder="e.g. 42.50" />
       </Section>
 
-      <Section title="Pay cycle" summary={sum.cycle} initiallyOpen>
+      <Section title="Pay Cycle" summary={sum.cycle} initiallyOpen>
         <View style={{ marginBottom: 12 }}>
           <Segmented<PayCycle> value={draft.cycle} onChange={(v) => setDraft({ ...draft, cycle: v })}
             options={[{ value: "weekly", label: "Weekly" }, { value: "fortnightly", label: "Fortnightly" }, { value: "monthly", label: "Monthly" }]} />
@@ -87,7 +87,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         }} />
       </Section>
 
-      <Section title={fullTime ? "Overtime" : "Excess & overtime"} summary={fullTime ? sum.ot.replace(/^[^·]*excess · /, "") : sum.ot}>
+      <Section title={fullTime ? "Overtime" : "Excess & Overtime"} summary={fullTime ? sum.ot.replace(/^[^·]*excess · /, "") : sum.ot}>
         <View style={{ flexDirection: "row", gap: 10 }}>
           {fullTime ? null : <View style={{ flex: 1 }}><Field label="Excess rate ×" value={form.exMult} onChangeText={(v) => set("exMult", v)} keyboardType={dec} placeholder="1" /></View>}
           <View style={{ flex: 1 }}><Field label="Overtime rate ×" value={form.otMult} onChangeText={(v) => set("otMult", v)} keyboardType={dec} placeholder="1.5" /></View>
@@ -102,7 +102,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         ) : null}
       </Section>
 
-      <Section title="Penalty rates" summary={sum.pen}>
+      <Section title="Penalty Rates" summary={sum.pen}>
         <View style={{ flexDirection: "row", gap: 10 }}>
           <View style={{ flex: 1 }}><Field label="Saturday %" value={form.penSat} onChangeText={(v) => set("penSat", v)} keyboardType={dec} placeholder="e.g. 50" /></View>
           <View style={{ flex: 1 }}><Field label="Sunday %" value={form.penSun} onChangeText={(v) => set("penSun", v)} keyboardType={dec} placeholder="e.g. 100" /></View>
@@ -113,7 +113,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         </View>
       </Section>
 
-      <Section title="Shift types" summary={sum.types}>
+      <Section title="Shift Types" summary={sum.types}>
         {!types.length ? <Dim>Add your shift types on the Types tab first.</Dim> : types.map((t, i) => {
           const rule: PayTypeRule = draft.typeRules[t.id] || {};
           const kind: AllowanceKind = rule.allowanceKind === "pct" || rule.allowanceKind === "flat" ? rule.allowanceKind : "none";
@@ -158,7 +158,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
             </View>
           </View>
         ))}
-        <Button small kind="outline" title="Add allowance"
+        <Button small kind="outline" title="Add Allowance"
           onPress={() => setDraft({ ...draft, allowances: draft.allowances.concat({ id: mkId(), name: "", kind: "flat", amount: 0 }) })} />
       </Section>
 
@@ -167,7 +167,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         <Field label="Annual leave loading %" value={form.leaveLoading} onChangeText={(v) => set("leaveLoading", v)} keyboardType={dec} placeholder="e.g. 17.5" />
       </Section>
 
-      <Section title="Super & tax" summary={sum.tax}>
+      <Section title="Super & Tax" summary={sum.tax}>
         <Field label="Employer super %" value={form.superPct} onChangeText={(v) => set("superPct", v)} keyboardType={dec} placeholder="12" />
         <ToggleRow label="Show estimated tax and take-home" value={form.showTax} onChange={(v) => set("showTax", v)} />
         <ToggleRow label="Claim the tax-free threshold" value={form.taxFree} onChange={(v) => set("taxFree", v)} />

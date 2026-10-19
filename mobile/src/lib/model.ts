@@ -162,6 +162,9 @@ export function mkId(): string {
   return "id" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
 }
 
+// Types in the order the user arranged them on the Types tab.
+export const sortedTypes = (types: ShiftType[]) => types.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
 export function typeLabel(t: ShiftType) {
   if (t.kind === "personal") return t.allDay ? "All day" : t.time ? t.time : "Personal";
   if (t.startTime && t.endTime) return t.startTime + "–" + t.endTime + " · " + fmtHours(t.hours || 0) + "h";

@@ -73,11 +73,11 @@ export function AuthScreen() {
         <Button title={busy ? "Please wait…" : mode === "login" ? "Log in" : "Create account"} onPress={submit} disabled={busy} />
         <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 16 }}>
           <LinkText title={mode === "login" ? "Create an account" : "I have an account"} onPress={() => { setMode(mode === "login" ? "signup" : "login"); setMsg(null); }} />
-          {mode === "login" ? <LinkText title="Forgot password?" onPress={forgot} /> : null}
+          {mode === "login" ? <LinkText title="Forgot Password?" onPress={forgot} /> : null}
         </View>
         </Card>
         <View style={{ alignItems: "center", marginTop: 28, paddingHorizontal: 24 }}>
-          <LinkText title="Use without an account" color={t.textDim} onPress={useWithoutAccount} />
+          <LinkText title="Use Without an Account" color={t.textDim} onPress={useWithoutAccount} />
           <Dim style={{ marginTop: 6, textAlign: "center" }}>Your roster stays on this phone only.</Dim>
         </View>
       </ScrollView>

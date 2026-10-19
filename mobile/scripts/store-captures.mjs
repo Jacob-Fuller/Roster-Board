@@ -75,8 +75,8 @@ const token = b64({ alg: "HS256", typ: "JWT" }) + "." + b64({ sub: UID, role: "a
 const session = { access_token: token, refresh_token: "r", token_type: "bearer", expires_in: 3600, expires_at: 4102444800, user };
 const conns = [{ id: "c1", requester_id: UID, target_id: "u2", requester_email: user.email, target_email: "sam@example.com", status: "accepted" }];
 
-const ANCHORS = ["Roster pattern", "Rotation length", "Stamp onto calendar", "By shift type", "Weekdays vs weekends", "Estimated pay",
-  "Compared with", "Previous", "Swaps", "Shifts", "Leave", "Birthdays", "Personal events", "Shift alarm", "Appearance", "Account", "October 2026"];
+const ANCHORS = ["Roster Pattern", "Rotation Length", "Stamp onto Calendar", "By Shift Type", "Weekdays vs Weekends", "Estimated Pay",
+  "Compared with", "Previous", "Swaps", "Shifts", "Leave", "Birthdays", "Personal Events", "Shift alarm", "Appearance", "Account", "October 2026"];
 
 const browser = await chromium.launch();
 async function capture(name, theme, steps, extra) {
@@ -129,7 +129,7 @@ const click = (p, loc) => loc.first().click().then(() => p.waitForTimeout(900));
 const scrollTo = (p, text, block = "start") => p.getByText(text, { exact: true }).first().evaluate((el, b) => el.scrollIntoView({ block: b }), block).then(() => p.waitForTimeout(600));
 const dayCell = (p, n) => p.getByLabel(new Date(2026, 9, n).toDateString(), { exact: true });
 const savePdf = (file) => async (p) => {
-  await click(p, p.getByText("PDF roster", { exact: true }));
+  await click(p, p.getByText("PDF Roster", { exact: true }));
   await p.waitForTimeout(1200);
   const html = await p.evaluate(() => { const f = document.querySelector("iframe"); return f ? f.srcdoc || f.getAttribute("srcdoc") : ""; });
   writeFileSync(`${OUT}/${file}`, html || "");
@@ -137,11 +137,11 @@ const savePdf = (file) => async (p) => {
 
 await capture("light-calendar", "light", async () => {});
 await capture("dark-calendar", "dark", async () => {});
-await capture("dark-stats", "dark", async (p) => { await tab(p, /Reports/); await scrollTo(p, "By shift type"); });
+await capture("dark-stats", "dark", async (p) => { await tab(p, /Reports/); await scrollTo(p, "By Shift Type"); });
 await capture("light-roster", "light", async (p) => { await tab(p, /Roster/); });
 await capture("light-reports", "light", async (p) => { await tab(p, /Reports/); });
-await capture("light-stats", "light", async (p) => { await tab(p, /Reports/); await scrollTo(p, "By shift type"); });
-await capture("light-weekdays", "light", async (p) => { await tab(p, /Reports/); await scrollTo(p, "Weekdays vs weekends"); });
+await capture("light-stats", "light", async (p) => { await tab(p, /Reports/); await scrollTo(p, "By Shift Type"); });
+await capture("light-weekdays", "light", async (p) => { await tab(p, /Reports/); await scrollTo(p, "Weekdays vs Weekends"); });
 await capture("light-reports-end", "light", async (p) => { await tab(p, /Reports/); await p.mouse.move(215, 500); await p.mouse.wheel(0, 6000); await p.waitForTimeout(700); },
   savePdf("pdf-oct.html"));
 await capture("light-reports-sep", "light", async (p) => {
@@ -153,7 +153,7 @@ await capture("light-day12", "light", async (p) => { await click(p, dayCell(p, 1
 await capture("light-day20", "light", async (p) => { await click(p, dayCell(p, 20)); });
 await capture("light-shared", "light", async (p) => {
   await tab(p, /Account/);
-  await click(p, p.getByText("Shared rosters", { exact: true }));
+  await click(p, p.getByText("Shared Rosters", { exact: true }));
   await click(p, p.getByText("sam@example.com", { exact: true }));
 });
 await capture("light-birthdays", "light", async (p) => { await tab(p, /Account/); await click(p, p.getByRole("button", { name: /^Birthdays/ })); });

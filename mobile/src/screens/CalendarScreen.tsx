@@ -3,9 +3,9 @@ import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
 import { SwipeMonths, useMonthSwipe } from "../components/SwipeMonths";
-import { Chip, Masthead, SERIF, useTheme, useUi } from "../components/ui";
+import { Chip, Masthead, useTheme, useUi } from "../components/ui";
 import { useStore } from "../lib/store";
-import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, addMonths, effectiveHours, fmtHours, mkId, parseYmd, startOfMonth, type ShiftType } from "../lib/model";
+import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, addMonths, effectiveHours, fmtHours, mkId, parseYmd, startOfMonth, type ShiftType, sortedTypes } from "../lib/model";
 import { DaySheet } from "./DaySheet";
 
 export function useTypesById() {
@@ -83,7 +83,7 @@ export function CalendarScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <Masthead
-        title={<Text style={{ fontFamily: SERIF, fontSize: 30, letterSpacing: -0.6, color: t.mastInk }} numberOfLines={1} adjustsFontSizeToFit>{MONTHS[month.getMonth()]}</Text>}
+        title={MONTHS[month.getMonth()]}
         sub={month.getFullYear() + " · " + totals.shifts + " shift" + (totals.shifts === 1 ? "" : "s") + " · " + fmtHours(totals.hours) + "h"}
         right={<MonthNav month={month} onChange={goTo} onMast />} />
       <View style={{ height: 10 }} />
@@ -101,7 +101,7 @@ export function CalendarScreen() {
             <Pressable accessibilityRole="button" onPress={endBulk} hitSlop={8}><Text style={{ color: t.accent, fontWeight: "800" }}>Done</Text></Pressable>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>
-            {data.types.map((ty) => (
+            {sortedTypes(data.types).map((ty) => (
               <Chip key={ty.id} label={ty.name} color={bulkType === ty.id ? ty.color : t.surface2} ink={bulkType === ty.id ? ty.ink : t.text} onPress={() => setBulkType(ty.id)} />
             ))}
           </ScrollView>

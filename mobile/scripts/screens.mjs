@@ -70,7 +70,7 @@ try {
   await p.getByRole("tab", { name: /Types/ }).click();
   await p.waitForTimeout(500);
   await shot(p, "04-types");
-  await p.getByText("New type", { exact: true }).click();
+  await p.getByText("New Type", { exact: true }).click();
   await p.waitForTimeout(800);
   await shot(p, "05-new-type");
   await p.getByLabel("Close").first().click();
@@ -86,7 +86,7 @@ try {
   await p.mouse.wheel(0, 2000);
   await p.waitForTimeout(400);
   await shot(p, "11-reports-year");
-  await p.getByText("PDF roster", { exact: true }).click(); await p.waitForTimeout(1200);
+  await p.getByText("PDF Roster", { exact: true }).click(); await p.waitForTimeout(1200);
   await shot(p, "12-pdf-preview");
   await p.getByLabel("Close").first().click(); await p.waitForTimeout(500);
   await p.getByRole("tab", { name: /Account/ }).click();

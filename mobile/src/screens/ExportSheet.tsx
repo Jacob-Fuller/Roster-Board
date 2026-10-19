@@ -78,7 +78,7 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
   };
 
   return (
-    <Sheet visible={visible} onClose={onClose} title="PDF roster"
+    <Sheet visible={visible} onClose={onClose} title="PDF Roster"
       footer={<Button title={busy ? "Creating PDF…" : "Export PDF"} onPress={exportPdf} disabled={busy} />}>
       <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 14 }}>

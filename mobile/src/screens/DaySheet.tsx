@@ -6,8 +6,7 @@ import { Button, Chip, Dim, Divider, Field, H2, SectionHead, Sheet, ToggleRow, u
 import {
   EVENT_CATS, EVENT_CAT_ORDER, EXCESS_ID, EXCESS_TYPE, LEAVE_KINDS, MONTHS, OVERTIME_ID, OVERTIME_TYPE, WEEKDAYS_FULL,
   birthdaysOnDate, employmentOf, entryColor, entryExcessHours, entryName, entryOTHours, fmtHours, isCombo, isSplitEntry, mkId, parseYmd,
-  type Rec, type ShiftEntry, type ShiftType, type Snapshot,
-} from "../lib/model";
+  type Rec, type ShiftEntry, type ShiftType, type Snapshot, sortedTypes } from "../lib/model";
 import { allowanceAmount, fmtMoney, payAllowances, payConfig, payTagLabel, payTagsOn, rateOn, type PayAllowance, type PayTag } from "../lib/pay";
 import { applySplit, autoSplitOn, rebalanceExtras } from "../lib/partTime";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -123,7 +122,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
 
   /* ----- leave ----- */
   // Leave is taken on a shift (e.g. Dayshift), so the calendar shows that shift with an Annual/Sick leave title.
-  const leaveTypes = data.types.filter((x) => x.kind !== "personal");
+  const leaveTypes = sortedTypes(data.types).filter((x) => x.kind !== "personal");
   const addLeave = (kind: "annual" | "sick", ty: ShiftType | null) => dialog({
     title: LEAVE_KINDS[kind].label + (ty ? " – " + ty.name : ""), message: "How many hours?",
     input: { placeholder: "e.g. 10", keyboard: "decimal-pad", value: ty && ty.hours ? String(ty.hours) : "" }, confirm: "Add",
@@ -163,7 +162,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   });
 
   /* ----- public holiday ----- */
-  // The public holiday penalty rate (Pay setup) is paid on shifts on these days.
+  // The public holiday penalty rate (Pay Setup) is paid on shifts on these days.
   const isHoliday = payTagsOn(data, key).some((x) => x.kind === "holiday");
   const setHoliday = (on: boolean) => update((d, tomb) => {
     const list = ((d.payTags[key] || []) as PayTag[]);
@@ -330,7 +329,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
           <Item key={s.id} color={col.bg} title={entryName(s, typesById)} sub={detail}
             actions={[
               combo && (s as any).addl > 0 ? { label: "Hours", onPress: () => dialog({
-                title: (s.baseTypeId && typesById[s.baseTypeId] ? typesById[s.baseTypeId].name : "Additional shift"), message: "Total hours worked",
+                title: (s.baseTypeId && typesById[s.baseTypeId] ? typesById[s.baseTypeId].name : "Additional Shift"), message: "Total hours worked",
                 input: { keyboard: "decimal-pad", value: String((s as any).addl) }, confirm: "Save",
                 onConfirm: (v) => { const h = parseFloat(v.replace(",", ".")); if (!h || h <= 0) { toast("Enter a number of hours"); return; } setExtraHours(s.id, h); toast("Hours updated"); },
               }) } : combo && fullTime && !entryExcessHours(s) ? { label: "Hours", onPress: () => askHours("Overtime – " + (s.baseTypeId && typesById[s.baseTypeId] ? typesById[s.baseTypeId].name : "shift"), "How many hours of overtime?", (h) => {
@@ -356,7 +355,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       ) : null}
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-        {data.types.map((ty) => <Chip key={ty.id} label={"+ " + ty.name} color={ty.color} ink={ty.ink} onPress={() => pickType(ty)} />)}
+        {sortedTypes(data.types).map((ty) => <Chip key={ty.id} label={"+ " + ty.name} color={ty.color} ink={ty.ink} onPress={() => pickType(ty)} />)}
       </View>
 
       <SectionHead title="Leave" />
@@ -408,7 +407,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         </>
       ) : null}
 
-      <SectionHead title="Personal events" />
+      <SectionHead title="Personal Events" />
       {events.length ? events.map((n) => {
         const c = EVENT_CATS[n.category || "other"] || EVENT_CATS.other;
         return (
@@ -526,7 +525,7 @@ function KindChooser({ type, fullTime, autoSplit, allowances, onClose, onPick }:
   const opts: { k: "normal" | "ot" | "ex" | "split"; tag: string; bg: string; ink: string }[] = [];
   if (type) {
     opts.push({ k: "normal", tag: "", bg: type.color, ink: type.ink });
-    if (!fullTime && (type.excessEligible !== false || (autoSplit && type.overtimeEligible !== false))) opts.push({ k: "ex", tag: autoSplit ? "Additional shift" : "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
+    if (!fullTime && (type.excessEligible !== false || (autoSplit && type.overtimeEligible !== false))) opts.push({ k: "ex", tag: autoSplit ? "Additional Shift" : "Excess Hours", bg: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
     // with an excess limit, additional shifts are split into excess and overtime automatically
     if (type.overtimeEligible !== false && !autoSplit) opts.push({ k: "ot", tag: "Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
     if (!fullTime && !autoSplit && type.overtimeEligible !== false && type.excessEligible !== false) opts.push({ k: "split", tag: "Excess + Overtime", bg: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
@@ -644,13 +643,13 @@ function SwapForm({ pending, dateKey, data, typesById, onClose }: {
 
   return (
     <Sheet visible={!!pending} onClose={onClose} title={"Swap " + (s ? entryName(s, typesById) : "shift")}
-      footer={<View style={{ flexDirection: "row", gap: 10 }}><Button kind="ghost" title="Cancel" onPress={onClose} /><Button style={{ flex: 1 }} title="Swap shift" onPress={confirm} /></View>}>
+      footer={<View style={{ flexDirection: "row", gap: 10 }}><Button kind="ghost" title="Cancel" onPress={onClose} /><Button style={{ flex: 1 }} title="Swap Shift" onPress={confirm} /></View>}>
       <DateField label="Swap to" value={to} onChange={setTo} />
       <Field label="Swapping with (optional)" value={partner} onChangeText={setPartner} placeholder="e.g. Sam" />
       <Field label="Note (optional)" value={note} onChangeText={setNote} />
       <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 8, fontWeight: "600" }}>Shift on the new date</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {data.types.length ? data.types.map((ty) => (
+        {data.types.length ? sortedTypes(data.types).map((ty) => (
           <Chip key={ty.id} label={ty.name} color={replace === ty.id ? ty.color : t.surface2} ink={replace === ty.id ? ty.ink : t.text} onPress={() => setReplace(ty.id)} />
         )) : <Dim>(no shift types yet)</Dim>}
       </View>

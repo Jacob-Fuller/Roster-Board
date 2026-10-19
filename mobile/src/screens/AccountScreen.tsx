@@ -45,19 +45,14 @@ export function AccountScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Masthead title="Account">
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 16 }}>
-            <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: t.mastBtn, borderWidth: 1.5, borderColor: t.glowB, alignItems: "center", justifyContent: "center" }}>
+        <Masthead title="Account" sub={signedIn ? name || user!.email || "" : "Not signed in"}
+          right={
+            <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: t.mastBtn, borderWidth: 1.5, borderColor: t.glowB, alignItems: "center", justifyContent: "center" }}>
               {signedIn && (name || user!.email)
                 ? <Text style={{ fontFamily: SERIF, fontSize: 22, color: t.mastInk }}>{String(name || user!.email).trim().charAt(0).toUpperCase()}</Text>
                 : <Ionicons name="person" size={24} color={t.mastInk} />}
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: t.mastInk, fontSize: 17, fontWeight: "700" }} numberOfLines={1}>{signedIn ? name || user!.email : "Not signed in"}</Text>
-              {signedIn && name ? <Text style={{ color: t.mastDim, fontSize: 14 }} numberOfLines={1}>{user!.email}</Text> : null}
-            </View>
-          </View>
-        </Masthead>
+          } />
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
 
         <Card style={{ paddingVertical: 2 }}>
@@ -89,18 +84,18 @@ export function AccountScreen() {
 
         {signedIn ? (
           <>
-            <SectionHead title="Share your roster" />
+            <SectionHead title="Share Your Roster" />
             <Card style={{ paddingVertical: 2 }}>
-              <MenuRow icon="people" iconColor="#3FC5C0" title="Shared rosters" onPress={() => setShareOpen(true)} />
+              <MenuRow icon="people" iconColor="#3FC5C0" title="Shared Rosters" onPress={() => setShareOpen(true)} />
             </Card>
-            <SectionHead title="Invite a friend" />
-            <Card><Button title="Share invite" onPress={shareInvite} /></Card>
+            <SectionHead title="Invite a Friend" />
+            <Card><Button title="Share Invite" onPress={shareInvite} /></Card>
           </>
         ) : (
           <>
-            <SectionHead title="Share your roster" />
+            <SectionHead title="Share Your Roster" />
             <Card>
-              <Button title="Sign in or create account" onPress={showSignIn} />
+              <Button title="Sign in or Create Account" onPress={showSignIn} />
             </Card>
           </>
         )}
@@ -109,9 +104,9 @@ export function AccountScreen() {
         <Card style={{ paddingVertical: 2 }}>
           <MenuRow icon="help-circle" iconColor="#4C8DFF" title="Help" onPress={() => setHelpOpen(true)} />
           <Divider />
-          <MenuRow icon="chatbubble-ellipses" iconColor="#2FA36B" title="Send feedback" onPress={feedback} />
+          <MenuRow icon="chatbubble-ellipses" iconColor="#2FA36B" title="Send Feedback" onPress={feedback} />
           <Divider />
-          <MenuRow icon="mail" iconColor="#E8A33C" title="Contact us" sub="contact@rosterboard.net" onPress={() => Linking.openURL("mailto:contact@rosterboard.net?subject=Roster%20Board")} />
+          <MenuRow icon="mail" iconColor="#E8A33C" title="Contact Us" sub="contact@rosterboard.net" onPress={() => Linking.openURL("mailto:contact@rosterboard.net?subject=Roster%20Board")} />
           <Divider />
           <MenuRow icon="shield-checkmark" iconColor="#5B6B82" title="Privacy Policy" onPress={() => Linking.openURL(WEB_URL + "privacy.html")} />
         </Card>
@@ -208,43 +203,43 @@ function AccountDetail({ visible, onClose }: { visible: boolean; onClose: () => 
             </View>
           </Card>
 
-          <SectionHead title="Change name" />
+          <SectionHead title="Change Name" />
           <Card>
             <Field label="Display name" value={name} onChangeText={setName} placeholder="Your name" autoComplete="name" textContentType="name" />
             {err.name ? <Text style={{ color: t.danger, marginBottom: 8 }}>{err.name}</Text> : null}
-            <Button small kind="outline" title="Update name" onPress={saveName} />
+            <Button small kind="outline" title="Update Name" onPress={saveName} />
           </Card>
 
-          <SectionHead title="Change email" />
+          <SectionHead title="Change Email" />
           <Card>
             <Field label="New email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" />
             {err.email ? <Text style={{ color: t.danger, marginBottom: 8 }}>{err.email}</Text> : null}
-            <Button small kind="outline" title="Update email" onPress={saveEmail} />
+            <Button small kind="outline" title="Update Email" onPress={saveEmail} />
           </Card>
 
-          <SectionHead title="Change password" />
+          <SectionHead title="Change Password" />
           <Card>
             <Field label="New password" value={pw1} onChangeText={setPw1} secureTextEntry textContentType="newPassword" autoComplete="new-password" />
             <Field label="Confirm new password" value={pw2} onChangeText={setPw2} secureTextEntry textContentType="newPassword" autoComplete="new-password" />
             {err.pw ? <Text style={{ color: t.danger, marginBottom: 8 }}>{err.pw}</Text> : null}
-            <Button small kind="outline" title="Update password" onPress={savePassword} />
+            <Button small kind="outline" title="Update Password" onPress={savePassword} />
           </Card>
 
           <PremiumSection />
 
           <View style={{ gap: 10, marginTop: 24 }}>
-            <Button small kind="outline" title="Sign out" onPress={confirmSignOut} />
-            <Button small kind="outlineDanger" title="Format calendar" onPress={formatCalendar} />
-            <Button small kind="outlineDanger" title="Delete account" onPress={confirmDelete} />
+            <Button small kind="outline" title="Sign Out" onPress={confirmSignOut} />
+            <Button small kind="outlineDanger" title="Format Calendar" onPress={formatCalendar} />
+            <Button small kind="outlineDanger" title="Delete Account" onPress={confirmDelete} />
           </View>
         </>
       ) : (
         <>
           <Card>
-            <Button title="Sign in or create account" onPress={() => { onClose(); showSignIn(); }} />
+            <Button title="Sign in or Create Account" onPress={() => { onClose(); showSignIn(); }} />
           </Card>
           <PremiumSection />
-          <Button small kind="outlineDanger" style={{ marginTop: 16 }} title="Format calendar" onPress={formatCalendar} />
+          <Button small kind="outlineDanger" style={{ marginTop: 16 }} title="Format Calendar" onPress={formatCalendar} />
         </>
       )}
     </Sheet>
@@ -272,9 +267,9 @@ function PremiumSection() {
             <Dim>{plan}</Dim>
           </View>
           {!premium.status.active ? (<><Divider /><MenuRow center title="Unlock Premium" onPress={() => { setOpen(false); setTimeout(() => premium.openPaywall(), 500); }} /></>) : null}
-          {premium.status.kind === "monthly" ? (<><Divider /><MenuRow center title="Manage subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
+          {premium.status.kind === "monthly" ? (<><Divider /><MenuRow center title="Manage Subscription" onPress={() => Linking.openURL("https://apps.apple.com/account/subscriptions")} /></>) : null}
           <Divider />
-          <MenuRow center title="Restore purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
+          <MenuRow center title="Restore Purchases" onPress={async () => { const ok = await premium.restore(); toast(ok ? "Purchases restored" : "No purchases found for this Apple ID"); }} />
         </Card>
       </Sheet>
     </>
@@ -334,7 +329,7 @@ function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () =
       </Card>
       {emp === "part" ? (
         <>
-          <SectionHead title="Pay cycle" />
+          <SectionHead title="Pay Cycle" />
           <Card>
             <View style={{ marginBottom: 12 }}>
               <Segmented<PayCycle> value={cycle} onChange={setCycle}

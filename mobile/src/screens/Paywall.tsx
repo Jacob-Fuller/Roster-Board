@@ -57,7 +57,7 @@ export function Paywall() {
           <Plan title="Lifetime" sub="One payment, yours forever" price={prices.lifetime} onPress={() => buy("lifetime")} disabled={busy} primary />
           <Plan title="Monthly" sub="Cancel anytime" price={prices.monthly} onPress={() => buy("monthly")} disabled={busy} />
           {error ? <Text style={{ color: t.danger, marginTop: 8, textAlign: "center" }}>{error}</Text> : null}
-          <Button kind="ghost" style={{ marginTop: 12 }} title="Restore purchases" onPress={async () => {
+          <Button kind="ghost" style={{ marginTop: 12 }} title="Restore Purchases" onPress={async () => {
             const ok = await restore();
             toast(ok ? "Purchases restored" : "No purchases found for this Apple ID");
           }} />

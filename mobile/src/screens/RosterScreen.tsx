@@ -3,7 +3,7 @@ import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { Button, Card, Chip, Dim, Masthead, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
-import { TYPE_ICONS, WEEKDAYS_SHORT, ymd } from "../lib/model";
+import { TYPE_ICONS, WEEKDAYS_SHORT, ymd, sortedTypes } from "../lib/model";
 import { applyRosterPattern, ensurePatternShape, patternHasContent } from "../lib/roster";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
@@ -73,11 +73,11 @@ export function RosterScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Masthead title="Roster pattern" sub={weeks + (weeks === 1 ? " week rotation" : " week rotation")} />
+        <Masthead title="Roster Pattern" sub={weeks + (weeks === 1 ? " week rotation" : " week rotation")} />
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <Card>
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12 }}>
-            <Text style={{ flex: 1, color: t.text, fontSize: 15 }}>Rotation length</Text>
+            <Text style={{ flex: 1, color: t.text, fontSize: 15 }}>Rotation Length</Text>
             <Stepper value={weeks} onChange={setWeeks} onTapValue={() => dialog({
               title: "Rotation length", message: "How many weeks before the pattern repeats? (1–52)",
               input: { value: String(weeks), keyboard: "decimal-pad" }, confirm: "Update",
@@ -115,13 +115,13 @@ export function RosterScreen() {
           ))}
         </Card>
 
-        <SectionHead title="Stamp onto calendar" />
+        <SectionHead title="Stamp Onto Calendar" />
         <Card>
           <DateField label="Start date" value={start} onChange={setStart} />
           <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 8, fontWeight: "600" }}>Repeat for</Text>
           <Segmented<Months> value={months} onChange={setMonths}
             options={[{ value: "3", label: "3 mo" }, { value: "6", label: "6 mo" }, { value: "12", label: "1 yr" }, { value: "24", label: "2 yrs" }]} />
-          <Button style={{ marginTop: 14 }} title="Fill calendar from pattern" onPress={fill} />
+          <Button style={{ marginTop: 14 }} title="Fill Calendar from Pattern" onPress={fill} />
         </Card>
         </View>
       </ScrollView>
@@ -129,7 +129,7 @@ export function RosterScreen() {
       <Sheet visible={!!cell} onClose={() => setCell(null)} title={cell ? "Week " + (cell.w + 1) + " · " + DAY_NAMES[cell.d] : ""}>
         {data.types.length ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {data.types.map((ty) => {
+            {sortedTypes(data.types).map((ty) => {
               const on = current.indexOf(ty.id) !== -1;
               return <Chip key={ty.id} label={(on ? "✓ " : "") + ty.name} color={on ? ty.color : t.surface2} ink={on ? ty.ink : t.text} onPress={() => toggle(ty.id)} />;
             })}

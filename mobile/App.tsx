@@ -31,9 +31,9 @@ type Tab = "calendar" | "roster" | "reports" | "types" | "account";
 type Icon = React.ComponentProps<typeof Ionicons>["name"];
 const TABS: { id: Tab; label: string; icon: Icon; iconOn: Icon }[] = [
   { id: "calendar", label: "Calendar", icon: "calendar-outline", iconOn: "calendar" },
-  { id: "roster", label: "Roster", icon: "repeat-outline", iconOn: "repeat" },
-  { id: "reports", label: "Reports", icon: "stats-chart-outline", iconOn: "stats-chart" },
   { id: "types", label: "Types", icon: "color-palette-outline", iconOn: "color-palette" },
+  { id: "reports", label: "Reports", icon: "stats-chart-outline", iconOn: "stats-chart" },
+  { id: "roster", label: "Roster", icon: "repeat-outline", iconOn: "repeat" },
   { id: "account", label: "Account", icon: "person-circle-outline", iconOn: "person-circle" },
 ];
 const SCREENS: { [k in Tab]: () => React.JSX.Element } = {

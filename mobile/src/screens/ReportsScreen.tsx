@@ -2,7 +2,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
 import { PanResponder, Pressable, ScrollView, Text, View } from "react-native";
-import { Button, Card, Dim, Divider, IconTile, MastButton, Masthead, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
+import { Button, Card, Dim, Divider, IconTile, Masthead, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
 import { EXCESS_ID, MONTHS, WEEKDAYS_FULL, parseYmd, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
 import {
   allowanceClaims, computePay, fmtMoney, fmtMoneyShort, payCardRangeAt, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
@@ -138,17 +138,14 @@ export function ReportsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Masthead title="Reports">
-          <View style={{ marginTop: 16 }}>
-            <Segmented<Mode> onMast value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
-            <MastButton icon="chevron-back" a11y="Previous" onPress={() => step(-1)} />
-            <Text style={{ color: t.mastInk, fontSize: 17, fontWeight: "700" }}>{label}</Text>
-            <MastButton icon="chevron-forward" a11y="Next" onPress={() => step(1)} />
-          </View>
-        </Masthead>
+        <Masthead title="Reports" sub={label} />
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+        <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 14 }}>
+          <Nav dir={-1} a11y="Previous" onPress={() => step(-1)} />
+          <Text style={{ color: t.text, fontSize: 17, fontWeight: "700" }}>{label}</Text>
+          <Nav dir={1} a11y="Next" onPress={() => step(1)} />
+        </View>
 
         <View style={{ flexDirection: "row", gap: 8 }}>
           <Stat icon="time" color="#4C8DFF" label="Hours" value={fmtHours(stats.totalHours)} />
@@ -164,7 +161,7 @@ export function ReportsScreen() {
 
         {ptProgress ? (
           <>
-            <SectionHead title="This pay period" right={<Dim>{shortDate(ptProgress.period.start) + " – " + shortDate(lastDay(ptProgress.period))}</Dim>} />
+            <SectionHead title="This Pay Period" right={<Dim>{shortDate(ptProgress.period.start) + " – " + shortDate(lastDay(ptProgress.period))}</Dim>} />
             <Card>
               {ptProgress.rostered ? <Bar name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={Math.max(ptProgress.rostered, ptProgress.rosteredDone)}
                 text={ptProgress.rosteredDone + " of " + ptProgress.rostered} /> : null}
@@ -175,9 +172,9 @@ export function ReportsScreen() {
           </>
         ) : null}
 
-        <SectionHead title="Estimated pay" right={<Button small kind="ghost" title="Pay setup" onPress={() => setSetupOpen(true)} />} />
+        <SectionHead title="Estimated Pay" right={<Button small kind="ghost" title="Pay Setup" onPress={() => setSetupOpen(true)} />} />
         {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : !payCard ? (
-          <Card><Button small title="Set my hourly rate" onPress={() => setSetupOpen(true)} /></Card>
+          <Card><Button small title="Set My Hourly Rate" onPress={() => setSetupOpen(true)} /></Card>
         ) : (
           <>
             <View style={{ marginBottom: 10 }}>
@@ -210,11 +207,11 @@ export function ReportsScreen() {
 
         {locked ? (
           <>
-            <SectionHead title="By shift type" />
+            <SectionHead title="By Shift Type" />
             <LockCard text="Full reports are part of Premium: hours by shift type, weekday vs weekend, comparisons and year in review." />
           </>
         ) : <>
-        <SectionHead title="By shift type" />
+        <SectionHead title="By Shift Type" />
         <Card>
           {stats.totalHours ? rows.map((r, i) => (
             <Bar key={i} name={r.name} color={r.color} value={r.hours} max={maxType}
@@ -222,7 +219,7 @@ export function ReportsScreen() {
           )) : <Dim>No shifts logged this period.</Dim>}
         </Card>
 
-        <SectionHead title="Weekdays vs weekends" />
+        <SectionHead title="Weekdays vs Weekends" />
         <Card>
           <Bar name="Weekdays" color={t.accent} value={stats.weekdayHours} max={Math.max(1, stats.weekdayHours, stats.weekendHours)}
             text={fmtHours(stats.weekdayHours) + "h · " + pct(stats.weekdayHours, wwTotal) + "% · " + stats.weekdayCount + "x"} />
@@ -230,7 +227,7 @@ export function ReportsScreen() {
             text={fmtHours(stats.weekendHours) + "h · " + pct(stats.weekendHours, wwTotal) + "% · " + stats.weekendCount + "x"} />
         </Card>
 
-        <SectionHead title={mode === "month" ? "Compared with last month" : "Compared with last year"} />
+        <SectionHead title={mode === "month" ? "Compared with Last Month" : "Compared with Last Year"} />
         <Card>
           <Bar name="This period" color={t.accent} value={stats.totalHours} max={Math.max(1, stats.totalHours, prev.totalHours)} text={fmtHours(stats.totalHours) + "h"} />
           <Bar name="Previous" color={t.textFaint} value={prev.totalHours} max={Math.max(1, stats.totalHours, prev.totalHours)} text={fmtHours(prev.totalHours) + "h"} />
@@ -241,7 +238,7 @@ export function ReportsScreen() {
 
         {mode === "year" ? (
           <>
-            <SectionHead title="Year in review" />
+            <SectionHead title="Year in Review" />
             <Card style={{ paddingVertical: 4 }}>
               {reviewRows.map((r, i) => (
                 <View key={r[0]}>
@@ -256,7 +253,7 @@ export function ReportsScreen() {
           </>
         ) : null}
         </>}
-        <Button small kind="ghost" style={{ marginTop: 22 }} title="PDF roster" onPress={() => (locked ? openPaywall("PDF export is part of Premium.") : setExportOpen(true))} />
+        <Button small kind="ghost" style={{ marginTop: 22 }} title="PDF Roster" onPress={() => (locked ? openPaywall("PDF export is part of Premium.") : setExportOpen(true))} />
         </View>
       </ScrollView>
       <ExportSheet visible={exportOpen} onClose={() => setExportOpen(false)} initialMode={mode} initialMonth={month} initialYear={year} />
@@ -323,11 +320,11 @@ function PayScreenSheet({ state, onChange, typesById }: {
 
   const close = () => { setSetupOpen(false); onChange(null); };
   return (
-    <Sheet visible={!!state} onClose={close} title="Estimated pay">
+    <Sheet visible={!!state} onClose={close} title="Estimated Pay">
       {state && view ? (
         <>
           <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: 10 }}>
-            <Button small kind="ghost" title="Pay setup" onPress={() => setSetupOpen(true)} />
+            <Button small kind="ghost" title="Pay Setup" onPress={() => setSetupOpen(true)} />
           </View>
           <Segmented<PayMode> value={state.mode} onChange={(m) => onChange({ mode: m, anchor: state.anchor })}
             options={[{ value: "period", label: "Pay period" }, { value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
@@ -382,7 +379,7 @@ function PayScreenSheet({ state, onChange, typesById }: {
             );
           })() : null}
 
-          <SectionHead title={"By month · " + view.y} />
+          <SectionHead title={"By Month · " + view.y} />
           <Card>
             {view.months.map((g, m) => (
               <Bar key={m} name={MONTHS[m].slice(0, 3)} color={t.accent} value={g} max={view.max || 1} text={g ? fmtMoneyShort(g) : "—"} />
@@ -405,7 +402,7 @@ function PayLines({ p, superPct }: { p: PayResult; superPct: number }) {
   if (p.excess) add("Excess hours", p.excess, undefined, fmtHours(p.excessHours) + "h");
   if (p.overtime) add("Overtime", p.overtime, undefined, fmtHours(p.otHours) + "h");
   if (p.penalties) {
-    add("Penalty rates", p.penalties);
+    add("Penalty Rates", p.penalties);
     Object.keys(p.penaltyLines).forEach((k) => add(k, p.penaltyLines[k], "sub"));
   }
   if (p.shiftAllowance) add("Shift allowance", p.shiftAllowance);

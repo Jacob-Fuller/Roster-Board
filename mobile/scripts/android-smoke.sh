@@ -30,7 +30,7 @@ tap_text "Skip"; shot 3-calendar 4
 tap_text "Mass-edit shifts"; shot 4-mass-edit 3
 tap_text "Done"
 tap_text "Types"; shot 5-types 3
-tap_text "New type"; shot 6-new-type 3
+tap_text "New Type"; shot 6-new-type 3
 adb shell input keyevent KEYCODE_BACK; sleep 1
 tap_text "Account"; shot 7-account 3
 adb logcat -d -s ReactNativeJS:V AndroidRuntime:E > "$OUT/emu-logcat.txt" 2>/dev/null || true

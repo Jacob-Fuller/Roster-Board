@@ -82,20 +82,23 @@ function MastBackground({ t }: { t: Theme }) {
   );
 }
 export { MastBackground };
-export function Masthead({ title, sub, right, children }: { title: React.ReactNode; sub?: string; right?: React.ReactNode; children?: React.ReactNode }) {
+// Every tab opens with the same band: same height, title, a line under it, and an optional control on the right.
+export const MAST_ROW_H = 62;
+export function Masthead({ title, sub, right }: { title: React.ReactNode; sub?: string; right?: React.ReactNode }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   return (
     <View style={{ backgroundColor: t.mast, paddingTop: insets.top + 14, paddingBottom: 18, paddingHorizontal: 18, borderBottomLeftRadius: 30, borderBottomRightRadius: 30, overflow: "hidden" }}>
       <MastBackground t={t} />
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10, height: MAST_ROW_H }}>
         <View style={{ flex: 1 }}>
-          {typeof title === "string" ? <Text style={{ fontFamily: SERIF, fontSize: 32, letterSpacing: -0.6, color: t.mastInk }} numberOfLines={1}>{title}</Text> : title}
-          {sub ? <Text style={{ color: t.mastDim, fontSize: 14, fontWeight: "500", marginTop: 3 }}>{sub}</Text> : null}
+          {typeof title === "string"
+            ? <Text style={{ fontFamily: SERIF, fontSize: 30, letterSpacing: -0.6, color: t.mastInk }} numberOfLines={1} adjustsFontSizeToFit>{title}</Text>
+            : title}
+          <Text style={{ color: t.mastDim, fontSize: 14, fontWeight: "500", marginTop: 3 }} numberOfLines={1}>{sub || " "}</Text>
         </View>
         {right}
       </View>
-      {children}
     </View>
   );
 }
