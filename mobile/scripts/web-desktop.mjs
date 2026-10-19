@@ -15,8 +15,12 @@ const types = [
 ];
 const shifts = {};
 [1, 2, 5, 6, 9, 13, 14, 17, 21, 22, 25].forEach((n, i) => { shifts[day(n)] = [{ id: "s" + n, typeId: i % 4 < 2 ? "t-day" : "t-night" }]; });
+shifts[day(9)].push({ id: "ex1", typeId: "excess_hours", hours: 10, baseTypeId: "t-day" });
+shifts[day(16)] = [{ id: "sp1", typeId: "overtime", hours: 2, excessHours: 8, baseTypeId: "t-day" }];
 const data = {
-  types, shifts, notes: {}, leave: {}, swaps: {}, payTags: { [day(5)]: [{ id: "a1", kind: "allowance", allowanceId: "mm" }] }, birthdays: [],
+  types, shifts,
+  notes: { [day(14)]: [{ id: "n1", text: "Dentist", category: "appointment", time: "10:30" }], [day(24)]: [{ id: "n2", text: "Dinner", category: "family", allDay: true }] },
+  leave: { [day(24)]: [{ id: "l1", kind: "sick", hours: 10, baseTypeId: "t-day" }] }, swaps: {}, payTags: { [day(5)]: [{ id: "a1", kind: "allowance", allowanceId: "mm" }] }, birthdays: [],
   roster: { weeks: 1, pattern: [[[], [], [], [], [], [], []]], updatedAt: 1 },
   settings: { hourlyRate: 39, employment: "part", partTime: { rostered: 4, excessCap: 28 }, updatedAt: 1,
     pay: { baseRate: 39, cycle: "fortnightly", savedAt: 1, allowances: [{ id: "mm", name: "Missed meal", kind: "flat", amount: 18.7, max: 2 }] } },
@@ -25,7 +29,7 @@ const data = {
 const errors = [];
 const browser = await chromium.launch();
 for (const theme of ["light", "dark"]) {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: theme });
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1.5, colorScheme: theme });
   const p = await ctx.newPage();
   p.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   await p.addInitScript(([d, theme]) => {
