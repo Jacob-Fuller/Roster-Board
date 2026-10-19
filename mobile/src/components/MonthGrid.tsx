@@ -21,6 +21,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
 }) {
   const t = useTheme();
   const [gridW, setGridW] = useState(0);
+  const [gridH, setGridH] = useState(0);
   // widths of the sample words at size 100, measured on this phone's font
   const [w100, setW100] = useState<{ [k in keyof typeof SAMPLES]?: number }>({});
   const ts = useMemo(() => bannerSizes(gridW, w100), [gridW, w100]);
@@ -42,7 +43,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
           <Text key={d} style={{ flex: 1, textAlign: "center", fontSize: 11, fontWeight: "700", color: t.textFaint, letterSpacing: 0.5, paddingBottom: 6 }}>{d.toUpperCase()}</Text>
         ))}
       </View>
-      <View onLayout={(e) => setGridW(e.nativeEvent.layout.width)} style={{ flex: 1, paddingHorizontal: 6, paddingBottom: 6 }}>
+      <View onLayout={(e) => { setGridW(e.nativeEvent.layout.width); setGridH(e.nativeEvent.layout.height); }} style={{ flex: 1, paddingHorizontal: 6, paddingBottom: 6 }}>
         {Array.from({ length: rows }, (_, r) => (
           <View key={r} style={{ flex: 1, flexDirection: "row" }}>
             {cells.slice(r * 7, r * 7 + 7).map((c) => {
@@ -84,7 +85,10 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               if (data.birthdays) birthdaysOnDate(data.birthdays, c.date).forEach((b) =>
                 items.push(<Pill ts={ts} key={"b" + b.id} strip="Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
                   label={(b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} party />));
-              const max = rows > 5 ? 2 : 3;
+              // as many banners as fit in the day (short days on a wide screen show fewer, with "+ more")
+              const cellH = gridH ? (gridH - 6) / rows - 4 - 6 - 20 : 0;
+              const fits = cellH > 0 ? Math.max(1, Math.floor((cellH + 3) / (ts.h + 3))) : 3;
+              const max = Math.min(rows > 5 ? 2 : 3, items.length > fits ? Math.max(1, fits - 1) : fits);
               const ph = ((data.payTags && data.payTags[key]) || []).some((x) => x.kind === "holiday");
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
               const sel = !!(selected && selected[key]);
@@ -136,9 +140,9 @@ const SAMPLES = {
   combo: { text: COMBO.toUpperCase(), weight: "800" as const, est: 11.6 },
   leave: { text: "ANNUAL LEAVE", weight: "800" as const, est: 8.3 },
 };
-type Sizes = { label: number; title: number; combo: number; leave: number };
+type Sizes = { label: number; title: number; combo: number; leave: number; h: number };
 function bannerSizes(gridW: number, w100: { [k in keyof typeof SAMPLES]?: number }): Sizes {
-  if (!gridW) return { label: 7, title: 5.5, combo: 4, leave: 5 };
+  if (!gridW) return { label: 7, title: 5.5, combo: 4, leave: 5, h: BANNER_H };
   const content = (gridW - 12) / 7 - 3 - 6 - 4; // cell margin, padding, thickest border
   const fit = (k: keyof typeof SAMPLES, room: number, max: number) => {
     const em = w100[k] ? w100[k]! / 100 : SAMPLES[k].est;
@@ -147,7 +151,10 @@ function bannerSizes(gridW: number, w100: { [k in keyof typeof SAMPLES]?: number
   const strip = content - 2 * STRIP_INSET - 4 - 1;
   // "Annual leave" and "Sick leave" share one size, the largest that fits "ANNUAL LEAVE" (never bigger than other titles)
   const title = fit("title", strip, 8);
-  return { label: fit("label", content - 6 - 1, 12), title, combo: fit("combo", strip, 8), leave: Math.min(title, fit("leave", strip, 8)) };
+  const label = fit("label", content - 6 - 1, 12);
+  // banners grow with their text on wide screens, so a title strip never pushes the name out of view
+  const h = Math.max(BANNER_H, Math.ceil(STRIP_INSET + STRIP_H + label * 1.3 + 5));
+  return { label, title, combo: fit("combo", strip, 8), leave: Math.min(title, fit("leave", strip, 8)), h };
 }
 
 // Party bunting and confetti for birthdays.
@@ -177,7 +184,7 @@ function Confetti() {
 
 function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; party?: boolean; ts: Sizes; border?: string | null }) {
   return (
-    <View style={{ height: BANNER_H, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
+    <View style={{ height: ts.h, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
         <View style={{ height: STRIP_H, marginTop: STRIP_INSET, marginHorizontal: STRIP_INSET, borderRadius: 3, overflow: "hidden", backgroundColor: stripBg, justifyContent: "center" }}>
           <Text numberOfLines={1} ellipsizeMode="clip"
