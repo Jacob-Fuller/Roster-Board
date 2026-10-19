@@ -1,8 +1,8 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
-import { PanResponder, Pressable, ScrollView, Text, View } from "react-native";
-import { Button, Card, Dim, Divider, IconTile, Masthead, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
+import { PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Button, Card, Dim, Divider, MastButton, Masthead, MenuRow, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
 import { EXCESS_ID, MONTHS, WEEKDAYS_FULL, parseYmd, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
 import {
   allowanceClaims, computePay, fmtMoney, fmtMoneyShort, payCardRangeAt, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
@@ -138,41 +138,46 @@ export function ReportsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <Masthead title="Reports" sub={label} />
+        <Masthead title="Reports" sub={label} right={
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <MastButton icon="chevron-back" a11y="Previous" onPress={() => step(-1)} />
+            <MastButton icon="chevron-forward" a11y="Next" onPress={() => step(1)} />
+          </View>
+        } />
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginVertical: 14 }}>
-          <Nav dir={-1} a11y="Previous" onPress={() => step(-1)} />
-          <Text style={{ color: t.text, fontSize: 17, fontWeight: "700" }}>{label}</Text>
-          <Nav dir={1} a11y="Next" onPress={() => step(1)} />
-        </View>
 
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <Stat icon="time" color="#4C8DFF" label="Hours" value={fmtHours(stats.totalHours)} />
-          {fullTime ? null : <Stat icon="add-circle" color="#A76BF0" label="Excess" value={fmtHours(stats.excessHours)} />}
-          <Stat icon="flash" color={OVERTIME_TYPE.color} label="Overtime" value={fmtHours(stats.otHours)} />
-          {fullTime ? <Stat icon="calendar" color="#3FC5C0" label="Days worked" value={String(stats.daysWorked)} /> : null}
-        </View>
-        <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
-          {fullTime ? null : <Stat icon="calendar" color="#3FC5C0" label="Days worked" value={String(stats.daysWorked)} />}
-          <Stat icon="airplane" color="#7E8B99" label="Leave days" value={String(stats.leaveDays)} />
-          <Stat icon="cash" color="#2FA36B" label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} />
-        </View>
+        <Card style={{ marginTop: 14, paddingVertical: 4, paddingHorizontal: 4 }}>
+          <View style={{ flexDirection: "row" }}>
+            <Figure label="Hours" value={fmtHours(stats.totalHours)} color="#4C8DFF" />
+            <VLine />
+            {fullTime ? null : <><Figure label="Excess" value={fmtHours(stats.excessHours)} color="#F7B3CE" /><VLine /></>}
+            <Figure label="Overtime" value={fmtHours(stats.otHours)} color={OVERTIME_TYPE.color} />
+            {fullTime ? <><VLine /><Figure label="Days worked" value={String(stats.daysWorked)} color="#3FC5C0" /></> : null}
+          </View>
+          <Divider />
+          <View style={{ flexDirection: "row" }}>
+            {fullTime ? null : <><Figure label="Days worked" value={String(stats.daysWorked)} color="#3FC5C0" /><VLine /></>}
+            <Figure label="Leave days" value={String(stats.leaveDays)} color="#7E8B99" />
+            <VLine />
+            <Figure label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} color="#2FA36B" />
+          </View>
+        </Card>
 
         {ptProgress ? (
           <>
             <SectionHead title="This Pay Period" right={<Dim>{shortDate(ptProgress.period.start) + " – " + shortDate(lastDay(ptProgress.period))}</Dim>} />
-            <Card>
-              {ptProgress.rostered ? <Bar name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={Math.max(ptProgress.rostered, ptProgress.rosteredDone)}
+            <Card style={{ gap: 12 }}>
+              {ptProgress.rostered ? <Meter name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={ptProgress.rostered}
                 text={ptProgress.rosteredDone + " of " + ptProgress.rostered} /> : null}
-              {ptProgress.excessCap ? <Bar name="Excess hours" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
+              {ptProgress.excessCap ? <Meter name="Excess hours" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
                 text={fmtHours(ptProgress.excessHours) + " of " + fmtHours(ptProgress.excessCap) + "h"} /> : null}
-              <Bar name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={Math.max(1, ptProgress.otHours)} text={fmtHours(ptProgress.otHours) + "h"} />
+              <Meter name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={Math.max(1, ptProgress.otHours)} text={fmtHours(ptProgress.otHours) + "h"} />
             </Card>
           </>
         ) : null}
 
-        <SectionHead title="Estimated Pay" right={<Button small kind="ghost" title="Pay Setup" onPress={() => setSetupOpen(true)} />} />
+        <SectionHead title="Estimated Pay" right={<HeadLink title="Pay Setup" onPress={() => setSetupOpen(true)} />} />
         {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : !payCard ? (
           <Card><Button small title="Set My Hourly Rate" onPress={() => setSetupOpen(true)} /></Card>
         ) : (
@@ -212,28 +217,39 @@ export function ReportsScreen() {
           </>
         ) : <>
         <SectionHead title="By Shift Type" />
-        <Card>
-          {stats.totalHours ? rows.map((r, i) => (
-            <Bar key={i} name={r.name} color={r.color} value={r.hours} max={maxType}
-              text={fmtHours(r.hours) + "h · " + pct(r.hours, stats.totalHours) + "% · " + r.count + "x"} />
+        <Card style={{ gap: 12 }}>
+          {stats.totalHours ? rows.filter((r) => r.hours > 0).map((r, i) => (
+            <Meter key={i} name={r.name} color={r.color} value={r.hours} max={maxType}
+              text={fmtHours(r.hours) + "h"} sub={pct(r.hours, stats.totalHours) + "% · " + r.count + (r.count === 1 ? " shift" : " shifts")} />
           )) : <Dim>No shifts logged this period.</Dim>}
         </Card>
 
         <SectionHead title="Weekdays vs Weekends" />
         <Card>
-          <Bar name="Weekdays" color={t.accent} value={stats.weekdayHours} max={Math.max(1, stats.weekdayHours, stats.weekendHours)}
-            text={fmtHours(stats.weekdayHours) + "h · " + pct(stats.weekdayHours, wwTotal) + "% · " + stats.weekdayCount + "x"} />
-          <Bar name="Weekends" color={t.accent} value={stats.weekendHours} max={Math.max(1, stats.weekdayHours, stats.weekendHours)}
-            text={fmtHours(stats.weekendHours) + "h · " + pct(stats.weekendHours, wwTotal) + "% · " + stats.weekendCount + "x"} />
+          <View style={{ flexDirection: "row", height: 10, borderRadius: 5, overflow: "hidden", backgroundColor: t.surface2 }}>
+            {wwTotal ? <>
+              <View style={{ flex: stats.weekdayHours || 0.0001, backgroundColor: t.accent }} />
+              <View style={{ width: 2, backgroundColor: t.surface }} />
+              <View style={{ flex: stats.weekendHours || 0.0001, backgroundColor: "#C8975F" }} />
+            </> : null}
+          </View>
+          <View style={{ flexDirection: "row", marginTop: 12 }}>
+            <Split color={t.accent} name="Weekdays" value={fmtHours(stats.weekdayHours) + "h"} sub={pct(stats.weekdayHours, wwTotal) + "% · " + stats.weekdayCount + " shifts"} />
+            <Split color="#C8975F" name="Weekends" value={fmtHours(stats.weekendHours) + "h"} sub={pct(stats.weekendHours, wwTotal) + "% · " + stats.weekendCount + " shifts"} right />
+          </View>
         </Card>
 
         <SectionHead title={mode === "month" ? "Compared with Last Month" : "Compared with Last Year"} />
         <Card>
-          <Bar name="This period" color={t.accent} value={stats.totalHours} max={Math.max(1, stats.totalHours, prev.totalHours)} text={fmtHours(stats.totalHours) + "h"} />
-          <Bar name="Previous" color={t.textFaint} value={prev.totalHours} max={Math.max(1, stats.totalHours, prev.totalHours)} text={fmtHours(prev.totalHours) + "h"} />
-          <Text style={{ marginTop: 6, fontWeight: "700", color: delta >= 0 ? t.good : t.danger }}>
-            {(delta >= 0 ? "+" : "") + fmtHours(delta) + "h (" + (deltaPct >= 0 ? "+" : "") + deltaPct + "%) vs previous period"}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
+            <Split color={t.accent} name={mode === "month" ? "This month" : "This year"} value={fmtHours(stats.totalHours) + "h"} />
+            <Split color={t.textFaint} name={mode === "month" ? "Last month" : "Last year"} value={fmtHours(prev.totalHours) + "h"} right />
+          </View>
+          <View style={{ alignSelf: "flex-start", marginTop: 12, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: (delta >= 0 ? t.good : t.danger) + "1F" }}>
+            <Text style={{ fontWeight: "700", fontSize: 13, color: delta >= 0 ? t.good : t.danger }}>
+              {(delta >= 0 ? "+" : "") + fmtHours(delta) + "h (" + (deltaPct >= 0 ? "+" : "") + deltaPct + "%)"}
+            </Text>
+          </View>
         </Card>
 
         {mode === "year" ? (
@@ -253,7 +269,9 @@ export function ReportsScreen() {
           </>
         ) : null}
         </>}
-        <Button small kind="ghost" style={{ marginTop: 22 }} title="PDF Roster" onPress={() => (locked ? openPaywall("PDF export is part of Premium.") : setExportOpen(true))} />
+        <Card style={{ marginTop: 24, paddingVertical: 2 }}>
+          <MenuRow icon="document-text" iconColor="#5B6B82" title="PDF Roster" onPress={() => (locked ? openPaywall("PDF export is part of Premium.") : setExportOpen(true))} />
+        </Card>
         </View>
       </ScrollView>
       <ExportSheet visible={exportOpen} onClose={() => setExportOpen(false)} initialMode={mode} initialMonth={month} initialYear={year} />
@@ -437,16 +455,64 @@ function PayLine({ label, amount, kind, detail }: { label: string; amount: numbe
   );
 }
 
-function Stat({ label, value, icon, color }: { label: string; value: string; icon: React.ComponentProps<typeof Ionicons>["name"]; color: string }) {
+// One figure in the summary card.
+function Figure({ label, value, color }: { label: string; value: string; color: string }) {
   const t = useTheme();
   return (
-    <Card style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 14 }}>
-      <IconTile icon={icon} color={color} size={26} />
-      <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: SERIF, color: t.text, fontSize: 24, marginTop: 8, fontVariant: ["tabular-nums"] }}>{value}</Text>
-      <Text style={{ color: t.textDim, fontSize: 12, fontWeight: "600", marginTop: 1 }} numberOfLines={1}>{label}</Text>
-    </Card>
+    <View style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 12 }}>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={{ fontFamily: SERIF, color: t.text, fontSize: 24, fontVariant: ["tabular-nums"] }}>{value}</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 }}>
+        <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+        <Text numberOfLines={1} style={{ color: t.textDim, fontSize: 12, fontWeight: "600", flexShrink: 1 }}>{label}</Text>
+      </View>
+    </View>
   );
 }
+function VLine() {
+  const t = useTheme();
+  return <View style={{ width: StyleSheet.hairlineWidth, backgroundColor: t.border, marginVertical: 12 }} />;
+}
+// A labelled row with a slim bar under it.
+function Meter({ name, color, value, max, text, sub }: { name: string; color: string; value: number; max: number; text: string; sub?: string }) {
+  const t = useTheme();
+  return (
+    <View>
+      <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color, alignSelf: "center" }} />
+        <Text numberOfLines={1} style={{ flex: 1, color: t.text, fontSize: 15, fontWeight: "600" }}>{name}</Text>
+        {sub ? <Text style={{ color: t.textFaint, fontSize: 12 }}>{sub}</Text> : null}
+        <Text style={{ color: t.text, fontSize: 14, fontWeight: "700", fontVariant: ["tabular-nums"], minWidth: 44, textAlign: "right" }}>{text}</Text>
+      </View>
+      <View style={{ height: 6, borderRadius: 3, backgroundColor: t.surface2, overflow: "hidden" }}>
+        <View style={{ width: `${value > 0 ? Math.max(3, Math.min(100, (value / max) * 100)) : 0}%`, height: "100%", backgroundColor: color, borderRadius: 3 }} />
+      </View>
+    </View>
+  );
+}
+// Half of a two-sided figure (weekdays/weekends, this/last period).
+function Split({ color, name, value, sub, right }: { color: string; name: string; value: string; sub?: string; right?: boolean }) {
+  const t = useTheme();
+  return (
+    <View style={{ flex: 1, alignItems: right ? "flex-end" : "flex-start" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
+        <Text style={{ color: t.textDim, fontSize: 13, fontWeight: "600" }}>{name}</Text>
+      </View>
+      <Text style={{ fontFamily: SERIF, color: t.text, fontSize: 24, marginTop: 2, fontVariant: ["tabular-nums"] }}>{value}</Text>
+      {sub ? <Text style={{ color: t.textFaint, fontSize: 12 }}>{sub}</Text> : null}
+    </View>
+  );
+}
+function HeadLink({ title, onPress }: { title: string; onPress: () => void }) {
+  const t = useTheme();
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} hitSlop={8} style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 2, opacity: pressed ? 0.6 : 1 })}>
+      <Text style={{ color: t.accent, fontWeight: "700", fontSize: 14 }}>{title}</Text>
+      <Ionicons name="chevron-forward" size={14} color={t.accent} />
+    </Pressable>
+  );
+}
+
 
 function Bar({ name, color, value, max, text }: { name: string; color: string; value: number; max: number; text: string }) {
   const t = useTheme();
