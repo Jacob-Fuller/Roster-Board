@@ -76,7 +76,7 @@ const session = { access_token: token, refresh_token: "r", token_type: "bearer",
 const conns = [{ id: "c1", requester_id: UID, target_id: "u2", requester_email: user.email, target_email: "sam@example.com", status: "accepted" }];
 
 const ANCHORS = ["Roster Pattern", "Rotation Length", "Stamp onto Calendar", "By Shift Type", "Weekdays vs Weekends", "Estimated Pay",
-  "Compared with", "Previous", "Swaps", "Shifts", "Leave", "Birthdays", "Personal Events", "Shift alarm", "Appearance", "Account", "October 2026"];
+  "Swaps", "Shifts", "Leave", "Birthdays", "Personal Events", "Shift alarm", "Appearance", "Account", "October 2026"];
 
 const browser = await chromium.launch();
 async function capture(name, theme, steps, extra) {

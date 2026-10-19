@@ -72,8 +72,6 @@ export function ReportsScreen() {
   const maxType = Math.max(1, ...rows.map((r) => r.hours));
   const wwTotal = stats.weekdayHours + stats.weekendHours;
   const pct = (v: number, of: number) => (of > 0 ? Math.round((v / of) * 100) : 0);
-  const delta = stats.totalHours - prev.totalHours;
-  const deltaPct = prev.totalHours > 0 ? Math.round((delta / prev.totalHours) * 100) : stats.totalHours > 0 ? 100 : 0;
 
   let busiest: string | null = null, busiestVal = 0;
   Object.keys(stats.monthTotals).forEach((k) => { if (stats.monthTotals[k] > busiestVal) { busiestVal = stats.monthTotals[k]; busiest = k; } });
@@ -147,20 +145,13 @@ export function ReportsScreen() {
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
 
-        <Card style={{ marginTop: 14, paddingVertical: 4, paddingHorizontal: 4 }}>
+        <Card style={{ marginTop: 14, paddingVertical: 2, paddingHorizontal: 4 }}>
           <View style={{ flexDirection: "row" }}>
             <Figure label="Hours" value={fmtHours(stats.totalHours)} color="#4C8DFF" />
             <VLine />
-            {fullTime ? null : <><Figure label="Excess" value={fmtHours(stats.excessHours)} color="#F7B3CE" /><VLine /></>}
-            <Figure label="Overtime" value={fmtHours(stats.otHours)} color={OVERTIME_TYPE.color} />
-            {fullTime ? <><VLine /><Figure label="Days worked" value={String(stats.daysWorked)} color="#3FC5C0" /></> : null}
-          </View>
-          <Divider />
-          <View style={{ flexDirection: "row" }}>
-            {fullTime ? null : <><Figure label="Days worked" value={String(stats.daysWorked)} color="#3FC5C0" /><VLine /></>}
-            <Figure label="Leave days" value={String(stats.leaveDays)} color="#7E8B99" />
+            {fullTime ? <Figure label="Days worked" value={String(stats.daysWorked)} color="#3FC5C0" /> : <Figure label="Excess" value={fmtHours(stats.excessHours)} color="#F7B3CE" />}
             <VLine />
-            <Figure label="Est. pay" value={payCard && !locked ? fmtMoneyShort(payCard.p.gross) : "—"} color="#2FA36B" />
+            <Figure label="Overtime" value={fmtHours(stats.otHours)} color={OVERTIME_TYPE.color} />
           </View>
         </Card>
 
@@ -170,9 +161,9 @@ export function ReportsScreen() {
             <Card style={{ gap: 12 }}>
               {ptProgress.rostered ? <Meter name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={ptProgress.rostered}
                 text={ptProgress.rosteredDone + " of " + ptProgress.rostered} /> : null}
-              {ptProgress.excessCap ? <Meter name="Excess hours" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
+              {ptProgress.excessCap ? <Meter name="Excess" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
                 text={fmtHours(ptProgress.excessHours) + " of " + fmtHours(ptProgress.excessCap) + "h"} /> : null}
-              <Meter name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={Math.max(1, ptProgress.otHours)} text={fmtHours(ptProgress.otHours) + "h"} />
+              {ptProgress.otHours ? <Meter name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={ptProgress.otHours} text={fmtHours(ptProgress.otHours) + "h"} /> : null}
             </Card>
           </>
         ) : null}
@@ -197,10 +188,10 @@ export function ReportsScreen() {
                   <Nav dir={1} onHero a11y="Next period" onPress={() => setCardOffset((o) => o + 1)} />
                 </View>
                 <Pressable accessibilityRole="button" accessibilityLabel="Pay breakdown" onPress={openBreakdown}
-                  style={({ pressed }) => ({ alignItems: "center", paddingTop: 18, paddingBottom: 4, opacity: pressed ? 0.75 : 1 })}>
-                  <Text style={{ fontFamily: SERIF, color: t.heroInk, fontSize: 42, letterSpacing: -0.8, fontVariant: ["tabular-nums"] }}>{fmtMoney(payCard.p.gross)}</Text>
+                  style={({ pressed }) => ({ alignItems: "center", paddingTop: 10, paddingBottom: 0, opacity: pressed ? 0.75 : 1 })}>
+                  <Text style={{ fontFamily: SERIF, color: t.heroInk, fontSize: 36, letterSpacing: -0.8, fontVariant: ["tabular-nums"] }}>{fmtMoney(payCard.p.gross)}</Text>
                   <Text style={{ color: t.heroDim, fontSize: 14, marginTop: 2 }}>{payCard.p.showTax ? "Gross · about " + fmtMoney(payCard.p.net) + " take-home" : "Gross"}</Text>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 14, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.12)" }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 10, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.12)" }}>
                     <Text style={{ color: t.heroInk, fontWeight: "700", fontSize: 13 }}>Breakdown</Text>
                     <Ionicons name="chevron-forward" size={14} color={t.heroInk} />
                   </View>
@@ -220,35 +211,22 @@ export function ReportsScreen() {
         <Card style={{ gap: 12 }}>
           {stats.totalHours ? rows.filter((r) => r.hours > 0).map((r, i) => (
             <Meter key={i} name={r.name} color={r.color} value={r.hours} max={maxType}
-              text={fmtHours(r.hours) + "h"} sub={pct(r.hours, stats.totalHours) + "% · " + r.count + (r.count === 1 ? " shift" : " shifts")} />
+              text={fmtHours(r.hours) + "h"} />
           )) : <Dim>No shifts logged this period.</Dim>}
         </Card>
 
         <SectionHead title="Weekdays vs Weekends" />
         <Card>
-          <View style={{ flexDirection: "row", height: 10, borderRadius: 5, overflow: "hidden", backgroundColor: t.surface2 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
+            <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>Weekdays <Text style={{ fontWeight: "700" }}>{fmtHours(stats.weekdayHours) + "h"}</Text></Text>
+            <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>Weekends <Text style={{ fontWeight: "700" }}>{fmtHours(stats.weekendHours) + "h"}</Text></Text>
+          </View>
+          <View style={{ flexDirection: "row", height: 6, borderRadius: 3, overflow: "hidden", backgroundColor: t.surface2 }}>
             {wwTotal ? <>
               <View style={{ flex: stats.weekdayHours || 0.0001, backgroundColor: t.accent }} />
               <View style={{ width: 2, backgroundColor: t.surface }} />
               <View style={{ flex: stats.weekendHours || 0.0001, backgroundColor: "#C8975F" }} />
             </> : null}
-          </View>
-          <View style={{ flexDirection: "row", marginTop: 12 }}>
-            <Split color={t.accent} name="Weekdays" value={fmtHours(stats.weekdayHours) + "h"} sub={pct(stats.weekdayHours, wwTotal) + "% · " + stats.weekdayCount + " shifts"} />
-            <Split color="#C8975F" name="Weekends" value={fmtHours(stats.weekendHours) + "h"} sub={pct(stats.weekendHours, wwTotal) + "% · " + stats.weekendCount + " shifts"} right />
-          </View>
-        </Card>
-
-        <SectionHead title={mode === "month" ? "Compared with Last Month" : "Compared with Last Year"} />
-        <Card>
-          <View style={{ flexDirection: "row", alignItems: "flex-end" }}>
-            <Split color={t.accent} name={mode === "month" ? "This month" : "This year"} value={fmtHours(stats.totalHours) + "h"} />
-            <Split color={t.textFaint} name={mode === "month" ? "Last month" : "Last year"} value={fmtHours(prev.totalHours) + "h"} right />
-          </View>
-          <View style={{ alignSelf: "flex-start", marginTop: 12, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, backgroundColor: (delta >= 0 ? t.good : t.danger) + "1F" }}>
-            <Text style={{ fontWeight: "700", fontSize: 13, color: delta >= 0 ? t.good : t.danger }}>
-              {(delta >= 0 ? "+" : "") + fmtHours(delta) + "h (" + (deltaPct >= 0 ? "+" : "") + deltaPct + "%)"}
-            </Text>
           </View>
         </Card>
 
@@ -486,20 +464,6 @@ function Meter({ name, color, value, max, text, sub }: { name: string; color: st
       <View style={{ height: 6, borderRadius: 3, backgroundColor: t.surface2, overflow: "hidden" }}>
         <View style={{ width: `${value > 0 ? Math.max(3, Math.min(100, (value / max) * 100)) : 0}%`, height: "100%", backgroundColor: color, borderRadius: 3 }} />
       </View>
-    </View>
-  );
-}
-// Half of a two-sided figure (weekdays/weekends, this/last period).
-function Split({ color, name, value, sub, right }: { color: string; name: string; value: string; sub?: string; right?: boolean }) {
-  const t = useTheme();
-  return (
-    <View style={{ flex: 1, alignItems: right ? "flex-end" : "flex-start" }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
-        <Text style={{ color: t.textDim, fontSize: 13, fontWeight: "600" }}>{name}</Text>
-      </View>
-      <Text style={{ fontFamily: SERIF, color: t.text, fontSize: 24, marginTop: 2, fontVariant: ["tabular-nums"] }}>{value}</Text>
-      {sub ? <Text style={{ color: t.textFaint, fontSize: 12 }}>{sub}</Text> : null}
     </View>
   );
 }
