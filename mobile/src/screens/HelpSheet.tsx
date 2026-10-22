@@ -29,11 +29,11 @@ const GROUPS: Group[] = [
       { title: "Adding a Shift", text: "Tap a day, then tap one of your shift types. If the shift can have excess or overtime, choose a plain shift, excess, overtime or both, and enter the hours." },
       { title: "Additional Shifts (part Time)", text: "When part time is set up with an excess limit, add extra shifts as Additional shift and just enter the hours worked. All excess hours in a pay period count toward the limit, and anything past it becomes overtime automatically." },
       { title: "Leave", text: "Tap + Annual Leave or + Sick Leave, pick the shift you're taking off and confirm the hours. The calendar shows that shift with a leave title on it. If the shift was already rostered, the leave replaces it, and removing the leave puts the shift back." },
-      { title: "Allowances", text: "Set up your allowances in Pay Setup, such as missed meals and missed breaks. Add them to a day when you add a shift, or with the − and + counters on the day. Each one is added to your estimated pay." },
+      { title: "Allowances", text: "Set up your allowances in Pay Setup, such as missed meals and missed breaks. Add them when you add a shift, using the − and + counters. Each one is added to your estimated pay." },
       { title: "Swaps", text: "Tap Swap next to a shift to move it to another date and note who you swapped with. Both days show the swap on the calendar, and Undo swap puts everything back." },
       { title: "Personal Events", text: "Add appointments, social plans and reminders to any day, all day or at a set time. With Premium on iOS 26 or later, set an alert and a second alert from the time of the event up to a week before." },
       { title: "Filling Many Days at Once", text: "Tap the wand button, choose a shift type, then tap days to add or remove it. Tap Done when you're finished." },
-      { title: "Public Holidays", text: "Open a day and turn on Public holiday. Shifts that day are paid at your public holiday penalty rate from Pay Setup." },
+      { title: "Public Holidays", text: "Choose your state in Account → Employment and its public holidays are marked PH on the calendar. Shifts on those days are paid at your public holiday penalty rate from Pay Setup." },
       { title: "Moving Between Months", text: "Swipe left or right, or use the arrows. Today takes you back to this month. Every second pay period is shaded once pay is set up." },
     ],
   },
@@ -65,7 +65,7 @@ const GROUPS: Group[] = [
   },
   {
     title: "Account", icon: "person-circle", color: "#5B6B82", topics: [
-      { title: "Employment", text: "Choose full time or part time. Part time lets you set your pay cycle, rostered shifts per pay period and the excess hours allowed before overtime." },
+      { title: "Employment", text: "Choose full time or part time, and your state for public holidays. Part time lets you set your pay cycle, rostered shifts per pay period and the excess hours allowed before overtime." },
       { title: "Birthdays", text: "Add birthdays yourself, or let the app show your contacts' birthdays. Contact birthdays update by themselves each time you open the app." },
       { title: "Appearance", text: "Choose light or dark, and whether personal events and birthdays show on the calendar." },
       { title: "Home Screen Widget", text: "Press and hold your home screen, tap Edit then Add Widget, and choose Roster Board. The small widget shows your next shift. The medium one adds the next few shifts and, with Premium, this pay period's estimate." },

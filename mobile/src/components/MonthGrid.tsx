@@ -5,7 +5,8 @@ import {
   EVENT_CATS, LEAVE_KINDS, LEAVE_STRIP, WEEKDAYS_SHORT, birthdaysOnDate, buildMonthCells, entryColor, entryName, isCombo, isSameDay, isSplitEntry, ymd,
   type Birthday, type Buckets, type EventEntry, type LeaveEntry, type Rec, type ShiftEntry, type ShiftType,
 } from "../lib/model";
-import { payConfig, payIsSetUp, payPeriodIsAlt } from "../lib/pay";
+import { holidayName, stateOf } from "../lib/holidays";
+import { isPublicHoliday, payConfig, payIsSetUp, payPeriodIsAlt } from "../lib/pay";
 import { BannerBorder } from "./BannerBorder";
 import { useTheme } from "./ui";
 
@@ -89,7 +90,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               const cellH = gridH ? (gridH - 6) / rows - 4 - 6 - 20 : 0;
               const fits = cellH > 0 ? Math.max(1, Math.floor((cellH + 3) / (ts.h + 3))) : 3;
               const max = Math.min(rows > 5 ? 2 : 3, items.length > fits ? Math.max(1, fits - 1) : fits);
-              const ph = ((data.payTags && data.payTags[key]) || []).some((x) => x.kind === "holiday");
+              const ph = isPublicHoliday(data as any, key);
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
               const sel = !!(selected && selected[key]);
               return (
@@ -105,7 +106,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                     <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 3, alignItems: "center", justifyContent: "center", backgroundColor: isToday ? t.accent : "transparent" }}>
                       <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accentInk : t.text, fontVariant: ["tabular-nums"] }}>{c.date.getDate()}</Text>
                     </View>
-                    {ph ? <Text accessibilityLabel="Public holiday" style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
+                    {ph ? <Text accessibilityLabel={holidayName(stateOf((data as any).settings), key) || "Public holiday"} style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
                   </View>
                   <View style={{ gap: 3 }}>
                     {items.slice(0, max)}

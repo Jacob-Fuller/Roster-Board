@@ -7,10 +7,11 @@ import {
   EVENT_CATS, EVENT_CAT_ORDER, EXCESS_ID, EXCESS_TYPE, LEAVE_KINDS, MONTHS, OVERTIME_ID, OVERTIME_TYPE, WEEKDAYS_FULL,
   birthdaysOnDate, employmentOf, entryColor, entryExcessHours, entryName, entryOTHours, fmtHours, isCombo, isSplitEntry, mkId, parseYmd,
   type Rec, type ShiftEntry, type ShiftType, type Snapshot, sortedTypes } from "../lib/model";
-import { allowanceAmount, fmtMoney, payAllowances, payConfig, payTagLabel, payTagsOn, rateOn, type PayAllowance, type PayTag } from "../lib/pay";
+import { payAllowances, type PayAllowance, type PayTag } from "../lib/pay";
 import { applySplit, autoSplitOn, rebalanceExtras } from "../lib/partTime";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { OptionPicker } from "../components/OptionPicker";
+import { holidayName, stateOf } from "../lib/holidays";
 import { usePremium } from "../lib/premium";
 import { askReminderPermission } from "../lib/reminders";
 import { EVENT_ALARM_OPTIONS, requestAlarmPermission, useAlarmsAvailable } from "../lib/shiftAlarms";
@@ -58,7 +59,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const leave = data.leave[key] || [];
   const swaps = data.swaps[key] || [];
   const allowances = payAllowances(data.settings).filter((a) => a.name);
-  const dayRate = rateOn(payConfig(data.settings), key);
+  const holiday = holidayName(stateOf(data.settings), key);
   const events = (data.notes[key] || []).slice().sort((a, b) => (a.allDay ? "" : a.time || "99:99").localeCompare(b.allDay ? "" : b.time || "99:99"));
   const bdays = birthdaysOnDate(data.birthdays, date);
 
@@ -109,6 +110,13 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       if (!d.shifts[key].length) delete d.shifts[key];
       tomb(id);
       rebalanceExtras(d, [key]);
+      // allowances are added with a shift, so they go once the day has no work shift left
+      if (!(d.shifts[key] || []).some((s) => typesById[s.typeId] && typesById[s.typeId].kind !== "personal") && d.payTags[key]) {
+        const list = d.payTags[key] as PayTag[];
+        list.filter((x) => x.kind === "allowance").forEach((x) => tomb(x.id));
+        d.payTags[key] = list.filter((x) => x.kind !== "allowance");
+        if (!d.payTags[key].length) delete d.payTags[key];
+      }
       // a removed picked-up shift takes its swap records with it
       const onRec = (d.swaps[key] || []).find((r) => r.kind === "on" && r.shiftEntryId === id);
       if (onRec) {
@@ -161,34 +169,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     }
   });
 
-  /* ----- public holiday ----- */
-  // The public holiday penalty rate (Pay Setup) is paid on shifts on these days.
-  const isHoliday = payTagsOn(data, key).some((x) => x.kind === "holiday");
-  const setHoliday = (on: boolean) => update((d, tomb) => {
-    const list = ((d.payTags[key] || []) as PayTag[]);
-    if (on) { if (!list.some((x) => x.kind === "holiday")) list.push({ id: mkId(), kind: "holiday", updatedAt: Date.now() }); d.payTags[key] = list; }
-    else {
-      list.filter((x) => x.kind === "holiday").forEach((x) => tomb(x.id));
-      d.payTags[key] = list.filter((x) => x.kind !== "holiday");
-      if (!d.payTags[key].length) delete d.payTags[key];
-    }
-  });
-
   /* ----- allowances ----- */
-  const setAllowanceCount = (allowanceId: string, count: number) => update((d, tomb) => {
-    const list = ((d.payTags[key] || []) as PayTag[]);
-    const mine = list.filter((x) => x.kind === "allowance" && x.allowanceId === allowanceId);
-    if (count > mine.length) {
-      const paid = mine.length > 0 && mine.every((x) => x.paid);
-      for (let i = mine.length; i < count; i++) list.push({ id: mkId(), kind: "allowance", allowanceId, ...(paid ? { paid: true } : {}), updatedAt: Date.now() });
-      d.payTags[key] = list;
-    } else {
-      const drop = mine.slice(count).map((x) => x.id);
-      drop.forEach((id) => tomb(id));
-      d.payTags[key] = list.filter((x) => drop.indexOf(x.id) === -1);
-      if (!d.payTags[key].length) delete d.payTags[key];
-    }
-  });
   // Allowances chosen while adding a shift are added to the day's count.
   const addAllowances = (counts: { [allowanceId: string]: number }) => {
     const ids = Object.keys(counts).filter((id) => counts[id] > 0);
@@ -199,11 +180,6 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       d.payTags[key] = list;
     });
   };
-  const setAllowancePaid = (allowanceId: string, paid: boolean) => update((d) => {
-    ((d.payTags[key] || []) as PayTag[]).forEach((x) => {
-      if (x.kind === "allowance" && x.allowanceId === allowanceId) { if (paid) x.paid = true; else delete x.paid; x.updatedAt = Date.now(); }
-    });
-  });
 
   /* ----- swaps ----- */
   function undoSwap(clickedId: string) {
@@ -316,6 +292,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
 
   return (
     <Sheet visible onClose={onClose} title={title}>
+      {holiday ? <Dim style={{ marginTop: -4, marginBottom: 4 }}>{holiday} · Public holiday</Dim> : null}
       <SectionHead title="Shifts" />
       {shifts.length ? shifts.map((s) => {
         const ty = typesById[s.typeId];
@@ -370,35 +347,6 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
             onPress={() => (leaveTypes.length ? setLeavePick(k) : addLeave(k, null))} />
         ))}
       </View>
-
-      <SectionHead title="Pay" />
-      <ToggleRow label="Public holiday" value={isHoliday} onChange={setHoliday} />
-      {allowances.length ? (
-        <>
-          <SectionHead title="Allowances" />
-          {allowances.map((a) => {
-            const mine = payTagsOn(data, key).filter((x) => x.kind === "allowance" && x.allowanceId === a.id);
-            const n = mine.length;
-            const paid = n > 0 && mine.every((x) => x.paid);
-            return (
-              <View key={a.id}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8 }}>
-                  <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: paid, disabled: !n }} accessibilityLabel={a.name + " paid"}
-                    disabled={!n} onPress={() => setAllowancePaid(a.id, !paid)} hitSlop={8}>
-                    <Ionicons name={paid ? "checkmark-circle" : "ellipse-outline"} size={24} color={!n ? t.border : paid ? t.good : t.textFaint} />
-                  </Pressable>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{a.name}</Text>
-                    <Dim>{n ? fmtMoney(n * allowanceAmount(a, dayRate)) + (paid ? " · paid" : "") : fmtMoney(allowanceAmount(a, dayRate)) + " each"}</Dim>
-                  </View>
-                  <Stepper value={n} onChange={(v) => setAllowanceCount(a.id, v)} label={a.name} />
-                </View>
-                <Divider />
-              </View>
-            );
-          })}
-        </>
-      ) : null}
 
       {bdays.length ? (
         <>

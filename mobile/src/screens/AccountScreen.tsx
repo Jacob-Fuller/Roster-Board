@@ -1,4 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { OptionPicker } from "../components/OptionPicker";
+import { AU_STATES, stateOf, type AuState } from "../lib/holidays";
 import React, { useEffect, useState } from "react";
 import { Linking, Platform, ScrollView, Share, Text, View, useColorScheme } from "react-native";
 import { Button, Card, Dim, Divider, Field, Masthead, MenuRow, SERIF, ToggleRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
@@ -58,7 +60,7 @@ export function AccountScreen() {
         <Card style={{ paddingVertical: 2 }}>
           <MenuRow icon="settings" iconColor="#5B6B82" title="Settings" sub={signedIn ? name || user!.email || "" : "Not signed in"} onPress={() => setAcctOpen(true)} />
           <Divider />
-          <MenuRow icon="briefcase" iconColor="#4C8DFF" title="Employment" sub={(employmentOf(data.settings) === "full" ? "Full time" : "Part time") + (employmentSub(data.settings) ? " · " + employmentSub(data.settings) : "")} onPress={() => setEmpOpen(true)} />
+          <MenuRow icon="briefcase" iconColor="#4C8DFF" title="Employment" sub={(employmentOf(data.settings) === "full" ? "Full time" : "Part time") + (stateOf(data.settings) ? " · " + stateOf(data.settings) : "") + (employmentSub(data.settings) ? " · " + employmentSub(data.settings) : "")} onPress={() => setEmpOpen(true)} />
           <Divider />
           <MenuRow icon="gift" iconColor="#A76BF0" title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
         </Card>
@@ -296,9 +298,11 @@ function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () =
   const [start, setStart] = useState("");
   const [rostered, setRostered] = useState("");
   const [cap, setCap] = useState("");
+  const [state, setState] = useState<AuState | "">("");
   useEffect(() => {
     if (!visible) return;
     const cfg = payConfig(data.settings), pt = partTimeOf(data.settings);
+    setState(stateOf(data.settings) || "");
     setEmp(employmentOf(data.settings)); setCycle(cfg.cycle); setStart(cfg.periodStart || ymd(payAnchor(cfg)));
     setRostered(pt.rostered ? String(pt.rostered) : ""); setCap(pt.excessCap ? String(pt.excessCap) : "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -308,6 +312,7 @@ function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () =
     update((d) => {
       const now = Date.now();
       const st: any = { ...d.settings, employment: emp, updatedAt: now };
+      if (state) st.state = state; else delete st.state;
       if (emp === "part") {
         st.partTime = { rostered: Math.max(0, Math.round(num(rostered, 0))), excessCap: Math.max(0, num(cap.replace(",", "."), 0)) };
         // the pay cycle is shared with pay setup
@@ -326,6 +331,10 @@ function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () =
       footer={<View style={{ flexDirection: "row", gap: 10 }}><Button style={{ flex: 1 }} kind="ghost" title="Cancel" onPress={onClose} /><Button style={{ flex: 1 }} title="Save" onPress={save} /></View>}>
       <Card>
         <Segmented<Employment> value={emp} onChange={setEmp} options={[{ value: "full", label: "Full time" }, { value: "part", label: "Part time" }]} />
+      </Card>
+      <SectionHead title="Public Holidays" />
+      <Card style={{ paddingVertical: 2 }}>
+        <OptionPicker<AuState | ""> label="State" value={state} options={[{ value: "", label: "None" }, ...AU_STATES]} onChange={setState} />
       </Card>
       {emp === "part" ? (
         <>

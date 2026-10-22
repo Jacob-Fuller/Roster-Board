@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { Pressable, Text } from "react-native";
 import { Card, Dim, Divider, MenuRow, Sheet, useTheme } from "./ui";
 
-export function OptionPicker({ label, value, options, onChange }: {
-  label: string; value: number; options: { value: number; label: string }[]; onChange: (v: number) => void;
+export function OptionPicker<V extends string | number>({ label, value, options, onChange }: {
+  label: string; value: V; options: { value: V; label: string }[]; onChange: (v: V) => void;
 }) {
   const t = useTheme();
   const [open, setOpen] = useState(false);
