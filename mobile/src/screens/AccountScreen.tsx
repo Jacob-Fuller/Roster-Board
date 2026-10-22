@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { OptionPicker } from "../components/OptionPicker";
-import { AU_STATES, stateOf, type AuState } from "../lib/holidays";
+import { AU_AREAS, AU_STATES, placeOf, stateOf, type AuState } from "../lib/holidays";
 import React, { useEffect, useState } from "react";
 import { Linking, Platform, ScrollView, Share, Text, View, useColorScheme } from "react-native";
 import { Button, Card, Dim, Divider, Field, Masthead, MenuRow, SERIF, ToggleRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
@@ -299,10 +299,12 @@ function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () =
   const [rostered, setRostered] = useState("");
   const [cap, setCap] = useState("");
   const [state, setState] = useState<AuState | "">("");
+  const [area, setArea] = useState("");
   useEffect(() => {
     if (!visible) return;
     const cfg = payConfig(data.settings), pt = partTimeOf(data.settings);
-    setState(stateOf(data.settings) || "");
+    const pl = placeOf(data.settings);
+    setState(pl ? pl.state : ""); setArea(pl ? pl.area : "");
     setEmp(employmentOf(data.settings)); setCycle(cfg.cycle); setStart(cfg.periodStart || ymd(payAnchor(cfg)));
     setRostered(pt.rostered ? String(pt.rostered) : ""); setCap(pt.excessCap ? String(pt.excessCap) : "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -313,6 +315,7 @@ function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () =
       const now = Date.now();
       const st: any = { ...d.settings, employment: emp, updatedAt: now };
       if (state) st.state = state; else delete st.state;
+      if (state && area) st.area = area; else delete st.area;
       if (emp === "part") {
         st.partTime = { rostered: Math.max(0, Math.round(num(rostered, 0))), excessCap: Math.max(0, num(cap.replace(",", "."), 0)) };
         // the pay cycle is shared with pay setup
@@ -334,7 +337,11 @@ function EmploymentSheet({ visible, onClose }: { visible: boolean; onClose: () =
       </Card>
       <SectionHead title="Public Holidays" />
       <Card style={{ paddingVertical: 2 }}>
-        <OptionPicker<AuState | ""> label="State" value={state} options={[{ value: "", label: "None" }, ...AU_STATES]} onChange={setState} />
+        <OptionPicker<AuState | ""> label="State" value={state} options={[{ value: "", label: "None" }, ...AU_STATES]} onChange={(v) => { setState(v); setArea(""); }} />
+        {state && AU_AREAS[state] ? (<>
+          <Divider />
+          <OptionPicker label="Area" value={area} options={[{ value: "", label: "Other" }, ...AU_AREAS[state]!]} onChange={setArea} />
+        </>) : null}
       </Card>
       {emp === "part" ? (
         <>

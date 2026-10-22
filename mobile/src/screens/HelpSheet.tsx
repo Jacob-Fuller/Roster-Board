@@ -33,7 +33,7 @@ const GROUPS: Group[] = [
       { title: "Swaps", text: "Tap Swap next to a shift to move it to another date and note who you swapped with. Both days show the swap on the calendar, and Undo swap puts everything back." },
       { title: "Personal Events", text: "Add appointments, social plans and reminders to any day, all day or at a set time. With Premium on iOS 26 or later, set an alert and a second alert from the time of the event up to a week before." },
       { title: "Filling Many Days at Once", text: "Tap the wand button, choose a shift type, then tap days to add or remove it. Tap Done when you're finished." },
-      { title: "Public Holidays", text: "Choose your state in Account → Employment and its public holidays are marked PH on the calendar. Shifts on those days are paid at your public holiday penalty rate from Pay Setup." },
+      { title: "Public Holidays", text: "Choose your state in Account → Employment and its public holidays are marked PH on the calendar. Choose your area too, like Brisbane for the Ekka, to add local show days. Shifts on those days are paid at your public holiday penalty rate from Pay Setup." },
       { title: "Moving Between Months", text: "Swipe left or right, or use the arrows. Today takes you back to this month. Every second pay period is shaded once pay is set up." },
     ],
   },

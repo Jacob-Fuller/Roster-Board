@@ -4,7 +4,7 @@
 // excessMultiplier / payLeave directly on settings; those are still read as
 // defaults and kept up to date so an older copy of the app keeps working.
 // The numbers must match the web app exactly (see pay.test.ts).
-import { holidayName, stateOf } from "./holidays.ts";
+import { holidayName, placeOf } from "./holidays.ts";
 import {
   EXCESS_ID, OVERTIME_ID, addDays, effectiveHours, entryExcessHours, entryOTHours, parseYmd, ymd,
   type Rec, type ShiftType, type Snapshot,
@@ -207,8 +207,8 @@ export const payTagsOn = (d: Pick<Snapshot, "payTags">, dateKey: string): PayTag
 // With a state chosen (Employment), that state's public holidays are used.
 // Without one, days marked as public holidays by hand (older versions) still count.
 export function isPublicHoliday(d: Pick<Snapshot, "payTags"> & { settings?: Settings | null }, dateKey: string) {
-  const st = stateOf(d.settings);
-  return st ? !!holidayName(st, dateKey) : payTagsOn(d, dateKey).some((t) => t.kind === "holiday");
+  const pl = placeOf(d.settings);
+  return pl ? !!holidayName(pl, dateKey) : payTagsOn(d, dateKey).some((t) => t.kind === "holiday");
 }
 // The allowances set up in pay settings (what a day can be tagged with).
 export const payAllowances = (settings: Settings | null | undefined): PayAllowance[] => payConfig(settings).allowances;

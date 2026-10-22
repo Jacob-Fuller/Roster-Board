@@ -11,7 +11,7 @@ import { payAllowances, type PayAllowance, type PayTag } from "../lib/pay";
 import { applySplit, autoSplitOn, rebalanceExtras } from "../lib/partTime";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { OptionPicker } from "../components/OptionPicker";
-import { holidayName, stateOf } from "../lib/holidays";
+import { holidayName, placeOf } from "../lib/holidays";
 import { usePremium } from "../lib/premium";
 import { askReminderPermission } from "../lib/reminders";
 import { EVENT_ALARM_OPTIONS, requestAlarmPermission, useAlarmsAvailable } from "../lib/shiftAlarms";
@@ -59,7 +59,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const leave = data.leave[key] || [];
   const swaps = data.swaps[key] || [];
   const allowances = payAllowances(data.settings).filter((a) => a.name);
-  const holiday = holidayName(stateOf(data.settings), key);
+  const holiday = holidayName(placeOf(data.settings), key);
   const events = (data.notes[key] || []).slice().sort((a, b) => (a.allDay ? "" : a.time || "99:99").localeCompare(b.allDay ? "" : b.time || "99:99"));
   const bdays = birthdaysOnDate(data.birthdays, date);
 

@@ -1,6 +1,7 @@
 // Australian public holidays by state, worked out from each state's rules so
-// they're right for any year. Statewide holidays only: regional show days and
-// part-day holidays (e.g. Christmas Eve evening) aren't included.
+// they're right for any year. Statewide holidays, plus the local show days and
+// regional holidays for the areas below. Part-day holidays (e.g. Christmas Eve
+// evening) aren't included.
 import { ymd } from "./model.ts";
 
 export type AuState = "QLD" | "NSW" | "VIC" | "ACT" | "SA" | "WA" | "TAS" | "NT";
@@ -11,6 +12,20 @@ export const AU_STATES: { value: AuState; label: string }[] = [
 ];
 export const stateOf = (settings: any): AuState | null =>
   settings && AU_STATES.some((s) => s.value === settings.state) ? settings.state : null;
+// Areas with their own holidays that follow a fixed rule each year.
+export const AU_AREAS: { [k in AuState]?: { value: string; label: string }[] } = {
+  QLD: [{ value: "brisbane", label: "Brisbane" }],
+  TAS: [{ value: "hobart", label: "Hobart and the south" }, { value: "launceston", label: "Launceston and the north" }],
+  NT: [{ value: "darwin", label: "Darwin" }, { value: "katherine", label: "Katherine" }, { value: "tennant", label: "Tennant Creek" }, { value: "alice", label: "Alice Springs" }],
+};
+export type Place = { state: AuState; area: string };
+// The state and area chosen in Employment, or null with no state.
+export function placeOf(settings: any): Place | null {
+  const state = stateOf(settings);
+  if (!state) return null;
+  const area = (AU_AREAS[state] || []).some((a) => a.value === settings.area) ? settings.area : "";
+  return { state, area };
+}
 export const stateLabel = (s: AuState | null) => (s ? AU_STATES.find((x) => x.value === s)!.label : "");
 
 const D = (y: number, m: number, d: number) => new Date(y, m - 1, d);
@@ -29,7 +44,7 @@ function easter(y: number) {
   return D(y, month, day);
 }
 
-function build(state: AuState, y: number): { [date: string]: string } {
+function build({ state, area }: Place, y: number): { [date: string]: string } {
   const out: { [date: string]: string } = {};
   const add = (d: Date, name: string) => { const k = ymd(d); if (!out[k]) out[k] = name; };
   // a weekend holiday moves to the Monday after
@@ -69,6 +84,20 @@ function build(state: AuState, y: number): { [date: string]: string } {
   if (state === "NT") add(nth(y, 8, 1, 1), "Picnic Day");
   if (state === "VIC") { add(plus(nth(y, 9, 6, -1), -1), "AFL Grand Final Friday"); add(nth(y, 11, 2, 1), "Melbourne Cup Day"); }
 
+  // local holidays
+  if (area === "brisbane") {
+    // Ekka: the Wednesday of the show, which starts on the first Friday in August
+    // (the second Friday when the first falls before the 5th)
+    let f = nth(y, 8, 5, 1); if (f.getDate() < 5) f = plus(f, 7);
+    add(plus(f, 5), "Royal Queensland Show");
+  }
+  if (area === "hobart") { add(nth(y, 2, 1, 2), "Royal Hobart Regatta"); add(plus(nth(y, 10, 6, 4), -2), "Royal Hobart Show"); }
+  if (area === "launceston") { add(plus(nth(y, 10, 6, 2), -2), "Royal Launceston Show"); add(nth(y, 11, 1, 1), "Recreation Day"); }
+  if (area === "alice") add(nth(y, 7, 5, 1), "Alice Springs Show Day");
+  if (area === "tennant") add(nth(y, 7, 5, 2), "Tennant Creek Show Day");
+  if (area === "katherine") add(nth(y, 7, 5, 3), "Katherine Show Day");
+  if (area === "darwin") add(nth(y, 7, 5, 4), "Darwin Show Day");
+
   // Christmas and Boxing Day, with extra days when they fall on a weekend
   const xmas = D(y, 12, 25), wd = xmas.getDay(), boxing = state === "SA" ? "Proclamation Day" : "Boxing Day";
   add(xmas, "Christmas Day");
@@ -81,12 +110,12 @@ function build(state: AuState, y: number): { [date: string]: string } {
 }
 
 const cache: { [k: string]: { [date: string]: string } } = {};
-export function holidaysFor(state: AuState, year: number) {
-  const k = state + year;
-  return cache[k] || (cache[k] = build(state, year));
+export function holidaysFor(place: Place, year: number) {
+  const k = place.state + place.area + year;
+  return cache[k] || (cache[k] = build(place, year));
 }
 // The holiday's name on that date, or null.
-export function holidayName(state: AuState | null, dateKey: string): string | null {
-  if (!state) return null;
-  return holidaysFor(state, +dateKey.slice(0, 4))[dateKey] || null;
+export function holidayName(place: Place | null, dateKey: string): string | null {
+  if (!place) return null;
+  return holidaysFor(place, +dateKey.slice(0, 4))[dateKey] || null;
 }
