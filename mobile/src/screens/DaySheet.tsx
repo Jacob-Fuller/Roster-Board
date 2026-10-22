@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Keyboard, Modal, Pressable, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
 import { Button, Chip, Dim, Divider, Field, H2, SectionHead, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
@@ -377,11 +377,11 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         ))}
       </View>
       {editing ? <DateField label="Date" value={moveTo || key} onChange={setMoveTo} /> : null}
-      <Field value={text} onChangeText={setText} placeholder="e.g. Dentist, Birthday dinner…" returnKeyType="done" onSubmitEditing={saveEvent} />
+      <Field value={text} onChangeText={setText} placeholder="e.g. Dentist, Birthday dinner…" returnKeyType="done" />
       <View style={{ marginBottom: 10 }}>
         <Segmented value={allDay ? "all" : time ? "time" : "none"}
           options={[{ value: "none", label: "No Time" }, { value: "time", label: "Set Time" }, { value: "all", label: "All Day" }]}
-          onChange={(v) => { setAllDay(v === "all"); setTime(v === "time" ? time || "09:00" : ""); }} />
+          onChange={(v) => { Keyboard.dismiss(); setAllDay(v === "all"); setTime(v === "time" ? time || "09:00" : ""); }} />
       </View>
       {!allDay ? (
         <>

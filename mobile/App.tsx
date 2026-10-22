@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AppState, Pressable, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
+import { LaunchCover } from "./src/components/LaunchCover";
 import { UiProvider, useTheme } from "./src/components/ui";
 import { askIfRemindersNeedIt, syncReminders } from "./src/lib/reminders";
 import { planContactSync, readContactBirthdays } from "./src/lib/contactBirthdays";
@@ -137,7 +138,7 @@ function Shell() {
   }, [auth, fontsReady]);
 
   if (auth === "loading" || !fontsReady) return <View style={{ flex: 1, backgroundColor: "#0F2244" }} />;
-  if (auth === "signedOut") return (<><StatusBar style={t.dark ? "light" : "dark"} /><AuthScreen /></>);
+  if (auth === "signedOut") return (<><StatusBar style={t.dark ? "light" : "dark"} /><AuthScreen /><LaunchCover /></>);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -167,6 +168,7 @@ function Shell() {
           })}
         </View>
       </View>
+      <LaunchCover />
     </View>
   );
 }
