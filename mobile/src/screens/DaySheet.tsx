@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
-import { Button, Chip, Dim, Divider, Field, H2, SectionHead, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
+import { Button, Chip, Dim, Divider, Field, H2, SectionHead, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
 import {
   EVENT_CATS, EVENT_CAT_ORDER, EXCESS_ID, EXCESS_TYPE, LEAVE_KINDS, MONTHS, OVERTIME_ID, OVERTIME_TYPE, WEEKDAYS_FULL,
   birthdaysOnDate, employmentOf, entryColor, entryExcessHours, entryName, entryOTHours, fmtHours, isCombo, isSplitEntry, mkId, parseYmd,
@@ -430,14 +430,14 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       </View>
       {editing ? <DateField label="Date" value={moveTo || key} onChange={setMoveTo} /> : null}
       <Field value={text} onChangeText={setText} placeholder="e.g. Dentist, Birthday dinner…" returnKeyType="done" onSubmitEditing={saveEvent} />
-      <ToggleRow label="All day" value={allDay} onChange={setAllDay} />
+      <View style={{ marginBottom: 10 }}>
+        <Segmented value={allDay ? "all" : time ? "time" : "none"}
+          options={[{ value: "none", label: "No Time" }, { value: "time", label: "Set Time" }, { value: "all", label: "All Day" }]}
+          onChange={(v) => { setAllDay(v === "all"); setTime(v === "time" ? time || "09:00" : ""); }} />
+      </View>
       {!allDay ? (
         <>
-          {time ? <TimeField label="Time" value={time} onChange={setTime} /> : (
-            <Pressable accessibilityRole="button" onPress={() => setTime("09:00")} style={{ paddingVertical: 10 }}>
-              <Text style={{ color: t.accent, fontWeight: "700" }}>+ Add a time (optional)</Text>
-            </Pressable>
-          )}
+          {time ? <TimeField label="Time" value={time} onChange={setTime} /> : null}
           {!useAlarms ? <ToggleRow label="Remind me" value={remindOn} onChange={setRemind} /> : null}
           {useAlarms && time ? (<>
             <OptionPicker label="Alert" value={alerts[0]} options={EVENT_ALARM_OPTIONS} onChange={(v) => chooseAlert(0, v)} />
