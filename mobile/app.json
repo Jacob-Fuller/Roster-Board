@@ -83,7 +83,7 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "Roster Board shows your contacts' birthdays on your calendar."
+          "contactsPermission": "Roster Board reads only the names and birthdays of your contacts to show their birthdays on your calendar. If you're signed in, these are saved to your account so they appear on your other devices. They are never shared."
         }
       ],
       [
