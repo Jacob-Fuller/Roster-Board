@@ -1,4 +1,4 @@
-// The launch screen, drawn again over the app the moment it's ready, so the
+// The launch screen (matches the expo-splash-screen image), drawn again over the app the moment it's ready, so the
 // iPhone's launch screen hands over seamlessly. It then lifts and fades away.
 import React, { useEffect, useRef, useState } from "react";
 import { Animated, Easing, Platform, StyleSheet } from "react-native";
