@@ -10,7 +10,7 @@ import { UiProvider, useTheme } from "./src/components/ui";
 import { askIfRemindersNeedIt, syncReminders } from "./src/lib/reminders";
 import { planContactSync, readContactBirthdays } from "./src/lib/contactBirthdays";
 import { PremiumProvider, usePremium } from "./src/lib/premium";
-import { syncShiftAlarms } from "./src/lib/shiftAlarms";
+import { syncShiftAlarms, useAlarmsAvailable } from "./src/lib/shiftAlarms";
 import { paydayNotes } from "./src/lib/payday";
 import { syncCalendar } from "./src/lib/calendarSync";
 import { syncWidget } from "./src/lib/widget";
@@ -54,7 +54,8 @@ function Shell() {
     data.types.forEach((x) => { m[x.id] = x; });
     return m;
   }, [data.types]);
-  useEffect(() => { if (auth !== "loading") syncReminders(data.notes, paydayNotes(data, payTypes)); }, [auth, data, payTypes]);
+  const alarmsOk = useAlarmsAvailable();
+  useEffect(() => { if (auth !== "loading") syncReminders(data.notes, paydayNotes(data, payTypes), alarmsOk && !locked); }, [auth, data, payTypes, alarmsOk, locked]);
   // Home screen widget: refreshed after changes and whenever the app comes back.
   useEffect(() => {
     if (auth === "loading") return;

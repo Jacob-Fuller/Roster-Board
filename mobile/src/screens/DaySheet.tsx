@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Keyboard, Modal, Pressable, Text, View } from "react-native";
+import { Keyboard, Modal, Platform, Pressable, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
 import { Button, Chip, Dim, Divider, Field, H2, SectionHead, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
@@ -40,7 +40,8 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const alarmsOk = useAlarmsAvailable();
   const { locked, openPaywall } = usePremium();
   // Premium on iOS 26+: real alarms replace "Remind me", so an event never gets both.
-  const useAlarms = alarmsOk && !locked;
+  // alerts: alarms on iPhones that can set them; on the website they're saved and your phone delivers them
+  const useAlarms = (alarmsOk || Platform.OS === "web") && !locked;
   const [moveTo, setMoveTo] = useState("");
   // sub-dialogs
   const [chooser, setChooser] = useState<ShiftType | null>(null);
@@ -238,7 +239,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   }
   async function chooseAlert(which: 0 | 1, v: number) {
     if (v >= 0 && locked) { onClose(); setTimeout(() => openPaywall("Alarms are part of Premium."), 500); return; }
-    if (v >= 0 && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
+    if (v >= 0 && Platform.OS !== "web" && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
     setAlerts((cur) => (which === 0 ? (v < 0 ? [-1, -1] : [v, cur[1]]) : [cur[0], v]));
   }
   const alarmList = () => (allDay || !time || !useAlarms ? [] : alerts.filter((m, i, a) => m >= 0 && a.indexOf(m) === i));

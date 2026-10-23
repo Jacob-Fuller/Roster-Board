@@ -39,7 +39,7 @@ export async function askIfRemindersNeedIt(notes: Buckets<EventEntry>) {
   if (Platform.OS === "web") return;
   const now = Date.now();
   const any = Object.keys(notes || {}).some((k) => (notes[k] || []).some((n) => {
-    if (!n.remind || !n.time || n.allDay) return false;
+    if (!(n.remind || (n.alarms || []).length) || !n.time || n.allDay) return false;
     const [h, m] = n.time.split(":").map((x) => +x);
     const d = parseYmd(k); d.setHours(h, m, 0, 0);
     return d.getTime() > now;
@@ -51,7 +51,8 @@ export async function askIfRemindersNeedIt(notes: Buckets<EventEntry>) {
 
 let timer: ReturnType<typeof setTimeout> | null = null;
 // `extra` are other notifications to keep scheduled alongside the events (payday reminders).
-export function syncReminders(notes: Buckets<EventEntry>, extra: ScheduledNote[] = []) {
+// `alarmsRing`: events' alerts ring as alarms on this phone (iOS 26 with Premium); otherwise they're notifications.
+export function syncReminders(notes: Buckets<EventEntry>, extra: ScheduledNote[] = [], alarmsRing = false) {
   if (Platform.OS === "web") return;
   if (timer) clearTimeout(timer);
   timer = setTimeout(async () => {
@@ -60,13 +61,21 @@ export function syncReminders(notes: Buckets<EventEntry>, extra: ScheduledNote[]
       if (!perm.granted) return;
       await ensureChannel();
       const now = Date.now();
-      const upcoming: { at: Date; n: EventEntry }[] = [];
+      const upcoming: { at: Date; n: EventEntry; id: string; body: string }[] = [];
       Object.keys(notes || {}).forEach((k) => (notes[k] || []).forEach((n) => {
-        // events with alarms ring as alarms instead, so they never get a notification as well
-        if (!n.remind || !n.time || n.allDay || (n.alarms || []).length) return;
+        if (!n.time || n.allDay) return;
         const [h, m] = n.time.split(":").map((x) => +x);
+        if (!isFinite(h) || !isFinite(m)) return;
         const d = parseYmd(k); d.setHours(h, m, 0, 0);
-        if (d.getTime() > now) upcoming.push({ at: d, n });
+        const alerts = (n.alarms || []).filter((x, i, a) => typeof x === "number" && x >= 0 && a.indexOf(x) === i);
+        if (alerts.length) {
+          // alerts that ring as alarms never get a notification as well
+          if (alarmsRing) return;
+          alerts.forEach((off) => {
+            const at = new Date(d.getTime() - off * 60000);
+            if (at.getTime() > now) upcoming.push({ at, n, id: n.id + "-" + off, body: (off ? "At " : "Now · ") + n.time });
+          });
+        } else if (n.remind && d.getTime() > now) upcoming.push({ at: d, n, id: n.id, body: n.time });
       }));
       upcoming.sort((a, b) => a.at.getTime() - b.at.getTime());
       await Notifications.cancelAllScheduledNotificationsAsync();
@@ -80,9 +89,9 @@ export function syncReminders(notes: Buckets<EventEntry>, extra: ScheduledNote[]
       }
       for (const u of upcoming.slice(0, 60)) {
         await Notifications.scheduleNotificationAsync({
-          identifier: u.n.id,
+          identifier: u.id,
           // sound "default" so it actually rings; without it iOS delivers it silently
-          content: { title: u.n.text, body: u.n.time, sound: "default", interruptionLevel: "active" },
+          content: { title: u.n.text, body: u.body, sound: "default", interruptionLevel: "active" },
           trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: u.at, channelId: CHANNEL },
         });
       }

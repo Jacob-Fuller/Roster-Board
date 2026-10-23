@@ -2,7 +2,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import React, { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import { MONTHS, parseYmd, ymd } from "../lib/model";
-import { Field, useTheme } from "./ui";
+import { webInput } from "./TimeField";
+import { useTheme } from "./ui";
 
 const pretty = (k: string) => { const d = parseYmd(k); return d.getDate() + " " + MONTHS[d.getMonth()].slice(0, 3) + " " + d.getFullYear(); };
 
@@ -10,7 +11,19 @@ const pretty = (k: string) => { const d = parseYmd(k); return d.getDate() + " " 
 export function DateField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const t = useTheme();
   const [open, setOpen] = useState(false);
-  if (Platform.OS === "web") return <Field label={label} value={value} onChangeText={onChange} placeholder="2026-01-31" />;
+  if (Platform.OS === "web") {
+    // the browser's own date picker
+    return (
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <Text style={{ fontSize: 15, color: t.text }}>{label}</Text>
+        {React.createElement("input", {
+          type: "date", value: value || "", "aria-label": label,
+          onChange: (e: any) => { if (e.target.value) onChange(e.target.value); },
+          style: webInput(t),
+        })}
+      </View>
+    );
+  }
   if (Platform.OS === "ios") {
     return (
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
