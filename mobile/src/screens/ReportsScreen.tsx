@@ -143,31 +143,7 @@ export function ReportsScreen() {
           </View>
         } />
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-        <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
-
-        <Card style={{ marginTop: 14, paddingVertical: 2, paddingHorizontal: 4 }}>
-          <View style={{ flexDirection: "row" }}>
-            <Figure label="Hours" value={fmtHours(stats.totalHours)} color="#4C8DFF" />
-            <VLine />
-            {fullTime ? <Figure label="Days worked" value={String(stats.daysWorked)} color="#3FC5C0" /> : <Figure label="Excess" value={fmtHours(stats.excessHours)} color="#F7B3CE" />}
-            <VLine />
-            <Figure label="Overtime" value={fmtHours(stats.otHours)} color={OVERTIME_TYPE.color} />
-          </View>
-        </Card>
-
-        {ptProgress ? (
-          <>
-            <SectionHead title="This Pay Period" right={<Dim>{shortDate(ptProgress.period.start) + " – " + shortDate(lastDay(ptProgress.period))}</Dim>} />
-            <Card style={{ gap: 12 }}>
-              {ptProgress.rostered ? <Meter name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={ptProgress.rostered}
-                text={ptProgress.rosteredDone + " of " + ptProgress.rostered} /> : null}
-              {ptProgress.excessCap ? <Meter name="Excess" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
-                text={fmtHours(ptProgress.excessHours) + " of " + fmtHours(ptProgress.excessCap) + "h"} /> : null}
-              {ptProgress.otHours ? <Meter name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={ptProgress.otHours} text={fmtHours(ptProgress.otHours) + "h"} /> : null}
-            </Card>
-          </>
-        ) : null}
-
+        <View style={{ marginTop: -18 }} />
         <SectionHead title="Estimated Pay" right={<HeadLink title="Pay Setup" onPress={() => setSetupOpen(true)} />} />
         {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : !payCard ? (
           <Card><Button small title="Set My Hourly Rate" onPress={() => setSetupOpen(true)} /></Card>
@@ -200,6 +176,33 @@ export function ReportsScreen() {
             </HeroCard>
           </>
         )}
+
+        <View style={{ marginTop: 22 }}>
+          <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
+        </View>
+
+        <Card style={{ marginTop: 14, paddingVertical: 2, paddingHorizontal: 4 }}>
+          <View style={{ flexDirection: "row" }}>
+            <Figure label="Hours" value={fmtHours(stats.totalHours)} color="#4C8DFF" />
+            <VLine />
+            {fullTime ? <Figure label="Days worked" value={String(stats.daysWorked)} color="#3FC5C0" /> : <Figure label="Excess" value={fmtHours(stats.excessHours)} color="#F7B3CE" />}
+            <VLine />
+            <Figure label="Overtime" value={fmtHours(stats.otHours)} color={OVERTIME_TYPE.color} />
+          </View>
+        </Card>
+
+        {ptProgress ? (
+          <>
+            <SectionHead title="This Pay Period" right={<Dim>{shortDate(ptProgress.period.start) + " – " + shortDate(lastDay(ptProgress.period))}</Dim>} />
+            <Card style={{ gap: 12 }}>
+              {ptProgress.rostered ? <Meter name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={ptProgress.rostered}
+                text={ptProgress.rosteredDone + " of " + ptProgress.rostered} /> : null}
+              {ptProgress.excessCap ? <Meter name="Excess" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
+                text={fmtHours(ptProgress.excessHours) + " of " + fmtHours(ptProgress.excessCap) + "h"} /> : null}
+              {ptProgress.otHours ? <Meter name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={ptProgress.otHours} text={fmtHours(ptProgress.otHours) + "h"} /> : null}
+            </Card>
+          </>
+        ) : null}
 
         {locked ? (
           <>
