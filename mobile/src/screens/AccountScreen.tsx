@@ -3,7 +3,7 @@ import { OptionPicker } from "../components/OptionPicker";
 import { AU_AREAS, AU_STATES, placeOf, stateOf, type AuState } from "../lib/holidays";
 import React, { useEffect, useState } from "react";
 import { Linking, Platform, ScrollView, Share, Text, View, useColorScheme } from "react-native";
-import { Button, Card, Dim, Divider, Field, Masthead, MenuRow, SERIF, ToggleRow, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Card, Dim, Divider, Field, Masthead, MenuRow, SERIF, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { DateField } from "../components/DateField";
 import { employmentOf, fmtHours, ymd, type Employment } from "../lib/model";
 import { partTimeOf, rebalanceAllExtras } from "../lib/partTime";
@@ -77,10 +77,13 @@ export function AccountScreen() {
             <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.hideBirthdays ? "hide" : "show"} onChange={(v) => setPrefs({ hideBirthdays: v === "hide" })} />
           </View>
           {Platform.OS !== "web" ? (
-            <ToggleRow label="Add shifts to the Calendar app" value={!!prefs.calendarSync} onChange={async (v) => {
-              if (v && !(await askCalendarPermission())) { toast("Allow calendar access for Roster Board in Settings"); return; }
-              setPrefs({ calendarSync: v });
-            }} />
+            <View>
+              <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Shifts in the Calendar app</Text>
+              <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.calendarSync ? "show" : "hide"} onChange={async (v) => {
+                if (v === "show" && !(await askCalendarPermission())) { toast("Allow calendar access for Roster Board in Settings"); return; }
+                setPrefs({ calendarSync: v === "show" });
+              }} />
+            </View>
           ) : null}
         </Card>
 
