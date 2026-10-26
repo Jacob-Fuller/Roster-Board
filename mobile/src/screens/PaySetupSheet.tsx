@@ -149,7 +149,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
           <View key={a.id}>
             {i ? <Divider /> : null}
             <View style={{ paddingTop: i ? 12 : 0 }}>
-              <Field label="Name" value={a.name} onChangeText={(v) => setAllowance(a.id, { name: v })} placeholder="e.g. Missed meal" />
+              <Field label="Name" value={a.name} onChangeText={(v) => setAllowance(a.id, { name: v })} placeholder="e.g. Meal allowance" />
               <Field label="Amount ($)" value={allowText[a.id] ?? (a.amount ? String(a.amount) : "")} keyboardType={dec} placeholder="e.g. 18.50"
                 onChangeText={(v) => { setAllowText({ ...allowText, [a.id]: v }); setAllowance(a.id, { amount: parseFloat(v) || 0, kind: "flat" }); }} />
               <Pressable accessibilityRole="button" onPress={() => setDraft({ ...draft, allowances: draft.allowances.filter((x) => x.id !== a.id) })} style={{ alignSelf: "flex-start", paddingBottom: 12 }}>

@@ -118,13 +118,13 @@ const GROUPS: Group[] = [
   {
     title: "Allowances", guides: [
       {
-        id: "allowance", title: "Add a missed meal allowance", icon: "restaurant", color: GOLD, keywords: "missed meal break allowance add set up claim",
+        id: "allowance", title: "Add your allowances", icon: "wallet", color: GOLD, keywords: "allowance add set up claim meal travel uniform on call",
         steps: [
           { text: "Open Reports and tap Pay Setup.", pic: [{ t: "tabs", active: "Reports" }, { t: "head", text: "Estimated Pay", link: "Pay Setup" }] },
-          { text: "Open Allowances and tap Add Allowance. Enter the name and what it pays, then Save. Add a Missed break the same way.", pic: [
-            { t: "head", text: "Allowances" }, { t: "field", label: "Name", value: "Missed meal" }, { t: "field", label: "Amount ($)", value: "18.70" }, { t: "btn", label: "Add Allowance", hl: true }] },
+          { text: "Open Allowances and tap Add Allowance. Enter its name and what it pays. Add each allowance you can claim, then tap Save.", pic: [
+            { t: "head", text: "Allowances" }, { t: "field", label: "Name", value: "Meal allowance" }, { t: "field", label: "Amount ($)", value: "18.70" }, { t: "btn", label: "Add Allowance", hl: true }] },
           { text: "When you add a shift, use + to count each allowance you got that day.", pic: [
-            { t: "stepper", label: "Missed meal", value: 1, hl: true }, { t: "stepper", label: "Missed break", value: 0 }, { t: "shift", label: "Day Shift", sub: "", color: DAY.color }] },
+            { t: "stepper", label: "Meal allowance", value: 1, hl: true }, { t: "stepper", label: "Travel allowance", value: 0 }, { t: "shift", label: "Day Shift", sub: "", color: DAY.color }] },
           { text: "It's added to your estimated pay straight away." },
         ],
       },
@@ -133,7 +133,7 @@ const GROUPS: Group[] = [
         steps: [
           { text: "Tap the day on the calendar." },
           { text: "Under Allowances, use − and + to change the count.", pic: [
-            { t: "head", text: "Allowances" }, { t: "stepper", label: "Missed meal", value: 2, hl: true }, { t: "stepper", label: "Missed break", value: 1 }] },
+            { t: "head", text: "Allowances" }, { t: "stepper", label: "Meal allowance", value: 2, hl: true }, { t: "stepper", label: "Travel allowance", value: 1 }] },
         ],
       },
       {
@@ -141,7 +141,7 @@ const GROUPS: Group[] = [
         steps: [
           { text: "Open Reports and tap Breakdown on Estimated Pay." },
           { text: "Tick each allowance once you see it on your payslip, so you can see what's still owed.", pic: [
-            { t: "check", label: "Missed meal ×2", value: "$37.40", on: true }, { t: "check", label: "Missed break ×2", value: "$24.20", on: false, hl: true }] },
+            { t: "check", label: "Meal allowance ×2", value: "$37.40", on: true }, { t: "check", label: "Travel allowance ×1", value: "$24.20", on: false, hl: true }] },
           { text: "Turn on Payday reminder in Pay Setup and you'll be told how many are left to check each payday." },
         ],
       },
