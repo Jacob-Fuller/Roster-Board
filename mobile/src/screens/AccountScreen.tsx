@@ -67,18 +67,21 @@ export function AccountScreen() {
 
         <SectionHead title="Appearance" />
         <Card style={{ gap: 14 }}>
-          <Segmented options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} value={themeValue} onChange={(v) => setPrefs({ theme: v })} />
           <View>
-            <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Personal events on the calendar</Text>
+            <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Theme</Text>
+            <Segmented options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} value={themeValue} onChange={(v) => setPrefs({ theme: v })} />
+          </View>
+          <View>
+            <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Personal events</Text>
             <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.hideEvents ? "hide" : "show"} onChange={(v) => setPrefs({ hideEvents: v === "hide" })} />
           </View>
           <View>
-            <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Birthdays on the calendar</Text>
+            <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Birthdays</Text>
             <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.hideBirthdays ? "hide" : "show"} onChange={(v) => setPrefs({ hideBirthdays: v === "hide" })} />
           </View>
           {Platform.OS !== "web" ? (
             <View>
-              <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Shifts in the Calendar app</Text>
+              <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Shifts</Text>
               <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.calendarSync ? "show" : "hide"} onChange={async (v) => {
                 if (v === "show" && !(await askCalendarPermission())) { toast("Allow calendar access for Roster Board in Settings"); return; }
                 setPrefs({ calendarSync: v === "show" });

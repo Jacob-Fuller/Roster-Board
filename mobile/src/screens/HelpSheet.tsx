@@ -166,7 +166,7 @@ const GROUPS: Group[] = [
       {
         id: "calapp", title: "Show shifts in the Calendar app", icon: "calendar", color: PINK, keywords: "iphone calendar app sync apple calendar",
         steps: [
-          { text: "Open Account and, under Shifts in the Calendar app, choose Show.", pic: [{ t: "tabs", active: "Account" }, { t: "row", label: "Shifts in the Calendar app", value: "Show", hl: true }] },
+          { text: "Open Account and, under Appearance → Shifts, choose Show.", pic: [{ t: "tabs", active: "Account" }, { t: "row", label: "Shifts", value: "Show", hl: true }] },
           { text: "Your shifts and leave appear in a Roster Board calendar and stay up to date." },
         ],
       },
