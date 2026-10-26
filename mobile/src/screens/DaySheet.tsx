@@ -60,6 +60,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const leave = data.leave[key] || [];
   const swaps = data.swaps[key] || [];
   const allowances = payAllowances(data.settings).filter((a) => a.name);
+  const dayTags = (data.payTags[key] || []) as PayTag[];
   const holiday = holidayName(placeOf(data.settings), key);
   const events = (data.notes[key] || []).slice().sort((a, b) => (a.allDay ? "" : a.time || "99:99").localeCompare(b.allDay ? "" : b.time || "99:99"));
   const bdays = birthdaysOnDate(data.birthdays, date);
@@ -181,6 +182,20 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       d.payTags[key] = list;
     });
   };
+
+  // Change a day's count for one allowance after the shift is in. Fewer: drop ones not yet ticked off first.
+  const setAllowanceCount = (allowanceId: string, n: number) => update((d, tomb) => {
+    let list = ((d.payTags[key] || []) as PayTag[]).slice();
+    const mine = list.filter((x) => x.kind === "allowance" && x.allowanceId === allowanceId);
+    if (n > mine.length) {
+      for (let i = mine.length; i < n; i++) list.push({ id: mkId(), kind: "allowance", allowanceId, updatedAt: Date.now() });
+    } else if (n < mine.length) {
+      const drop = mine.slice().sort((x, y) => Number(!!x.paid) - Number(!!y.paid)).slice(0, mine.length - n).map((x) => x.id);
+      drop.forEach((id) => tomb(id));
+      list = list.filter((x) => !drop.includes(x.id));
+    }
+    if (list.length) d.payTags[key] = list; else delete d.payTags[key];
+  });
 
   /* ----- swaps ----- */
   function undoSwap(clickedId: string) {
@@ -320,6 +335,22 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
             ]} />
         );
       }) : null}
+
+      {allowances.length && shifts.some((s) => typesById[s.typeId] && typesById[s.typeId].kind !== "personal") ? (
+        <>
+          <SectionHead title="Allowances" />
+          {allowances.map((a, i) => (
+            <View key={a.id}>
+              {i ? <Divider /> : null}
+              <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8, gap: 10 }}>
+                <Text style={{ flex: 1, color: t.text, fontSize: 15, fontWeight: "600" }} numberOfLines={1}>{a.name}</Text>
+                <Stepper value={dayTags.filter((x) => x.kind === "allowance" && x.allowanceId === a.id).length} label={a.name}
+                  onChange={(v) => setAllowanceCount(a.id, Math.max(0, v))} />
+              </View>
+            </View>
+          ))}
+        </>
+      ) : null}
 
       {swaps.length ? (
         <>
