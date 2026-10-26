@@ -170,13 +170,6 @@ const GROUPS: Group[] = [
           { text: "Your shifts and leave appear in a Roster Board calendar and stay up to date." },
         ],
       },
-      {
-        id: "premium", title: "What Premium includes", icon: "star", color: "#C8975F", keywords: "premium price subscription free lifetime",
-        steps: [
-          { text: "Premium adds estimated pay, full reports, roster patterns, sharing, alarms, PDF export and unlimited shift types. $4.99 a month or $24.99 once." },
-          { text: "Free includes the calendar, up to 3 shift types, leave, events, birthdays and sync." },
-        ],
-      },
     ],
   },
 ];
