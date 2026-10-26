@@ -44,7 +44,9 @@ jobs:
           # Reminders are local notifications only; no push entitlement is needed
           for f in ios/*/*.entitlements; do /usr/libexec/PlistBuddy -c "Delete :aps-environment" "$f" 2>/dev/null || true; done
       - name: Build and upload
-        run: fastlane beta
+        run: |
+          set -o pipefail
+          fastlane beta 2>&1 | tee ../fastlane.log
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -58,6 +60,7 @@ jobs:
         if: always()
         run: |
           mkdir -p ../build-info
+          (grep -v -iE "p8|password|token|secret" ../fastlane.log 2>/dev/null | tail -80 || true) > ../build-info/fastlane-tail.txt
           (grep -o "RosterBoardWidget[^ ;\"]*" ios/*.xcodeproj/project.pbxproj | sort -u || true) > ../build-info/targets.txt
           (for f in build/*.ipa; do unzip -l "$f" | grep -E "\.appex/|Info.plist$" | head -40; done || true) > ../build-info/ipa.txt
           (ls ~/Library/MobileDevice/Provisioning\ Profiles/ 2>/dev/null; for p in ~/Library/MobileDevice/Provisioning\ Profiles/*; do security cms -D -i "$p" 2>/dev/null | plutil -extract Name raw - 2>/dev/null; done) > ../build-info/profiles.txt || true
