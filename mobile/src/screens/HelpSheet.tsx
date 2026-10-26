@@ -201,9 +201,9 @@ export function HelpSheet({ visible, onClose }: { visible: boolean; onClose: () 
 
   const guideView = open ? (
       <>
-        <Pressable accessibilityRole="button" onPress={() => setOpen(null)} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: -6, marginBottom: 12 }}>
+        <Pressable accessibilityRole="button" onPress={() => setOpen(null)} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingTop: 4, marginBottom: 12 }}>
           <Ionicons name="chevron-back" size={18} color={t.accent} />
-          <Text style={{ color: t.accent, fontWeight: "600", fontSize: 15 }}>All help</Text>
+          <Text style={{ color: t.accent, fontWeight: "600", fontSize: 15 }}>Back</Text>
         </Pressable>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <IconTile icon={open.icon} color={open.color} size={36} />
