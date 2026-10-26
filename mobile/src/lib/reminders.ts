@@ -83,7 +83,7 @@ export function syncReminders(notes: Buckets<EventEntry>, extra: ScheduledNote[]
         if (x.at.getTime() <= now) continue;
         await Notifications.scheduleNotificationAsync({
           identifier: x.id,
-          content: { title: x.title, body: x.body, sound: "default", interruptionLevel: "active" },
+          content: { title: x.title, body: x.body, sound: "default", interruptionLevel: "active", data: x.data || {} },
           trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: x.at, channelId: CHANNEL },
         });
       }

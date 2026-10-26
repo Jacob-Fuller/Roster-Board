@@ -180,6 +180,21 @@ export function allowanceClaims(d: Pick<Snapshot, "payTags" | "settings">, start
   return out;
 }
 
+// Every allowance not yet ticked off as paid, from any date up to today, oldest first.
+export type OwedClaim = { dateKey: string; allowance: PayAllowance; tags: PayTag[]; amount: number };
+export function owedAllowances(d: Pick<Snapshot, "payTags" | "settings">, now = new Date()): OwedClaim[] {
+  const cfg = payConfig(d.settings);
+  const today = ymd(now);
+  const out: OwedClaim[] = [];
+  Object.keys(d.payTags || {}).filter((k) => k <= today).sort().forEach((k) => {
+    cfg.allowances.forEach((a) => {
+      const tags = payTagsOn(d, k).filter((x) => x.kind === "allowance" && x.allowanceId === a.id && !x.paid);
+      if (tags.length) out.push({ dateKey: k, allowance: a, tags, amount: tags.length * allowanceAmount(a, rateOn(cfg, k)) });
+    });
+  });
+  return out;
+}
+
 /* ---------- tax (rough, Australian resident, 2026–27) ---------- */
 export function annualTaxEstimate(income: number, taxFree: boolean): number {
   if (!(income > 0)) return 0;

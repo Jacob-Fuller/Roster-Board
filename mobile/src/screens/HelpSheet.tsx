@@ -139,10 +139,11 @@ const GROUPS: Group[] = [
       {
         id: "allowance-tick", title: "Tick off allowances from your payslip", icon: "checkmark-done", color: GREEN, keywords: "tick payslip owed check allowance paid",
         steps: [
-          { text: "Open Reports and tap Breakdown on Estimated Pay." },
-          { text: "Tick each allowance once you see it on your payslip, so you can see what's still owed.", pic: [
-            { t: "check", label: "Meal allowance ×2", value: "$37.40", on: true }, { t: "check", label: "Travel allowance ×1", value: "$24.20", on: false, hl: true }] },
-          { text: "Turn on Payday reminder in Pay Setup and you'll be told how many are left to check each payday." },
+          { text: "Open Reports and tap Allowances Owed. It lists every allowance not yet paid, from any week.", pic: [
+            { t: "tabs", active: "Reports" }, { t: "row", label: "Allowances Owed", value: "3 · $61.60", hl: true, chevron: true }] },
+          { text: "Tap the ones on your payslip, then tap Mark Paid. They drop off the list.", pic: [
+            { t: "check", label: "Meal allowance ×2", value: "$37.40", on: true, hl: true }, { t: "check", label: "Travel allowance ×1", value: "$24.20", on: false }, { t: "btn", label: "Mark Paid · $37.40" }] },
+          { text: "Turn on Payday reminder in Pay Setup. Tap the reminder on payday to go straight to the list." },
         ],
       },
     ],

@@ -3,7 +3,7 @@ import { Fraunces_700Bold, useFonts } from "@expo-google-fonts/fraunces";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AppState, Pressable, Text, View } from "react-native";
+import { AppState, Platform, Pressable, Text, View } from "react-native";
 import { SafeAreaProvider, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LaunchCover } from "./src/components/LaunchCover";
 import { UiProvider, useTheme } from "./src/components/ui";
@@ -12,6 +12,9 @@ import { planContactSync, readContactBirthdays } from "./src/lib/contactBirthday
 import { PremiumProvider, usePremium } from "./src/lib/premium";
 import { syncShiftAlarms, useAlarmsAvailable } from "./src/lib/shiftAlarms";
 import { paydayNotes } from "./src/lib/payday";
+import * as Notifications from "expo-notifications";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { requestOwed } from "./src/lib/openOwed";
 import { syncCalendar } from "./src/lib/calendarSync";
 import { syncWidget } from "./src/lib/widget";
 import { EXCESS_TYPE, OVERTIME_TYPE, type ShiftType } from "./src/lib/model";
@@ -89,6 +92,23 @@ function Shell() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth]);
   const [tab, setTab] = useState<Tab>("calendar");
+  // Tapping a payday reminder opens Reports at the allowances still owed.
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    const handle = (r: Notifications.NotificationResponse | null) => {
+      if (!r || (r.notification.request.content.data as any)?.open !== "owed") return;
+      // the last tapped notification is reported again on every launch, so each one opens the list once
+      const id = r.notification.request.identifier;
+      AsyncStorage.getItem("rosterBoard.owedNoteSeen").then((seen) => {
+        if (seen === id) return;
+        AsyncStorage.setItem("rosterBoard.owedNoteSeen", id).catch(() => {});
+        setTab("reports"); requestOwed();
+      }).catch(() => {});
+    };
+    Notifications.getLastNotificationResponseAsync().then(handle).catch(() => {});
+    const sub = Notifications.addNotificationResponseReceivedListener(handle);
+    return () => sub.remove();
+  }, []);
   // Mirror contact birthdays each time the app opens or comes back to the front,
   // after the account's data has loaded so another phone's copies are known.
   const dataRef = useRef(data); dataRef.current = data;

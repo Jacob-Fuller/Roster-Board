@@ -5,7 +5,7 @@ import { PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "rea
 import { Button, Card, Dim, Divider, MastButton, Masthead, MenuRow, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
 import { EXCESS_ID, MONTHS, WEEKDAYS_FULL, parseYmd, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, sortedTypes, type ShiftType } from "../lib/model";
 import {
-  allowanceClaims, computePay, fmtMoney, fmtMoneyShort, payCardRangeAt, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
+  allowanceClaims, computePay, owedAllowances, fmtMoney, fmtMoneyShort, payCardRangeAt, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
   type PayResult, type PayTag,
 } from "../lib/pay";
 import { collectPeriodStats, type TypeRow } from "../lib/reports";
@@ -15,6 +15,8 @@ import { ExportSheet } from "./ExportSheet";
 import { LockCard } from "./Paywall";
 import { usePremium } from "../lib/premium";
 import { PaySetupSheet } from "./PaySetupSheet";
+import { OwedSheet } from "./OwedSheet";
+import { onOwedRequest, takeOwedRequest } from "../lib/openOwed";
 
 type CardView = "weekly" | "fortnightly" | "monthly";
 type PayMode = "period" | "month" | "year";
@@ -34,6 +36,16 @@ export function ReportsScreen() {
   const [exportOpen, setExportOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
   const [payScreen, setPayScreen] = useState<{ mode: PayMode; anchor: Date } | null>(null);
+  const [owedOpen, setOwedOpen] = useState(false);
+  // a tapped payday notification opens the owed list
+  useEffect(() => {
+    const open = () => { if (takeOwedRequest()) setOwedOpen(true); };
+    open();
+    return onOwedRequest(open);
+  }, []);
+  const owed = useMemo(() => owedAllowances(data), [data]);
+  const owedCount = owed.reduce((n, c) => n + c.tags.length, 0);
+  const owedTotal = owed.reduce((n, c) => n + c.amount, 0);
   // Weekly / Fortnightly / Monthly choice on the pay card, remembered on this device (like the web).
   const [savedView, setSavedView] = useState("");
   useEffect(() => { AsyncStorage.getItem(PAY_CARD_VIEW_KEY).then((v) => setSavedView(v || "")).catch(() => {}); }, []);
@@ -168,6 +180,12 @@ export function ReportsScreen() {
           </>
         )}
 
+        {!locked && owedCount ? (
+          <Card style={{ marginTop: 14, paddingVertical: 2 }}>
+            <MenuRow icon="wallet" iconColor="#E8A33C" title="Allowances Owed" sub={owedCount + " · " + fmtMoney(owedTotal)} onPress={() => setOwedOpen(true)} />
+          </Card>
+        ) : null}
+
         <View style={{ marginTop: 22 }}>
           <Segmented<Mode> value={mode} onChange={setMode} options={[{ value: "month", label: "Month" }, { value: "year", label: "Year" }]} />
         </View>
@@ -236,6 +254,7 @@ export function ReportsScreen() {
       <ExportSheet visible={exportOpen} onClose={() => setExportOpen(false)} initialMode={mode} initialMonth={month} initialYear={year} />
       <PaySetupSheet visible={setupOpen && !payScreen} onClose={() => setSetupOpen(false)} />
       <PayScreenSheet state={payScreen} onChange={setPayScreen} typesById={typesById} />
+      <OwedSheet visible={owedOpen} onClose={() => setOwedOpen(false)} />
     </View>
   );
 }
