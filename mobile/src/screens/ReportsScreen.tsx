@@ -3,12 +3,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useMemo, useState } from "react";
 import { PanResponder, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Button, Card, Dim, Divider, MastButton, Masthead, MenuRow, HeroCard, SERIF, SectionHead, Segmented, Sheet, useTheme } from "../components/ui";
-import { EXCESS_ID, MONTHS, WEEKDAYS_FULL, parseYmd, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, type ShiftType } from "../lib/model";
+import { EXCESS_ID, MONTHS, WEEKDAYS_FULL, parseYmd, employmentOf, OVERTIME_ID, OVERTIME_TYPE, addDays, addMonths, fmtHours, startOfMonth, ymd, sortedTypes, type ShiftType } from "../lib/model";
 import {
   allowanceClaims, computePay, fmtMoney, fmtMoneyShort, payCardRangeAt, payConfig, payIsSetUp, payPeriodFor, periodsPerYear, rateOn, shiftPayPeriod,
   type PayResult, type PayTag,
 } from "../lib/pay";
-import { lastDay, partTimeOf, partTimeProgress } from "../lib/partTime";
 import { collectPeriodStats, type TypeRow } from "../lib/reports";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
@@ -65,10 +64,10 @@ export function ReportsScreen() {
   if (fullTime && byType[EXCESS_ID] && !byType[EXCESS_ID].hours) delete byType[EXCESS_ID];
   if (!fullTime && !byType[EXCESS_ID]) byType[EXCESS_ID] = { name: "Excess", color: "#F7B3CE", count: 0, hours: 0, rank: 1 };
   if (!byType[OVERTIME_ID]) byType[OVERTIME_ID] = { name: OVERTIME_TYPE.name, color: OVERTIME_TYPE.color, count: 0, hours: 0, rank: 2 };
-  const rows: TypeRow[] = Object.values(byType).sort((a, b) => b.hours - a.hours || a.rank - b.rank);
-  // excess always sits directly ahead of overtime
-  const exRow = byType[EXCESS_ID], otRow = byType[OVERTIME_ID];
-  if (exRow && otRow && rows.indexOf(otRow) < rows.indexOf(exRow)) { rows.splice(rows.indexOf(exRow), 1); rows.splice(rows.indexOf(otRow), 0, exRow); }
+  // same order as the Types tab, with excess then overtime last
+  const typeOrder = sortedTypes(data.types).map((ty) => ty.id);
+  const typePos = (id: string) => id === EXCESS_ID ? 1e6 : id === OVERTIME_ID ? 1e6 + 1 : typeOrder.indexOf(id) < 0 ? 1e5 : typeOrder.indexOf(id);
+  const rows: TypeRow[] = Object.keys(byType).sort((a, b) => typePos(a) - typePos(b)).map((id) => byType[id]);
   const maxType = Math.max(1, ...rows.map((r) => r.hours));
   const wwTotal = stats.weekdayHours + stats.weekendHours;
   const pct = (v: number, of: number) => (of > 0 ? Math.round((v / of) * 100) : 0);
@@ -94,14 +93,6 @@ export function ReportsScreen() {
     onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
     onPanResponderRelease: (_, g) => { if (Math.abs(g.dx) >= 50) setCardOffset((o) => o + (g.dx < 0 ? 1 : -1)); },
   }), []);
-
-  // Part time: this pay period's rostered shifts, excess hours and overtime.
-  const ptProgress = useMemo(() => {
-    if (fullTime) return null;
-    const pt = partTimeOf(data.settings);
-    if (!pt.rostered && !pt.excessCap) return null;
-    return partTimeProgress(data, typesById, new Date());
-  }, [fullTime, data, typesById]);
 
   const openBreakdown = () => {
     if (!payCard) return;
@@ -190,19 +181,6 @@ export function ReportsScreen() {
             <Figure label="Overtime" value={fmtHours(stats.otHours)} color={OVERTIME_TYPE.color} />
           </View>
         </Card>
-
-        {ptProgress ? (
-          <>
-            <SectionHead title="This Pay Period" right={<Dim>{shortDate(ptProgress.period.start) + " – " + shortDate(lastDay(ptProgress.period))}</Dim>} />
-            <Card style={{ gap: 12 }}>
-              {ptProgress.rostered ? <Meter name="Rostered shifts" color={t.accent} value={ptProgress.rosteredDone} max={ptProgress.rostered}
-                text={ptProgress.rosteredDone + " of " + ptProgress.rostered} /> : null}
-              {ptProgress.excessCap ? <Meter name="Excess" color="#F7B3CE" value={ptProgress.excessHours} max={ptProgress.excessCap}
-                text={fmtHours(ptProgress.excessHours) + " of " + fmtHours(ptProgress.excessCap) + "h"} /> : null}
-              {ptProgress.otHours ? <Meter name="Overtime" color={OVERTIME_TYPE.color} value={ptProgress.otHours} max={ptProgress.otHours} text={fmtHours(ptProgress.otHours) + "h"} /> : null}
-            </Card>
-          </>
-        ) : null}
 
         {locked ? (
           <>
