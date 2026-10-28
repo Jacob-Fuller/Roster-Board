@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Roster Board",
-  "short_name": "Roster Board",
+  "name": "Tempus Board",
+  "short_name": "Tempus Board",
   "description": "A shift calendar app with rosters, overtime and excess hours, leave tracking, pay estimates and cloud backup.",
   "start_url": "./index.html",
   "scope": "./",
