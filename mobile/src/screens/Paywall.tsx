@@ -44,7 +44,7 @@ export function Paywall() {
             </Pressable>
           </View>
           <Text style={{ color: t.accent, fontWeight: "800", letterSpacing: 1, fontSize: 12, marginTop: 4 }}>PREMIUM</Text>
-          <H1 style={{ marginTop: 4, marginBottom: 8 }}>Roster Board Premium</H1>
+          <H1 style={{ marginTop: 4, marginBottom: 8 }}>Tempus Board Premium</H1>
           {paywall ? <Dim style={{ fontSize: 15, marginBottom: 14 }}>{paywall}</Dim> : null}
           <View style={{ gap: 10, marginBottom: 20 }}>
             {PERKS.map((p) => (

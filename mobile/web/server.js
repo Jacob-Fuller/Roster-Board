@@ -1,4 +1,4 @@
-// Minimal static file server for Roster Board — no dependencies.
+// Minimal static file server for Tempus Board — no dependencies.
 // Render (or any Node host) runs this as the Web Service "start command".
 const http = require("http");
 const fs = require("fs");
@@ -120,5 +120,5 @@ http.createServer((req, res) => {
     }, data);
   });
 }).listen(PORT, () => {
-  console.log("Roster Board serving on port " + PORT);
+  console.log("Tempus Board serving on port " + PORT);
 });

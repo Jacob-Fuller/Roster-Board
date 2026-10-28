@@ -1,4 +1,4 @@
-// Data model shared with the Roster Board web app (index.html in the repo root).
+// Data model shared with the Tempus Board web app (index.html in the repo root).
 // The native app reads and writes exactly the same record shapes, so the same
 // account can be used on the web, iPhone and Android side by side. Records may
 // carry fields this app doesn't know about yet; edits always copy the whole

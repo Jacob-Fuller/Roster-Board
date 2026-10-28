@@ -126,7 +126,7 @@ function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: 
   // header (jsPDF y is the text baseline; boxes below are positioned by their top)
   parts.push(`<div class="title" style="left:${u(margin)};top:${u(n(margin + 18 - 17))}">${esc(monthLabel)}</div>`);
   parts.push(`<div class="summary" style="left:${u(margin)};top:${u(n(margin + 34 - 7.5))}">${summary.map(esc).join("&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;")}</div>`);
-  parts.push(`<div class="brand" style="right:${u(margin)};top:${u(n(margin + 15.5 - 9))}">Roster Board</div>`);
+  parts.push(`<div class="brand" style="right:${u(margin)};top:${u(n(margin + 15.5 - 9))}">Tempus Board</div>`);
 
   // weekday header
   WEEKDAYS.forEach((w, i) => {
@@ -185,7 +185,7 @@ function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: 
   // footer
   const fy = H - margin + 4 - 6;
   parts.push(`<div class="foot" style="left:${u(gridLeft)};top:${u(n(fy))}">Printed ${esc(today.toLocaleDateString())}</div>`);
-  parts.push(`<div class="foot" style="right:${u(margin)};top:${u(n(fy))}">Made with Roster Board&nbsp;&nbsp;·&nbsp;&nbsp;rosterboard.net</div>`);
+  parts.push(`<div class="foot" style="right:${u(margin)};top:${u(n(fy))}">Made with Tempus Board&nbsp;&nbsp;·&nbsp;&nbsp;rosterboard.net</div>`);
 
   return `<section class="page">${parts.join("\n")}</section>`;
 }

@@ -1,4 +1,4 @@
-# Roster Board native app (iPhone and Android)
+# Tempus Board native app (iPhone and Android)
 
 A real native app built with React Native and Expo. It uses the same Supabase
 accounts and data as rosterboard.net, so people can switch between the website,

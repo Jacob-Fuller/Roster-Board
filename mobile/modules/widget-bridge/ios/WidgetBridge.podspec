@@ -1,8 +1,8 @@
 Pod::Spec.new do |s|
   s.name           = 'WidgetBridge'
   s.version        = '1.0.0'
-  s.summary        = 'Roster Board home screen widget data'
-  s.author         = 'Roster Board'
+  s.summary        = 'Tempus Board home screen widget data'
+  s.author         = 'Tempus Board'
   s.homepage       = 'https://www.rosterboard.net'
   s.license        = { :type => 'Proprietary' }
   s.platforms      = { :ios => '15.1' }

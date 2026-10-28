@@ -1,4 +1,4 @@
-// Shifts and leave copied into a "Roster Board" calendar in the phone's Calendar
+// Shifts and leave copied into a "Tempus Board" calendar in the phone's Calendar
 // app, from a month ago to a year ahead. The calendar is rebuilt whenever your
 // shifts change, so swaps and edits show there too. Turning it off removes it.
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,7 +9,8 @@ import {
   type ShiftType, type Snapshot,
 } from "./model";
 
-const CAL_TITLE = "Roster Board";
+const CAL_TITLE = "Tempus Board";
+const OLD_TITLES = ["Roster Board"]; // renamed app: pick up and rename the old calendar
 const KEY_ID = "rosterBoard.calendarId";
 const KEY_HASH = "rosterBoard.calendarHash";
 
@@ -24,7 +25,10 @@ export async function askCalendarPermission(): Promise<boolean> {
 async function findCalendar(): Promise<string | null> {
   const saved = await AsyncStorage.getItem(KEY_ID).catch(() => null);
   const cals = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-  const hit = cals.find((c) => c.id === saved) || cals.find((c) => c.title === CAL_TITLE && c.allowsModifications);
+  const hit = cals.find((c) => c.id === saved)
+    || cals.find((c) => c.title === CAL_TITLE && c.allowsModifications)
+    || cals.find((c) => OLD_TITLES.includes(c.title) && c.allowsModifications);
+  if (hit && hit.title !== CAL_TITLE) await Calendar.updateCalendarAsync(hit.id, { title: CAL_TITLE }).catch(() => {});
   return hit ? hit.id : null;
 }
 
@@ -80,7 +84,7 @@ function buildEvents(d: Snapshot, typesById: { [id: string]: ShiftType }, from: 
 }
 
 let running = false, again: (() => void) | null = null;
-// Brings the phone's Roster Board calendar up to date (only when something changed).
+// Brings the phone's Tempus Board calendar up to date (only when something changed).
 export async function syncCalendar(d: Snapshot, typesById: { [id: string]: ShiftType }, on: boolean) {
   if (Platform.OS === "web") return;
   if (running) { again = () => syncCalendar(d, typesById, on); return; }

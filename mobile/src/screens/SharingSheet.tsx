@@ -52,7 +52,7 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
     setBusy(false);
     if (r.error) { setErr(r.error.message || "Couldn't send invite"); return; }
     setEmail("");
-    toast("If they have a Roster Board account, they'll see your request");
+    toast("If they have a Tempus Board account, they'll see your request");
     refresh();
   }
   async function respond(id: string, accept: boolean) {
@@ -88,7 +88,7 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
     });
     setShared({ email: other(c), typesById, data: { shifts, leave: data.leave || {}, notes: data.notes || {} } });
   }
-  const shareApp = () => Share.share({ message: "I'm using Roster Board to manage my shifts and roster. Check it out: " + WEB_URL }).catch(() => {});
+  const shareApp = () => Share.share({ message: "I'm using Tempus Board to manage my shifts and roster. Check it out: " + WEB_URL }).catch(() => {});
 
   return (
     <Sheet visible={visible} onClose={onClose} title="Share Your Roster">
@@ -97,7 +97,7 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
         onChange={(v) => update((d) => { d.settings = { ...d.settings, shareEvents: v === "show", updatedAt: Date.now() }; })}
         options={[{ value: "show", label: "Show" }, { value: "hide", label: "Hide" }]} />
       <SectionHead title="Invite Someone" />
-      <Field value={email} onChangeText={setEmail} placeholder="Their Roster Board email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" onSubmitEditing={invite} />
+      <Field value={email} onChangeText={setEmail} placeholder="Their Tempus Board email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" onSubmitEditing={invite} />
       {err ? <Text style={{ color: t.danger, marginBottom: 10 }}>{err}</Text> : null}
       <View style={{ flexDirection: "row", gap: 10 }}>
         <Button style={{ flex: 1 }} title={busy ? "Sending…" : "Send request"} onPress={invite} disabled={busy} />

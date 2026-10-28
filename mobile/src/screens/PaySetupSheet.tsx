@@ -82,7 +82,7 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
         </View>
         <DateField label="Pay period start date" value={form.periodStart} onChange={(v) => set("periodStart", v)} />
         <ToggleRow label="Payday reminder" value={!!draft.paydayReminder} onChange={async (v) => {
-          if (v && !(await askReminderPermission())) { toast("Allow notifications for Roster Board in Settings to get payday reminders"); return; }
+          if (v && !(await askReminderPermission())) { toast("Allow notifications for Tempus Board in Settings to get payday reminders"); return; }
           setDraft({ ...draft, paydayReminder: v });
         }} />
       </Section>

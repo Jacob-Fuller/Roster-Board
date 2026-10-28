@@ -118,7 +118,7 @@ struct NextShift: View {
         ShiftChip(x: x, big: true)
         Text(timeLabel(x)).font(.system(size: 13, weight: .semibold)).foregroundColor(dim)
       } else {
-        Text(entry.empty ? "Open Roster Board" : "No shifts coming up").font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
+        Text(entry.empty ? "Open Tempus Board" : "No shifts coming up").font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
       }
       Spacer(minLength: 0)
     }

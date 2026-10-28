@@ -161,14 +161,14 @@ const GROUPS: Group[] = [
         id: "widget", title: "Add the home screen widget", icon: "apps", color: BLUE, keywords: "widget home screen next shift",
         steps: [
           { text: "Press and hold your home screen, tap Edit, then Add Widget." },
-          { text: "Choose Roster Board and pick the small or medium size." },
+          { text: "Choose Tempus Board and pick the small or medium size." },
         ],
       },
       {
         id: "calapp", title: "Show shifts in the Calendar app", icon: "calendar", color: PINK, keywords: "iphone calendar app sync apple calendar",
         steps: [
           { text: "Open Account and, under Appearance → Shifts, choose Show.", pic: [{ t: "tabs", active: "Account" }, { t: "row", label: "Shifts", value: "Show", hl: true }] },
-          { text: "Your shifts and leave appear in a Roster Board calendar and stay up to date." },
+          { text: "Your shifts and leave appear in a Tempus Board calendar and stay up to date." },
         ],
       },
     ],

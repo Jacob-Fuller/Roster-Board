@@ -7,7 +7,7 @@ import AlarmKit
 // Real alarms before shifts, using Apple's AlarmKit (iOS 26 and later).
 // They ring like the Clock app, even on silent or in a Focus mode.
 // The app sends the full list of upcoming alarms each time the roster changes;
-// this replaces every alarm Roster Board has set.
+// this replaces every alarm Tempus Board has set.
 struct ShiftAlarmItem: Record {
   @Field var at: Double = 0
   @Field var title: String = "Shift"

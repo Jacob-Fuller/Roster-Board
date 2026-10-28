@@ -34,7 +34,7 @@ export function AuthScreen() {
         if (r.error) setMsg({ text: r.error.message });
       }
     } catch {
-      setMsg({ text: "Couldn't reach Roster Board. Check your connection and try again." });
+      setMsg({ text: "Couldn't reach Tempus Board. Check your connection and try again." });
     } finally {
       setBusy(false);
     }
@@ -61,7 +61,7 @@ export function AuthScreen() {
         <View style={{ backgroundColor: t.mast, paddingTop: insets.top + 48, paddingBottom: 76, alignItems: "center", borderBottomLeftRadius: 34, borderBottomRightRadius: 34, overflow: "hidden" }}>
           <MastBackground t={t} />
           <Image source={require("../../assets/icon.png")} style={{ width: 84, height: 84, borderRadius: 20, marginBottom: 16 }} />
-          <Text style={{ fontFamily: SERIF, fontSize: 34, letterSpacing: -0.6, color: t.mastInk }}>Roster Board</Text>
+          <Text style={{ fontFamily: SERIF, fontSize: 34, letterSpacing: -0.6, color: t.mastInk }}>Tempus Board</Text>
           <Text style={{ color: t.mastDim, fontSize: 15, marginTop: 4 }}>Shifts, rosters and pay in one calendar</Text>
         </View>
         <Card style={{ marginHorizontal: 18, marginTop: -44, padding: 20 }}>

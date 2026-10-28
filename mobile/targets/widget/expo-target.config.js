@@ -4,7 +4,7 @@
 module.exports = () => ({
   type: "widget",
   name: "RosterBoardWidget",
-  displayName: "Roster Board",
+  displayName: "Tempus Board",
   bundleIdentifier: ".widget",
   deploymentTarget: "17.0",
   colors: { $accent: "#C8975F", $widgetBackground: "#132849" },

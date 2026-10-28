@@ -48,7 +48,7 @@ export function TypesScreen() {
   const alarmsOk = useAlarmsAvailable();
   async function chooseAlarm(v: number) {
     if (v > 0 && locked) { setEditing(null); setTimeout(() => openPaywall("Alarms are part of Premium."), 500); return; }
-    if (v > 0 && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
+    if (v > 0 && !(await requestAlarmPermission())) { toast("Allow alarms for Tempus Board in Settings to use alarms"); return; }
     set({ alarm: v });
   }
 

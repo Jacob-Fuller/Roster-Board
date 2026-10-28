@@ -39,10 +39,10 @@ export function AccountScreen() {
   function feedback() {
     dialog({ title: "Send feedback", message: "Got a suggestion or found a problem? Write it below. This opens an email to us with your message filled in, ready to send.", input: { placeholder: "Your feedback..." }, confirm: "Continue", onConfirm: (v) => {
       const text = v.trim(); if (!text) { toast("Write your feedback first"); return; }
-      Linking.openURL("mailto:contact@rosterboard.net?subject=" + encodeURIComponent("Roster Board feedback") + "&body=" + encodeURIComponent(text)).catch(() => toast("Couldn't open your email app"));
+      Linking.openURL("mailto:contact@rosterboard.net?subject=" + encodeURIComponent("Tempus Board feedback") + "&body=" + encodeURIComponent(text)).catch(() => toast("Couldn't open your email app"));
     } });
   }
-  const shareInvite = () => Share.share({ message: "I'm using Roster Board to manage my shifts and roster — thought you might like it too. Check it out: " + WEB_URL }).catch(() => {});
+  const shareInvite = () => Share.share({ message: "I'm using Tempus Board to manage my shifts and roster — thought you might like it too. Check it out: " + WEB_URL }).catch(() => {});
 
   return (
     <View style={{ flex: 1, backgroundColor: t.bg }}>
@@ -83,7 +83,7 @@ export function AccountScreen() {
             <View>
               <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Shifts</Text>
               <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.calendarSync ? "show" : "hide"} onChange={async (v) => {
-                if (v === "show" && !(await askCalendarPermission())) { toast("Allow calendar access for Roster Board in Settings"); return; }
+                if (v === "show" && !(await askCalendarPermission())) { toast("Allow calendar access for Tempus Board in Settings"); return; }
                 setPrefs({ calendarSync: v === "show" });
               }} />
             </View>
@@ -266,9 +266,9 @@ function PremiumSection() {
     <>
       <SectionHead title="Premium" />
       <Card style={{ paddingVertical: 2 }}>
-        <MenuRow center title="Roster Board Premium" onPress={() => setOpen(true)} />
+        <MenuRow center title="Tempus Board Premium" onPress={() => setOpen(true)} />
       </Card>
-      <Sheet visible={open} onClose={() => setOpen(false)} title="Roster Board Premium">
+      <Sheet visible={open} onClose={() => setOpen(false)} title="Tempus Board Premium">
         <Card style={{ paddingVertical: 2 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 12 }}>
             <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>Plan</Text>

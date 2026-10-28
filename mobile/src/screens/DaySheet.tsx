@@ -254,7 +254,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   }
   async function chooseAlert(which: 0 | 1, v: number) {
     if (v >= 0 && locked) { onClose(); setTimeout(() => openPaywall("Alarms are part of Premium."), 500); return; }
-    if (v >= 0 && Platform.OS !== "web" && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
+    if (v >= 0 && Platform.OS !== "web" && !(await requestAlarmPermission())) { toast("Allow alarms for Tempus Board in Settings to use alarms"); return; }
     setAlerts((cur) => (which === 0 ? (v < 0 ? [-1, -1] : [v, cur[1]]) : [cur[0], v]));
   }
   const alarmList = () => (allDay || !time || !useAlarms ? [] : alerts.filter((m, i, a) => m >= 0 && a.indexOf(m) === i));
@@ -265,7 +265,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     if (!v) { if (editing) toast("Give the event a name"); return; }
     if (remind) {
       const ok = await askReminderPermission();
-      if (!ok) toast("Notifications are off for Roster Board in your phone's Settings");
+      if (!ok) toast("Notifications are off for Tempus Board in your phone's Settings");
     }
     if (editing) {
       const from = editing.date, to = moveTo || from, id = editing.id;
