@@ -3,9 +3,9 @@ import { Platform, Pressable, Text, View, useWindowDimensions } from "react-nati
 import { WebView } from "react-native-webview";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import { Button, Segmented, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Chip, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { MONTHS, addMonths, startOfMonth } from "../lib/model";
-import { PDF_PAGE, buildRosterHtml, nothingToExport, rosterFileName } from "../lib/pdf";
+import { PDF_PAGE, buildRosterHtml, nothingToExport, rosterFileName, rosterFilterOptions } from "../lib/pdf";
 import { useStore } from "../lib/store";
 
 type Mode = "month" | "year";
@@ -27,6 +27,9 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
   const [month, setMonth] = useState(startOfMonth(initialMonth || new Date()));
   const [year, setYear] = useState(initialYear ?? new Date().getFullYear());
   const [busy, setBusy] = useState(false);
+  // Types left out of the PDF; kept while the app is open so the choice carries between exports.
+  const [hidden, setHidden] = useState<Set<string>>(() => new Set());
+  const toggle = (id: string) => setHidden((h) => { const n = new Set(h); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   // Start from the caller's period each time the sheet opens.
   useEffect(() => {
@@ -41,13 +44,14 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
     if (mode === "month") return [month];
     return Array.from({ length: 12 }, (_, mi) => new Date(year, mi, 1));
   }, [mode, month, year]);
+  const options = useMemo(() => (visible ? rosterFilterOptions(data, months) : []), [visible, data, months]);
   // Live preview of exactly what will be exported.
   const { width: screenW, height: screenH } = useWindowDimensions();
   const previewW = screenW - 36;
   const pageH = (previewW * PDF_PAGE.height) / PDF_PAGE.width;
   const previewH = mode === "month" ? pageH + 4 : Math.min(screenH * 0.55, pageH * 12);
-  const previewHtml = useMemo(() => (visible ? buildRosterHtml(data, months).replace("</style>",
-    "body{background:#E4E2DD}.page{background:#fff;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.25)}</style>") : ""), [visible, data, months]);
+  const previewHtml = useMemo(() => (visible ? buildRosterHtml(data, months, undefined, hidden).replace("</style>",
+    "body{background:#E4E2DD}.page{background:#fff;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.25)}</style>") : ""), [visible, data, months, hidden]);
 
   const label = mode === "month" ? MONTHS[month.getMonth()] + " " + month.getFullYear() : String(year);
   const step = (n: number) => { if (mode === "month") setMonth(addMonths(month, n)); else setYear(year + n); };
@@ -55,7 +59,8 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
   const exportPdf = async () => {
     if (busy) return;
     if (nothingToExport(data)) { toast("Nothing to export yet"); return; }
-    const html = buildRosterHtml(data, months);
+    if (options.length && options.every((o) => hidden.has(o.id))) { toast("Select at least one"); return; }
+    const html = buildRosterHtml(data, months, undefined, hidden);
     setBusy(true);
     try {
       if (Platform.OS === "web") {
@@ -92,6 +97,17 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
           : <WebView originWhitelist={["*"]} source={{ html: previewHtml }} style={{ flex: 1, backgroundColor: "#E4E2DD" }}
               scrollEnabled={mode === "year"} showsVerticalScrollIndicator={false} />}
       </View>
+      {options.length ? (
+        <>
+          <SectionHead title="Show" />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {options.map((o) => {
+              const on = !hidden.has(o.id);
+              return <Chip key={o.id} label={(on ? "✓ " : "") + o.label} color={on ? o.color : t.surface2} ink={on ? o.ink : t.textDim} onPress={() => toggle(o.id)} />;
+            })}
+          </View>
+        </>
+      ) : null}
     </Sheet>
   );
 }

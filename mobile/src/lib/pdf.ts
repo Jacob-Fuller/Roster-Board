@@ -22,6 +22,8 @@ type PdfEntry = {
   work?: boolean; ex?: number; ot?: number;
 };
 type TypesById = { [id: string]: ShiftType };
+type Hidden = ReadonlySet<string>;
+const NONE: Hidden = new Set();
 
 const COMBO_TYPES: { [id: string]: ShiftType } = { [OVERTIME_ID]: OVERTIME_TYPE, [EXCESS_ID]: EXCESS_TYPE };
 
@@ -51,7 +53,7 @@ const n = (v: number) => Math.round(v * 100) / 100;
 // layout identical on every platform.
 const u = (pt: number) => `${Math.round((pt / PDF_PAGE.width) * 100 * 10000) / 10000}vw`;
 
-function dayEntries(data: PdfData, typesById: TypesById, key: string): PdfEntry[] {
+function dayEntries(data: PdfData, typesById: TypesById, key: string, hidden: Hidden = NONE): PdfEntry[] {
   const out: PdfEntry[] = [];
   (data.shifts[key] || []).forEach((s) => {
     const t = typesById[s.typeId];
@@ -80,10 +82,10 @@ function dayEntries(data: PdfData, typesById: TypesById, key: string): PdfEntry[
     const bt = l.baseTypeId ? typesById[l.baseTypeId] : null;
     out.push({ name: bt ? def.label + " – " + bt.name : def.label, detail: l.hours ? fmtHours(l.hours) + "h" : "All day", color: def.color, typeId: "leave_" + l.kind, hours: 0 });
   });
-  return out;
+  return hidden.size ? out.filter((e) => !hidden.has(e.typeId)) : out;
 }
 
-function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: Date): string {
+function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: Date, hidden: Hidden): string {
   const W = PDF_PAGE.width, H = PDF_PAGE.height, margin = 34;
   const monthLabel = MONTHS[monthDate.getMonth()] + " " + monthDate.getFullYear();
   const cells = buildMonthCells(monthDate);
@@ -99,7 +101,7 @@ function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: 
   };
   cells.forEach((cell) => {
     if (!cell.inMonth) return;
-    dayEntries(data, typesById, ymd(cell.date)).forEach((e) => {
+    dayEntries(data, typesById, ymd(cell.date), hidden).forEach((e) => {
       if (COMBO_TYPES[e.typeId]) {
         // excess and overtime counted separately, so a split shift adds to both
         if (e.ex) add(EXCESS_ID, "Excess", "#F7B3CE", e.ex);
@@ -147,7 +149,7 @@ function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: 
       if (key === todayKey) inner.push(`<div class="today">${cell.date.getDate()}</div>`);
       else inner.push(`<div class="dn">${cell.date.getDate()}</div>`);
 
-      const entries = dayEntries(data, typesById, key);
+      const entries = dayEntries(data, typesById, key, hidden);
       const pad = 5, blockH = 19, gap = 3, top = 20;
       const room = Math.max(1, Math.floor((rowH - 22 + gap) / (blockH + gap)));
       const shown = entries.length > room ? entries.slice(0, room - 1) : entries;
@@ -233,14 +235,45 @@ export function rosterFileName(months: Date[]): string {
   return "roster-" + m.getFullYear() + "-" + String(m.getMonth() + 1).padStart(2, "0") + ".pdf";
 }
 
+function typesMap(data: PdfData): TypesById {
+  const typesById: TypesById = { [OVERTIME_ID]: OVERTIME_TYPE, [EXCESS_ID]: EXCESS_TYPE };
+  data.types.forEach((t) => { typesById[t.id] = t; });
+  return typesById;
+}
+
+export type RosterFilterOption = { id: string; label: string; color: string; ink: string };
+
+/**
+ * The shift types, excess/overtime and leave kinds that appear in `months`,
+ * for choosing what the PDF shows. Ids match what `hidden` takes.
+ */
+export function rosterFilterOptions(data: PdfData, months: Date[]): RosterFilterOption[] {
+  const typesById = typesMap(data);
+  const used = new Set<string>();
+  months.forEach((m) => {
+    const y = m.getFullYear(), mi = m.getMonth(), days = new Date(y, mi + 1, 0).getDate();
+    for (let d = 1; d <= days; d++) dayEntries(data, typesById, ymd(new Date(y, mi, d))).forEach((e) => used.add(e.typeId));
+  });
+  const out: RosterFilterOption[] = [];
+  [...data.types].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).forEach((t) => {
+    if (used.has(t.id)) out.push({ id: t.id, label: t.name, color: t.color, ink: t.ink });
+  });
+  // excess ahead of overtime
+  if (used.has(EXCESS_ID)) out.push({ id: EXCESS_ID, label: "Excess", color: EXCESS_TYPE.color, ink: EXCESS_TYPE.ink });
+  if (used.has(OVERTIME_ID)) out.push({ id: OVERTIME_ID, label: "Overtime", color: OVERTIME_TYPE.color, ink: OVERTIME_TYPE.ink });
+  Object.keys(LEAVE_KINDS).forEach((k) => {
+    if (used.has("leave_" + k)) out.push({ id: "leave_" + k, label: LEAVE_KINDS[k].label, color: LEAVE_KINDS[k].color, ink: LEAVE_KINDS[k].ink });
+  });
+  return out;
+}
+
 /**
  * Self-contained HTML for the roster PDF: one A4 landscape page per month.
  * `months` are any dates inside the months to print (one month, or all 12 of a year).
  */
-export function buildRosterHtml(data: PdfData, months: Date[], today: Date = new Date()): string {
-  const typesById: TypesById = { [OVERTIME_ID]: OVERTIME_TYPE, [EXCESS_ID]: EXCESS_TYPE };
-  data.types.forEach((t) => { typesById[t.id] = t; });
-  const pages = months.map((m) => monthPage(data, typesById, new Date(m.getFullYear(), m.getMonth(), 1), today));
+export function buildRosterHtml(data: PdfData, months: Date[], today: Date = new Date(), hidden: Hidden = NONE): string {
+  const typesById = typesMap(data);
+  const pages = months.map((m) => monthPage(data, typesById, new Date(m.getFullYear(), m.getMonth(), 1), today, hidden));
   const title = esc(rosterFileName(months).replace(/\.pdf$/, ""));
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
