@@ -129,7 +129,6 @@ function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: 
   // header (jsPDF y is the text baseline; boxes below are positioned by their top)
   parts.push(`<div class="title" style="left:${u(margin)};top:${u(n(margin + 18 - 17))}">${esc(monthLabel)}</div>`);
   parts.push(`<div class="summary" style="left:${u(margin)};top:${u(n(margin + 34 - 7.5))}">${summary.map(esc).join("&nbsp;&nbsp;&nbsp;·&nbsp;&nbsp;&nbsp;")}</div>`);
-  parts.push(`<div class="brand" style="right:${u(margin)};top:${u(n(margin + 15.5 - 9))}">Tempus Board</div>`);
 
   // weekday header
   WEEKDAYS.forEach((w, i) => {
@@ -188,7 +187,6 @@ function monthPage(data: PdfData, typesById: TypesById, monthDate: Date, today: 
   // footer
   const fy = H - margin + 4 - 6;
   parts.push(`<div class="foot" style="left:${u(gridLeft)};top:${u(n(fy))}">Printed ${esc(today.toLocaleDateString())}</div>`);
-  parts.push(`<div class="foot" style="right:${u(margin)};top:${u(n(fy))}">Made with Tempus Board&nbsp;&nbsp;·&nbsp;&nbsp;rosterboard.net</div>`);
 
   return `<section class="page">${parts.join("\n")}</section>`;
 }
@@ -203,7 +201,6 @@ body { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; color: ${INK
 .page > div { position: absolute; white-space: nowrap; }
 .title { font-size: ${u(22)}; font-weight: 700; line-height: ${u(22)}; color: ${INK}; }
 .summary { font-size: ${u(9)}; line-height: ${u(9)}; color: ${DIM}; }
-.brand { font-size: ${u(11)}; font-weight: 700; line-height: ${u(11)}; color: ${NAVY}; }
 .wd { font-size: ${u(7.5)}; line-height: ${u(7.5)}; font-weight: 700; color: ${DIM}; text-align: center; letter-spacing: ${u(0.6)}; }
 .grid { border: ${u(0.8)} solid rgb(190,194,202); border-radius: ${u(4)}; overflow: hidden; }
 .cell { position: absolute; }
