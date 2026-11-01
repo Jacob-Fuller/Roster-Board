@@ -7,13 +7,23 @@ import { useStore } from "../lib/store";
 import { isFromContacts } from "../lib/contactBirthdays";
 
 type Draft = { id: string | null; name: string; day: string; month: number; year: string };
+type Kind = "birthdays" | "yearly";
 
-export function BirthdaysSheet({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+// Words for each list; yearly events (anniversaries etc.) share this sheet with birthdays.
+const TEXT = {
+  birthdays: { title: "Birthdays", one: "birthday", Add: "Add birthday", Edit: "Edit birthday", added: "Birthday added", updated: "Birthday updated", deleted: "Birthday deleted",
+    del: (n: string) => "Delete " + n + "'s birthday?", none: "No birthdays added yet.", name: "Name", yearHint: "Shows their age", icon: "🎂 " },
+  yearly: { title: "Yearly Events", one: "event", Add: "Add yearly event", Edit: "Edit yearly event", added: "Event added", updated: "Event updated", deleted: "Event deleted",
+    del: (n: string) => "Delete " + n + "?", none: "No yearly events added yet.", name: "Event", yearHint: "Shows how many years", icon: "🗓️ " },
+};
+
+export function BirthdaysSheet({ visible, onClose, kind = "birthdays" }: { visible: boolean; onClose: () => void; kind?: Kind }) {
   const t = useTheme();
   const { data, update } = useStore();
   const { dialog, toast } = useUi();
   const [draft, setDraft] = useState<Draft | null>(null);
-  const sorted = data.birthdays.slice().sort((a, b) => a.month - b.month || a.day - b.day || (a.name || "").localeCompare(b.name || ""));
+  const tx = TEXT[kind];
+  const sorted = data[kind].slice().sort((a, b) => a.month - b.month || a.day - b.day || (a.name || "").localeCompare(b.name || ""));
 
   const open = (b?: Birthday) => setDraft(b
     ? { id: b.id, name: b.name, day: String(b.day), month: b.month, year: b.year ? String(b.year) : "" }
@@ -25,7 +35,7 @@ export function BirthdaysSheet({ visible, onClose }: { visible: boolean; onClose
     const day = parseInt(draft.day, 10);
     const year = draft.year.trim() ? parseInt(draft.year, 10) : null;
     const maxDay = new Date(2024, draft.month, 0).getDate();
-    if (!name) { toast("Enter a name"); return; }
+    if (!name) { toast(kind === "yearly" ? "Enter the event" : "Enter a name"); return; }
     if (!day || day < 1 || day > maxDay) { toast("Enter a valid day"); return; }
     if (year != null && (isNaN(year) || year < 1900 || year > 2100)) { toast("Enter a valid year"); return; }
     const id = draft.id;
@@ -33,11 +43,12 @@ export function BirthdaysSheet({ visible, onClose }: { visible: boolean; onClose
       const rec: any = { name, day, month: draft.month };
       if (year) rec.year = year;
       if (id) {
-        const i = d.birthdays.findIndex((x) => x.id === id);
-        if (i >= 0) { const { year: _y, ...rest } = d.birthdays[i]; d.birthdays[i] = { ...rest, ...rec, updatedAt: Date.now() }; }
-      } else d.birthdays.push({ id: mkId(), ...rec });
+        const list = d[kind];
+        const i = list.findIndex((x) => x.id === id);
+        if (i >= 0) { const { year: _y, ...rest } = list[i]; list[i] = { ...rest, ...rec, updatedAt: Date.now() }; }
+      } else d[kind].push({ id: mkId(), ...rec });
     });
-    toast(id ? "Birthday updated" : "Birthday added");
+    toast(id ? tx.updated : tx.added);
     setDraft(null);
   }
 
@@ -45,26 +56,26 @@ export function BirthdaysSheet({ visible, onClose }: { visible: boolean; onClose
     const id = draft && draft.id;
     if (!id) return;
     dialog({
-      title: "Delete " + draft!.name + "'s birthday?", confirm: "Delete", danger: true,
+      title: tx.del(draft!.name), confirm: "Delete", danger: true,
       onConfirm: () => {
-        update((d, tomb) => { d.birthdays = d.birthdays.filter((x) => x.id !== id); tomb(id); });
-        toast("Birthday deleted");
+        update((d, tomb) => { d[kind] = d[kind].filter((x) => x.id !== id); tomb(id); });
+        toast(tx.deleted);
         setDraft(null);
       },
     });
   }
 
   return (
-    <Sheet visible={visible} onClose={() => { setDraft(null); onClose(); }} title={draft ? (draft.id ? "Edit birthday" : "Add birthday") : "Birthdays"}
+    <Sheet visible={visible} onClose={() => { setDraft(null); onClose(); }} title={draft ? (draft.id ? tx.Edit : tx.Add) : tx.title}
       footer={draft ? (
         <View style={{ flexDirection: "row", gap: 10 }}>
           {draft.id ? <Button kind="danger" title="Delete" onPress={remove} /> : <Button kind="ghost" title="Back" onPress={() => setDraft(null)} />}
           <Button style={{ flex: 1 }} title="Save" onPress={save} />
         </View>
-      ) : <Button title="+ Add birthday" onPress={() => open()} />}>
+      ) : <Button title={"+ " + tx.Add} onPress={() => open()} />}>
       {draft ? (
         <>
-          <Field label="Name" value={draft.name} onChangeText={(v) => setDraft({ ...draft, name: v })} maxLength={30} />
+          <Field label={tx.name} value={draft.name} placeholder={kind === "yearly" ? "e.g. Anniversary" : undefined} onChangeText={(v) => setDraft({ ...draft, name: v })} maxLength={30} />
           <Field label="Day" value={draft.day} onChangeText={(v) => setDraft({ ...draft, day: v.replace(/\D/g, "") })} keyboardType="number-pad" maxLength={2} placeholder="e.g. 14" />
           <Text style={{ fontSize: 13, color: t.textDim, marginBottom: 6, fontWeight: "600" }}>Month</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 14 }} contentContainerStyle={{ gap: 6 }}>
@@ -78,19 +89,19 @@ export function BirthdaysSheet({ visible, onClose }: { visible: boolean; onClose
               );
             })}
           </ScrollView>
-          <Field label="Year (optional)" value={draft.year} onChangeText={(v) => setDraft({ ...draft, year: v.replace(/\D/g, "") })} keyboardType="number-pad" maxLength={4} placeholder="Shows their age" />
+          <Field label="Year (optional)" value={draft.year} onChangeText={(v) => setDraft({ ...draft, year: v.replace(/\D/g, "") })} keyboardType="number-pad" maxLength={4} placeholder={tx.yearHint} />
         </>
       ) : sorted.length ? sorted.map((b, i) => (
         <View key={b.id}>
           {i ? <Divider /> : null}
           {/* birthdays from contacts mirror the phone, so they're changed in Contacts, not here */}
           <Pressable accessibilityRole="button" disabled={isFromContacts(b)} onPress={() => open(b)} style={{ paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Text style={{ flex: 1, color: t.text, fontSize: 15, fontWeight: "600" }}>🎂 {b.name}</Text>
+            <Text style={{ flex: 1, color: t.text, fontSize: 15, fontWeight: "600" }}>{tx.icon}{b.name}</Text>
             {isFromContacts(b) ? <Ionicons name="person-circle-outline" size={16} color={t.textFaint} accessibilityLabel="From contacts" /> : null}
             <Dim>{b.day} {MONTHS[b.month - 1].slice(0, 3)}{b.year ? " " + b.year : ""}</Dim>
           </Pressable>
         </View>
-      )) : <Dim>No birthdays added yet.</Dim>}
+      )) : <Dim>{tx.none}</Dim>}
     </Sheet>
   );
 }

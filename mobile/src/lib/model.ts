@@ -29,6 +29,8 @@ export type ShiftEntry = Rec & { typeId: string; hours?: number; baseTypeId?: st
 export type LeaveEntry = Rec & { kind: string; hours?: number; baseTypeId?: string };
 export type EventEntry = Rec & { text: string; category?: string; time?: string; allDay?: boolean; remind?: boolean; notified?: boolean; alarms?: number[] };
 export type Birthday = Rec & { name: string; day: number; month: number; year?: number | null };
+/** A date that repeats every year (anniversary etc.); same shape as a birthday, kept in its own list. */
+export type YearlyEvent = Birthday;
 export type Buckets<T> = { [dateKey: string]: T[] };
 
 export type Snapshot = {
@@ -39,6 +41,7 @@ export type Snapshot = {
   swaps: Buckets<Rec>;
   payTags: Buckets<Rec>;
   birthdays: Birthday[];
+  yearly: YearlyEvent[];
   roster: { weeks: number; pattern: string[][][]; updatedAt: number; [k: string]: any };
   settings: { hourlyRate: number; updatedAt?: number; [k: string]: any };
   tombstones: { [id: string]: number };
@@ -48,7 +51,7 @@ export const BUCKET_KEYS = ["shifts", "notes", "leave", "swaps", "payTags"] as c
 
 export function emptySnapshot(): Snapshot {
   return {
-    types: [], shifts: {}, notes: {}, leave: {}, swaps: {}, payTags: {}, birthdays: [],
+    types: [], shifts: {}, notes: {}, leave: {}, swaps: {}, payTags: {}, birthdays: [], yearly: [],
     roster: { weeks: 1, pattern: [[[], [], [], [], [], [], []]], updatedAt: 0 },
     settings: { hourlyRate: 0 }, tombstones: {},
   };
@@ -61,6 +64,7 @@ export function normaliseSnapshot(d: any): Snapshot {
     types: Array.isArray(d.types) ? d.types : [],
     shifts: d.shifts || {}, notes: d.notes || {}, leave: d.leave || {}, swaps: d.swaps || {}, payTags: d.payTags || {},
     birthdays: Array.isArray(d.birthdays) ? d.birthdays : [],
+    yearly: Array.isArray(d.yearly) ? d.yearly : [],
     roster: d.roster && d.roster.pattern ? { ...d.roster, updatedAt: d.roster.updatedAt || 0 } : e.roster,
     settings: d.settings || e.settings,
     tombstones: d.tombstones || {},

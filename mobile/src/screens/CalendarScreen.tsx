@@ -49,6 +49,7 @@ export function CalendarScreen() {
     shifts: data.shifts, leave: data.leave, swaps: data.swaps, payTags: data.payTags, settings: data.settings,
     notes: prefs.hideEvents ? {} : data.notes,
     birthdays: prefs.hideBirthdays ? [] : data.birthdays,
+    yearly: data.yearly,
   }), [data, prefs.hideEvents, prefs.hideBirthdays]);
 
   const swipe = useMonthSwipe(month, setMonth, bulk);

@@ -64,6 +64,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const holiday = holidayName(placeOf(data.settings), key);
   const events = (data.notes[key] || []).slice().sort((a, b) => (a.allDay ? "" : a.time || "99:99").localeCompare(b.allDay ? "" : b.time || "99:99"));
   const bdays = birthdaysOnDate(data.birthdays, date);
+  const yearly = birthdaysOnDate(data.yearly, date);
 
   /* ----- shifts ----- */
   const addShift = (typeId: string, hours?: number | null, baseTypeId?: string | null, tag?: string | null) => {
@@ -384,6 +385,13 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         <>
           <SectionHead title="Birthdays" />
           {bdays.map((b) => <Item key={b.id} color={t.accent} title={"🎂 " + b.name + (b.age != null ? " turns " + b.age : "")} />)}
+        </>
+      ) : null}
+
+      {yearly.length ? (
+        <>
+          <SectionHead title="Yearly Events" />
+          {yearly.map((y) => <Item key={y.id} color="#E5484D" title={"🗓️ " + y.name + (y.age ? " · " + y.age + (y.age === 1 ? " year" : " years") : "")} />)}
         </>
       ) : null}
 

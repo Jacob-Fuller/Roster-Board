@@ -11,7 +11,7 @@ import { BannerBorder } from "./BannerBorder";
 import { useTheme } from "./ui";
 
 export type GridData = {
-  shifts: Buckets<ShiftEntry>; leave: Buckets<LeaveEntry>; notes?: Buckets<EventEntry>; birthdays?: Birthday[];
+  shifts: Buckets<ShiftEntry>; leave: Buckets<LeaveEntry>; notes?: Buckets<EventEntry>; birthdays?: Birthday[]; yearly?: Birthday[];
   swaps?: Buckets<Rec>; payTags?: Buckets<Rec>; settings?: any;
 };
 
@@ -88,6 +88,9 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               if (data.birthdays) birthdaysOnDate(data.birthdays, c.date).forEach((b) =>
                 items.push(<Pill ts={ts} key={"b" + b.id} strip="Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
                   label={(b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} party />));
+              if (data.yearly) birthdaysOnDate(data.yearly, c.date).forEach((y) =>
+                items.push(<Pill ts={ts} key={"y" + y.id} strip="Yearly" stripBg={YEARLY.color} stripFg={YEARLY.ink}
+                  label={y.name} bg={YEARLY.color + "38"} fg={t.text} />));
               const sel = !!(selected && selected[key]);
               // Up to 3 banners per day; they shrink a little to fit, and only show "+ more" when even that won't fit.
               const room = areaH ? areaH - (isToday || sel ? 4 : 0) : 0;
@@ -125,6 +128,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
 }
 
 const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
+const YEARLY = { color: "#E5484D", ink: "#FFFFFF" };
 const GAP = 3, GAP_TIGHT = 2, MORE_H = 11;
 // Smallest a banner gets before a day falls back to "+ more" (never under 70% of full size).
 const MIN_BANNER_H = 18, MIN_BANNER_SHARE = 0.7;

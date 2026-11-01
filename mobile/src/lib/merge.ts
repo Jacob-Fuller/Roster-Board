@@ -101,6 +101,7 @@ export function mergeSnapshots(local: Snapshot, remote: any): Snapshot {
     swaps: mergeBucketed(local.swaps, r && r.swaps, tombs),
     payTags: mergeBucketed(local.payTags, r && r.payTags, tombs),
     birthdays: mergeArrayById(local.birthdays, r && r.birthdays, tombs),
+    yearly: mergeArrayById(local.yearly, r && r.yearly, tombs),
     roster: mergeRoster(local.roster, r && r.roster),
     settings: mergeSettings(local.settings, r && r.settings),
     tombstones: tombs,
@@ -117,7 +118,7 @@ function canonical(snap: any) {
       const days: any = {};
       Object.keys(v || {}).forEach((d) => { if ((v[d] || []).length) days[d] = (v[d] || []).slice().sort(byId); });
       out[k] = days;
-    } else if (k === "types" || k === "birthdays") {
+    } else if (k === "types" || k === "birthdays" || k === "yearly") {
       out[k] = (v || []).slice().sort(byId);
     } else out[k] = v;
   });
@@ -142,7 +143,7 @@ export function stripHistory(d: any) {
 }
 export function snapshotHasData(d: any) {
   return !!d && !!(Object.keys(d.shifts || {}).length || Object.keys(d.notes || {}).length || (d.types || []).length ||
-    Object.keys(d.leave || {}).length || Object.keys(d.swaps || {}).length || (d.birthdays || []).length ||
+    Object.keys(d.leave || {}).length || Object.keys(d.swaps || {}).length || (d.birthdays || []).length || (d.yearly || []).length ||
     Object.keys(d.payTags || {}).length);
 }
 export function buildHistory(remote: any, force: boolean, now = Date.now()) {

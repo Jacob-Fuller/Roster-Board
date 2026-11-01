@@ -176,7 +176,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const backup = normaliseSnapshot(stripHistory(snap));
     const now = Date.now();
     const revive = (r: any) => { if (r && r.id) r.updatedAt = now; };
-    backup.types.forEach(revive); backup.birthdays.forEach(revive);
+    backup.types.forEach(revive); backup.birthdays.forEach(revive); backup.yearly.forEach(revive);
     (["shifts", "notes", "leave", "swaps", "payTags"] as const).forEach((k) => {
       Object.keys(backup[k]).forEach((d) => (backup[k] as any)[d].forEach(revive));
     });

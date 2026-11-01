@@ -27,6 +27,7 @@ export function AccountScreen() {
   const { dialog, toast } = useUi();
   const [acctOpen, setAcctOpen] = useState(false);
   const [bdaysOpen, setBdaysOpen] = useState(false);
+  const [yearlyOpen, setYearlyOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [empOpen, setEmpOpen] = useState(false);
@@ -34,6 +35,7 @@ export function AccountScreen() {
   const signedIn = auth === "signedIn" && !!user;
   const name = (user && user.user_metadata && (user.user_metadata as any).full_name) || "";
   const nB = data.birthdays.length;
+  const nY = data.yearly.length;
   const themeValue = prefs.theme === "system" ? (sys === "dark" ? "dark" : "light") : prefs.theme;
 
   function feedback() {
@@ -63,6 +65,8 @@ export function AccountScreen() {
           <MenuRow icon="briefcase" iconColor="#4C8DFF" title="Employment" sub={(employmentOf(data.settings) === "full" ? "Full time" : "Part time") + (stateOf(data.settings) ? " · " + stateOf(data.settings) : "") + (employmentSub(data.settings) ? " · " + employmentSub(data.settings) : "")} onPress={() => setEmpOpen(true)} />
           <Divider />
           <MenuRow icon="gift" iconColor="#A76BF0" title="Birthdays" sub={nB ? nB + " birthday" + (nB === 1 ? "" : "s") + " added" : "None added"} onPress={() => setBdaysOpen(true)} />
+          <Divider />
+          <MenuRow icon="calendar" iconColor="#E5484D" title="Yearly Events" sub={nY ? nY + " event" + (nY === 1 ? "" : "s") + " added" : "None added"} onPress={() => setYearlyOpen(true)} />
         </Card>
 
         <SectionHead title="Appearance" />
@@ -124,6 +128,7 @@ export function AccountScreen() {
       <AccountDetail visible={acctOpen} onClose={() => setAcctOpen(false)} />
       <EmploymentSheet visible={empOpen} onClose={() => setEmpOpen(false)} />
       <BirthdaysSheet visible={bdaysOpen} onClose={() => setBdaysOpen(false)} />
+      <BirthdaysSheet kind="yearly" visible={yearlyOpen} onClose={() => setYearlyOpen(false)} />
       <SharingSheet visible={shareOpen} onClose={() => setShareOpen(false)} />
       <HelpSheet visible={helpOpen} onClose={() => setHelpOpen(false)} />
     </View>
