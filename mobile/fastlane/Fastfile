@@ -96,12 +96,17 @@ platform :ios do
       )
     end
 
-    last = latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, initial_build_number: 0)
+    app_version = get_info_plist_value(path: "ios/#{scheme}/Info.plist", key: "CFBundleShortVersionString")
+    # Build numbers must go up across every version, so take the highest of the
+    # newest version's builds and this version's builds.
+    last = [
+      latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, initial_build_number: 0),
+      latest_testflight_build_number(api_key: api_key, app_identifier: APP_ID, version: app_version.to_s, initial_build_number: 0),
+    ].map(&:to_i).max
     # Expo writes the build number straight into Info.plist.
     set_info_plist_value(path: "ios/#{scheme}/Info.plist", key: "CFBundleVersion", value: (last.to_i + 1).to_s)
     if widget_target
       # the widget's version and build number must match the app's
-      app_version = get_info_plist_value(path: "ios/#{scheme}/Info.plist", key: "CFBundleShortVersionString")
       widget_plist = "targets/widget/Info.plist" # actions run from mobile/, Ruby here runs from mobile/fastlane
       set_info_plist_value(path: widget_plist, key: "CFBundleVersion", value: (last.to_i + 1).to_s)
       set_info_plist_value(path: widget_plist, key: "CFBundleShortVersionString", value: app_version.to_s)
