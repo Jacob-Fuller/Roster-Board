@@ -1,0 +1,80 @@
+[20:44:03]: ▸ [35m::warning ::Run script build phase '[CP-User] [Hermes] Replace Hermes for the right configuration, if needed' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'hermes-engine' from project 'Pods')[0m
+[20:44:03]: ▸ [35m[36;1mnote: [0mRun script build phase '[CP-User] [RN]Check FBReactNativeSpec' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'React-RCTFBReactNativeSpec' from project 'Pods')[0m
+[20:44:03]: ▸ [35m[36;1mnote: [0mRun script build phase '[CP-User] [RNDeps] Replace React Native Core for the right configuration, if needed' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'React-Core-prebuilt' from project 'Pods')[0m
+[20:44:03]: ▸ [35m[36;1mnote: [0mRun script build phase '[CP-User] [RNDeps] Replace React Native Dependencies for the right configuration, if needed' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'ReactNativeDependencies' from project 'Pods')[0m
+[20:44:03]: ▸ [35m[36;1mnote: [0mRun script build phase 'Bundle React Native code and images' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'TempusBoard' from project 'TempusBoard')[0m
+[20:44:03]: ▸ [35m[36;1mnote: [0mRun script build phase '[Expo] Configure project' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'TempusBoard' from project 'TempusBoard')[0m
+[20:44:03]: ▸ [35m[36;1mnote: [0mRun script build phase '[CP-User] Generate app.config for prebuilt Constants.manifest' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'EXConstants' from project 'Pods')[0m
+[20:44:03]: ▸ [35m[32;1mArchive Succeeded[0m
+[20:44:03]: [33mGenerated plist file with the following values:[0m
+[20:44:03]: ▸ [35m-----------------------------------------[0m
+[20:44:03]: ▸ [35m{[0m
+[20:44:03]: ▸ [35m  "provisioningProfiles": {[0m
+[20:44:03]: ▸ [35m    "net.rosterboard.app": "match AppStore net.rosterboard.app",[0m
+[20:44:03]: ▸ [35m    "net.rosterboard.app.widget": "Roster Board Widget AppStore"[0m
+[20:44:03]: ▸ [35m  },[0m
+[20:44:03]: ▸ [35m  "method": "app-store",[0m
+[20:44:03]: ▸ [35m  "signingStyle": "manual"[0m
+[20:44:03]: ▸ [35m}[0m
+[20:44:03]: ▸ [35m-----------------------------------------[0m
+[20:44:03]: [36m$ /usr/bin/xcrun /Users/runner/hostedtoolcache/Ruby/3.3.13/arm64/lib/ruby/gems/3.3.0/gems/fastlane-2.241.2/gym/lib/assets/wrap_xcodebuild/xcbuild-safe.sh -exportArchive -exportOptionsPlist /var/folders/n6/hn37q6pj7sj_9dmqqc2113800000gn/T/gym_config20261101-9341-85y4bn.plist -archivePath /Users/runner/Library/Developer/Xcode/Archives/2026-11-01/TempusBoard\ 2026-11-01\ 20.41.23.xcarchive -exportPath /var/folders/n6/hn37q6pj7sj_9dmqqc2113800000gn/T/gym_output20261101-9341-wns1jm [0m
+[20:44:07]: Compressing 2 dSYM(s)
+[20:44:07]: [36m$ cd /Users/runner/Library/Developer/Xcode/Archives/2026-11-01/TempusBoard\ 2026-11-01\ 20.41.23.xcarchive/dSYMs && zip -r /Users/runner/work/Roster-Board/Roster-Board/mobile/build/TempusBoard.app.dSYM.zip *.dSYM[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/Resources/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/Resources/Relocations/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/Resources/Relocations/aarch64/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/Resources/Relocations/aarch64/RosterBoardWidget.yml (deflated 85%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/Resources/DWARF/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/Resources/DWARF/RosterBoardWidget (deflated 63%)[0m
+[20:44:08]: ▸ [35m  adding: RosterBoardWidget.appex.dSYM/Contents/Info.plist (deflated 52%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/Resources/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/Resources/Relocations/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/Resources/Relocations/aarch64/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/Resources/Relocations/aarch64/TempusBoard.yml (deflated 88%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/Resources/DWARF/ (stored 0%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/Resources/DWARF/TempusBoard (deflated 72%)[0m
+[20:44:08]: ▸ [35m  adding: TempusBoard.app.dSYM/Contents/Info.plist (deflated 52%)[0m
+
+[20:44:08]: [32mSuccessfully exported and compressed dSYM file[0m
+[20:44:08]: [32mSuccessfully exported and signed the ipa file:[0m
+[20:44:08]: /Users/runner/work/Roster-Board/Roster-Board/mobile/build/TempusBoard.ipa
+[20:44:08]: [32m----------------------------------[0m
+[20:44:08]: [32m--- Step: upload_to_testflight ---[0m
+[20:44:08]: [32m----------------------------------[0m
+[20:44:08]: [32mReady to upload new build to TestFlight (App: 6818411085)...[0m
+[20:44:08]: Going to upload updated app to App Store Connect
+[20:44:08]: [32mThis might take a few minutes. Please don't interrupt the script.[0m
+[20:45:22]: [32m--------------------------------------------------------------------[0m
+[20:45:22]: [32mSuccessfully uploaded package to App Store Connect. It might take a few minutes until it's visible online.[0m
+[20:45:22]: [32m--------------------------------------------------------------------[0m
+[20:45:22]: [32mSuccessfully uploaded the new binary to App Store Connect[0m
+[20:45:22]: [33m`skip_waiting_for_build_processing` used and no `changelog` supplied - skipping waiting for build processing[0m
+[20:45:22]: [32mUploaded build 82 to TestFlight.[0m
+
++-----------------------------------------------------+
+|                  [32mfastlane summary[0m                   |
++------+--------------------------------+-------------+
+| Step | Action                         | Time (in s) |
++------+--------------------------------+-------------+
+| 1    | default_platform               | 0           |
+| 2    | app_store_connect_api_key      | 0           |
+| 3    | setup_ci                       | 0           |
+| 4    | match                          | 4           |
+| 5    | get_provisioning_profile       | 0           |
+| 6    | update_code_signing_settings   | 0           |
+| 7    | update_code_signing_settings   | 0           |
+| 8    | get_info_plist_value           | 0           |
+| 9    | latest_testflight_build_number | 0           |
+| 10   | latest_testflight_build_number | 0           |
+| 11   | set_info_plist_value           | 0           |
+| 12   | set_info_plist_value           | 0           |
+| 13   | set_info_plist_value           | 0           |
+| 14   | build_app                      | 179         |
+| 15   | upload_to_testflight           | 74          |
++------+--------------------------------+-------------+
+
+[20:45:22]: [32mfastlane.tools finished successfully 🎉[0m
