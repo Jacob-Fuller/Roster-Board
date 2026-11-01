@@ -22,7 +22,8 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
 }) {
   const t = useTheme();
   const [gridW, setGridW] = useState(0);
-  const [gridH, setGridH] = useState(0);
+  // height left for banners in a day, measured from one plain (not today/selected) day
+  const [areaH, setAreaH] = useState(0);
   // widths of the sample words at size 100, measured on this phone's font
   const [w100, setW100] = useState<{ [k in keyof typeof SAMPLES]?: number }>({});
   const ts = useMemo(() => bannerSizes(gridW, w100), [gridW, w100]);
@@ -31,6 +32,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
   const shade = useMemo(() => (data.settings && payIsSetUp(data.settings) ? payConfig(data.settings) : null), [data.settings]);
   const rows = cells.length / 7;
   const today = new Date();
+  const measureIdx = cells.findIndex((c) => !isSameDay(c.date, today) && !(selected && selected[ymd(c.date)]));
   return (
     <View style={{ flex: 1 }}>
       <View pointerEvents="none" style={{ position: "absolute", left: 0, top: 0, width: 4000, opacity: 0 }}>
@@ -44,10 +46,10 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
           <Text key={d} style={{ flex: 1, textAlign: "center", fontSize: 11, fontWeight: "700", color: t.textFaint, letterSpacing: 0.5, paddingBottom: 6 }}>{d.toUpperCase()}</Text>
         ))}
       </View>
-      <View onLayout={(e) => { setGridW(e.nativeEvent.layout.width); setGridH(e.nativeEvent.layout.height); }} style={{ flex: 1, paddingHorizontal: 6, paddingBottom: 6 }}>
+      <View onLayout={(e) => setGridW(e.nativeEvent.layout.width)} style={{ flex: 1, paddingHorizontal: 6, paddingBottom: 6 }}>
         {Array.from({ length: rows }, (_, r) => (
           <View key={r} style={{ flex: 1, flexDirection: "row" }}>
-            {cells.slice(r * 7, r * 7 + 7).map((c) => {
+            {cells.slice(r * 7, r * 7 + 7).map((c, ci) => {
               const key = ymd(c.date);
               const isToday = isSameDay(c.date, today);
               const items: React.ReactNode[] = [];
@@ -86,13 +88,12 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
               if (data.birthdays) birthdaysOnDate(data.birthdays, c.date).forEach((b) =>
                 items.push(<Pill ts={ts} key={"b" + b.id} strip="Birthday" stripBg={BIRTHDAY.color} stripFg={BIRTHDAY.ink}
                   label={(b.name || "").trim().split(/\s+/)[0]} bg={BIRTHDAY.color + "38"} fg={t.text} party />));
-              // as many banners as fit in the day (short days on a wide screen show fewer, with "+ more")
-              const cellH = gridH ? (gridH - 6) / rows - 4 - 6 - 20 : 0;
-              const fits = cellH > 0 ? Math.max(1, Math.floor((cellH + 3) / (ts.h + 3))) : 3;
-              const max = Math.min(rows > 5 ? 2 : 3, items.length > fits ? Math.max(1, fits - 1) : fits);
+              const sel = !!(selected && selected[key]);
+              // Up to 3 banners per day; they shrink a little to fit, and only show "+ more" when even that won't fit.
+              const room = areaH ? areaH - (isToday || sel ? 4 : 0) : 0;
+              const { show: max, h: bh } = fitBanners(items.length, room, ts.h);
               const ph = isPublicHoliday(data as any, key);
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
-              const sel = !!(selected && selected[key]);
               return (
                 <Pressable key={key} disabled={!onDayPress} onPress={() => onDayPress && onDayPress(key)}
                   accessibilityRole={onDayPress ? "button" : undefined} accessibilityLabel={c.date.toDateString()}
@@ -108,9 +109,10 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                     </View>
                     {ph ? <Text accessibilityLabel={holidayName(placeOf((data as any).settings), key) || "Public holiday"} style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
                   </View>
-                  <View style={{ gap: 3 }}>
-                    {items.slice(0, max)}
-                    {items.length > max ? <Text style={{ fontSize: 9, color: t.textDim, textAlign: "center" }}>+{items.length - max} more</Text> : null}
+                  <View onLayout={r * 7 + ci === measureIdx ? (e) => { const h = e.nativeEvent.layout.height; setAreaH((o) => (Math.abs(o - h) < 0.5 ? o : h)); } : undefined}
+                    style={{ flex: 1, gap: bh < ts.h ? GAP_TIGHT : GAP }}>
+                    {items.slice(0, max).map((el) => React.cloneElement(el as React.ReactElement<{ h?: number }>, { h: bh }))}
+                    {items.length > max ? <Text style={{ fontSize: 9, lineHeight: MORE_H, color: t.textDim, textAlign: "center" }}>+{items.length - max} more</Text> : null}
                   </View>
                 </Pressable>
               );
@@ -123,6 +125,25 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
 }
 
 const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
+const GAP = 3, GAP_TIGHT = 2, MORE_H = 11;
+// Smallest a banner gets before a day falls back to "+ more" (never under 70% of full size).
+const MIN_BANNER_H = 18, MIN_BANNER_SHARE = 0.7;
+const MAX_BANNERS = 3;
+
+/** How many banners a day shows and how tall they are, given the height the day has for them. */
+function fitBanners(count: number, room: number, fullH: number): { show: number; h: number } {
+  if (!count) return { show: 0, h: fullH };
+  if (!room) return { show: Math.min(count, MAX_BANNERS), h: fullH }; // before the first measurement
+  const minH = Math.max(MIN_BANNER_H, Math.round(fullH * MIN_BANNER_SHARE));
+  for (let k = Math.min(count, MAX_BANNERS); k >= 1; k--) {
+    const more = count > k ? MORE_H + GAP_TIGHT : 0;
+    const full = k * fullH + (k - 1) * GAP + more;
+    if (full <= room) return { show: k, h: fullH };
+    const h = Math.floor((room - more - (k - 1) * GAP_TIGHT) / k);
+    if (h >= minH) return { show: k, h };
+  }
+  return { show: 1, h: Math.max(minH, Math.min(fullH, room)) };
+}
 // Swap tabs: orange for a shift given away, green for one picked up.
 const SWAP_OFF = "#F2843A", SWAP_ON = "#22A06B";
 
@@ -183,19 +204,27 @@ function Confetti() {
   );
 }
 
-function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; party?: boolean; ts: Sizes; border?: string | null }) {
+function Pill({ label, bg, fg, strip, stripBg, stripFg, ts, party, border, h }: { label: string; bg: string; fg: string; strip?: string; stripBg?: string; stripFg?: string; fixed?: boolean; party?: boolean; ts: Sizes; border?: string | null; h?: number }) {
+  // Banners shrink on busy days: the title strip and text scale down with the banner.
+  const bh = h && h < ts.h ? h : ts.h;
+  const k = bh / ts.h;
+  const inset = bh < 24 ? 2 : STRIP_INSET;
+  const stripH = bh < ts.h ? Math.max(7, Math.round(STRIP_H * Math.min(1, k + 0.1))) : STRIP_H;
+  const titleSize = (strip === COMBO ? ts.combo : strip && / leave$/.test(strip) ? ts.leave : ts.title) * (stripH / STRIP_H);
+  const labelRoom = bh - (strip ? inset + stripH : 0) - 3;
+  const labelSize = Math.max(5, Math.min(ts.label, Math.floor((labelRoom / 1.25) * 10) / 10));
   return (
-    <View style={{ height: ts.h, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
+    <View style={{ height: bh, borderRadius: 5, overflow: "hidden", backgroundColor: bg }}>
       {strip ? (
-        <View style={{ height: STRIP_H, marginTop: STRIP_INSET, marginHorizontal: STRIP_INSET, borderRadius: 3, overflow: "hidden", backgroundColor: stripBg, justifyContent: "center" }}>
+        <View style={{ height: stripH, marginTop: inset, marginHorizontal: inset, borderRadius: 3, overflow: "hidden", backgroundColor: stripBg, justifyContent: "center" }}>
           <Text numberOfLines={1} ellipsizeMode="clip"
-            style={{ color: stripFg, fontSize: strip === COMBO ? ts.combo : / leave$/.test(strip) ? ts.leave : ts.title, lineHeight: STRIP_H, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
+            style={{ color: stripFg, fontSize: titleSize, lineHeight: stripH, fontWeight: "800", textAlign: "center", paddingHorizontal: 2 }}>{strip.toUpperCase()}</Text>
         </View>
       ) : null}
-      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3, paddingTop: party ? 3 : 0 }}>
+      <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 3, paddingTop: party ? (bh < ts.h ? 1 : 3) : 0 }}>
         {party ? <><Bunting /><Confetti /></> : null}
         <Text numberOfLines={1} ellipsizeMode="tail"
-          style={{ color: fg, fontSize: ts.label, fontWeight: "700", textAlign: "center" }}>{label}</Text>
+          style={{ color: fg, fontSize: labelSize, lineHeight: Math.ceil(labelSize * 1.25), fontWeight: "700", textAlign: "center" }}>{label}</Text>
       </View>
       <BannerBorder kind={border} bg={bg} ink={fg} radius={5} />
     </View>
