@@ -1,0 +1,28 @@
+script: locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for getByLabel('Sun Nov 01 2026', { exact: true }).first()
+    - locator resolved to <div tabindex="-1" aria-disabled="true" aria-label="Sun Nov 01 2026" class="css-g5y9jx r-12vffkv">…</div>
+  - attempting click action
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+    - waiting 20ms
+    2 × waiting for element to be visible, enabled and stable
+      - element is visible, enabled and stable
+      - scrolling into view if needed
+      - done scrolling
+      - element is outside of the viewport
+    - retrying click action
+      - waiting 100ms
+    58 × waiting for element to be visible, enabled and stable
+       - element is visible, enabled and stable
+       - scrolling into view if needed
+       - done scrolling
+       - element is outside of the viewport
+     - retrying click action
+       - waiting 500ms
+
+    at /home/runner/work/Roster-Board/Roster-Board/mobile/scripts/screens.mjs:62:67

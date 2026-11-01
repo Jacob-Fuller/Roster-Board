@@ -1,0 +1,5 @@
+
+> roster-board-mobile@1.0.0 test
+> node --experimental-strip-types src/lib/merge.test.ts && node --experimental-strip-types src/lib/roster.test.ts && node --experimental-strip-types src/lib/partTime.test.ts && node --experimental-strip-types src/lib/pay.test.ts
+
+MISMATCH 0
