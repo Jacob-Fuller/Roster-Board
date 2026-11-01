@@ -11,6 +11,7 @@ import {
   buildMonthCells, effectiveHours, entryExcessHours, entryOTHours, fmtHours, ymd,
   type ShiftType, type Snapshot,
 } from "./model.ts";
+import { HTML2CANVAS_JS } from "./html2canvasSource.ts";
 
 /** A4 landscape in points (72 per inch), as used by the web's jsPDF page. */
 export const PDF_PAGE = { width: 842, height: 595 } as const;
@@ -214,8 +215,8 @@ body { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; color: ${INK
 .blk { position: absolute; height: ${u(19)}; border-radius: ${u(3)}; overflow: hidden; padding-left: ${u(7)}; padding-right: ${u(3)}; }
 .bar { position: absolute; left: 0; top: 0; bottom: 0; width: ${u(3)}; border-radius: ${u(1.5)}; }
 .bn, .bd { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bn { font-size: ${u(7)}; line-height: ${u(7)}; font-weight: 700; color: ${INK}; margin-top: ${u(2.5)}; }
-.bd { font-size: ${u(6)}; line-height: ${u(6)}; color: ${DIM}; margin-top: ${u(2)}; }
+.bn { font-size: ${u(7)}; line-height: ${u(8.2)}; font-weight: 700; color: ${INK}; margin-top: ${u(1.8)}; }
+.bd { font-size: ${u(6)}; line-height: ${u(7)}; color: ${DIM}; margin-top: ${u(1)}; }
 .more { position: absolute; font-size: ${u(6.5)}; line-height: ${u(6.5)}; font-weight: 700; color: ${DIM}; }
 .legend { height: ${u(10)}; overflow: hidden; display: flex; flex-wrap: wrap; font-size: ${u(7.5)}; line-height: ${u(10)}; color: ${INK}; }
 .li { display: inline-flex; align-items: center; margin-right: ${u(14)}; white-space: nowrap; }
@@ -283,4 +284,34 @@ export function buildRosterHtml(data: PdfData, months: Date[], today: Date = new
 </head><body>
 ${pages.join("\n")}
 </body></html>`;
+}
+
+// Photo export: the same pages drawn to a PNG inside a WebView with html2canvas.
+// A year is one tall image, scaled down to stay inside the phone's canvas size limit.
+const MAX_IMAGE_PIXELS = 16_000_000;
+
+/** File name for the photo version of the export. */
+export function rosterImageName(months: Date[]): string {
+  return rosterFileName(months).replace(/\.pdf$/, ".png");
+}
+
+/**
+ * HTML that draws the roster and posts it back as a PNG data URL (or "error:…")
+ * through window.ReactNativeWebView (native) or window.parent (web iframe).
+ * Load it in a view PDF_PAGE.width points wide.
+ */
+export function buildRosterImageHtml(data: PdfData, months: Date[], today: Date = new Date(), hidden: Hidden = NONE): string {
+  const w = PDF_PAGE.width, h = (PDF_PAGE.height - 1) * months.length;
+  const scale = Math.min(3, Math.floor(Math.sqrt(MAX_IMAGE_PIXELS / (w * h)) * 10) / 10);
+  const script = `<script>${HTML2CANVAS_JS.replace(/<\/script/gi, "<\\/script")}</script>
+<script>
+function send(m){ if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(m); else window.parent.postMessage(m, "*"); }
+function shoot(){ html2canvas(document.body, { scale: ${scale}, backgroundColor: "#ffffff", width: ${w}, windowWidth: ${w}, logging: false })
+  .then(function(c){ send(c.toDataURL("image/png")); }).catch(function(e){ send("error:" + e); }); }
+if (document.readyState === "complete") setTimeout(shoot, 50); else window.addEventListener("load", function(){ setTimeout(shoot, 50); });
+</script>`;
+  return buildRosterHtml(data, months, today, hidden)
+    .replace('content="width=device-width, initial-scale=1"', `content="width=${w}, initial-scale=1"`)
+    .replace("</style>", `body{width:${w}px}</style>`)
+    .replace("</body>", script + "</body>");
 }
