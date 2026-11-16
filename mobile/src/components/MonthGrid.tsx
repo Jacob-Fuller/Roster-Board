@@ -16,9 +16,9 @@ export type GridData = {
 };
 
 // Month calendar used for your own roster and, read-only, for a shared one.
-export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
+export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePast }: {
   month: Date; data: GridData; typesById: { [id: string]: ShiftType }; onDayPress?: (dateKey: string) => void;
-  selected?: { [dateKey: string]: unknown };
+  selected?: { [dateKey: string]: unknown }; fadePast?: boolean;
 }) {
   const t = useTheme();
   const [gridW, setGridW] = useState(0);
@@ -32,6 +32,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
   const shade = useMemo(() => (data.settings && payIsSetUp(data.settings) ? payConfig(data.settings) : null), [data.settings]);
   const rows = cells.length / 7;
   const today = new Date();
+  const todayKey = ymd(today);
   const measureIdx = cells.findIndex((c) => !isSameDay(c.date, today) && !(selected && selected[ymd(c.date)]));
   return (
     <View style={{ flex: 1 }}>
@@ -52,6 +53,8 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
             {cells.slice(r * 7, r * 7 + 7).map((c, ci) => {
               const key = ymd(c.date);
               const isToday = isSameDay(c.date, today);
+              // past days fade (Account → Appearance → Past days)
+              const past = !!fadePast && key < todayKey;
               const items: React.ReactNode[] = [];
               const daySwaps = (data.swaps && data.swaps[key]) || [];
               const swappedIn: { [id: string]: true } = {};
@@ -108,12 +111,12 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected }: {
                   })}>
                   <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2, marginLeft: 1 }}>
                     <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 3, alignItems: "center", justifyContent: "center", backgroundColor: isToday ? t.accent : "transparent" }}>
-                      <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accentInk : t.text, fontVariant: ["tabular-nums"] }}>{c.date.getDate()}</Text>
+                      <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accentInk : past ? t.textFaint : t.text, fontVariant: ["tabular-nums"] }}>{c.date.getDate()}</Text>
                     </View>
                     {ph ? <Text accessibilityLabel={holidayName(placeOf((data as any).settings), key) || "Public holiday"} style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
                   </View>
                   <View onLayout={r * 7 + ci === measureIdx ? (e) => { const h = e.nativeEvent.layout.height; setAreaH((o) => (Math.abs(o - h) < 0.5 ? o : h)); } : undefined}
-                    style={{ flex: 1, gap: bh < ts.h ? GAP_TIGHT : GAP }}>
+                    style={{ flex: 1, gap: bh < ts.h ? GAP_TIGHT : GAP, opacity: past ? 0.4 : 1 }}>
                     {items.slice(0, max).map((el) => React.cloneElement(el as React.ReactElement<{ h?: number }>, { h: bh }))}
                     {items.length > max ? <Text style={{ fontSize: 9, lineHeight: MORE_H, color: t.textDim, textAlign: "center" }}>+{items.length - max} more</Text> : null}
                   </View>

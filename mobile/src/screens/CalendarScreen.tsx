@@ -89,9 +89,9 @@ export function CalendarScreen() {
         right={<MonthNav month={month} onChange={goTo} onMast />} />
       <View style={{ height: 10 }} />
       <SwipeMonths swipe={swipe} renderMonth={(m, current) => current
-        ? <MonthGrid month={m} data={gridData} typesById={typesById} selected={bulk ? bulkSel : undefined}
+        ? <MonthGrid month={m} data={gridData} typesById={typesById} fadePast={prefs.fadePast} selected={bulk ? bulkSel : undefined}
             onDayPress={(k) => (bulk ? bulkToggle(k) : setOpenDay(k))} />
-        : <MonthGrid month={m} data={gridData} typesById={typesById} />} />
+        : <MonthGrid month={m} data={gridData} typesById={typesById} fadePast={prefs.fadePast} />} />
 
       {bulk ? (
         <View style={{ backgroundColor: t.surface, borderTopWidth: 0.5, borderTopColor: t.border, paddingTop: 10, paddingBottom: 10 }}>

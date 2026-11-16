@@ -83,6 +83,10 @@ export function AccountScreen() {
             <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Birthdays</Text>
             <Segmented<ShowHide> options={SHOW_HIDE} value={prefs.hideBirthdays ? "hide" : "show"} onChange={(v) => setPrefs({ hideBirthdays: v === "hide" })} />
           </View>
+          <View>
+            <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Past days</Text>
+            <Segmented<"normal" | "fade"> options={[{ value: "normal", label: "Normal" }, { value: "fade", label: "Faded" }]} value={prefs.fadePast ? "fade" : "normal"} onChange={(v) => setPrefs({ fadePast: v === "fade" })} />
+          </View>
           {Platform.OS !== "web" ? (
             <View>
               <Text style={{ fontSize: 13, color: t.textDim, fontWeight: "600", marginBottom: 6 }}>Shifts</Text>
