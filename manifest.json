@@ -1,13 +1,13 @@
 {
   "id": "/",
-  "name": "Tempus Board",
-  "short_name": "Tempus Board",
+  "name": "Roster Board",
+  "short_name": "Roster Board",
   "description": "A shift calendar app with rosters, overtime and excess hours, leave tracking, pay estimates and cloud backup.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0F2244",
-  "theme_color": "#0F2244",
+  "background_color": "#121214",
+  "theme_color": "#121214",
   "orientation": "portrait",
   "categories": ["productivity", "business", "lifestyle"],
   "icons": [
