@@ -56,7 +56,7 @@ function statusFrom(purchases: any[]): Status {
 
 export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>({ active: false, kind: "", until: 0 });
-  const [prices, setPrices] = useState({ monthly: "", lifetime: "$9.99" });
+  const [prices, setPrices] = useState({ monthly: "$4.99 / month", lifetime: "$24.99" });
   const [paywall, setPaywall] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");

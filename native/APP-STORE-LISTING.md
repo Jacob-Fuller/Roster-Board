@@ -49,7 +49,9 @@ SAFE AND SHARED
   pay are never shared
 
 ROSTER BOARD PREMIUM
-Free includes the calendar, up to 3 shift types, overtime and excess, leave, events, birthdays, reminders, roster sharing and cloud backup. Premium unlocks unlimited shift types, roster patterns, pay estimates, full reports and PDF export. One-off purchase, no subscription.
+Free includes the calendar, up to 3 shift types, overtime and excess, leave, events, birthdays, reminders, roster sharing and cloud backup. Premium unlocks unlimited shift types, roster patterns, pay estimates, full reports and PDF export. Choose a monthly subscription or a one-off lifetime purchase.
+
+The monthly subscription renews automatically unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID. Manage or cancel it in your Apple ID settings.
 
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy policy: https://www.rosterboard.net/privacy.html
@@ -85,8 +87,7 @@ If someone uses the app without an account, nothing leaves the device, but the a
 
 | Product | Type | Product ID | Price |
 |---|---|---|---|
-| Premium Lifetime | Non-consumable | `net.rosterboard.app.premium.lifetime` | A$9.99 |
-
-Remove the monthly subscription (`net.rosterboard.app.premium.monthly`) from sale if it was created.
+| Premium Monthly | Auto-renewable subscription (group "Roster Board Premium") | `net.rosterboard.app.premium.monthly` | A$4.99 / month |
+| Premium Lifetime | Non-consumable | `net.rosterboard.app.premium.lifetime` | A$24.99 |
 
 Purchases need Apple's Paid Apps agreement, with banking and tax details, active in App Store Connect → Business.
