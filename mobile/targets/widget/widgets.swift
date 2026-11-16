@@ -78,7 +78,7 @@ extension Color {
     self.init(red: Double((v >> 16) & 255) / 255, green: Double((v >> 8) & 255) / 255, blue: Double(v & 255) / 255)
   }
 }
-let navyTop = Color(hex: "#1E3D69"), navyBottom = Color(hex: "#0D1D36"), brass = Color(hex: "#E7A75C")
+let navyTop = Color(hex: "#26252A"), navyBottom = Color(hex: "#111113"), brass = Color(hex: "#D4A946")
 let dim = Color.white.opacity(0.68)
 
 func dayLabel(_ d: Date, now: Date) -> String {

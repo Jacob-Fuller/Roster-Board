@@ -7,6 +7,6 @@ module.exports = () => ({
   displayName: "Roster Board",
   bundleIdentifier: ".widget",
   deploymentTarget: "17.0",
-  colors: { $accent: "#C8975F", $widgetBackground: "#132849" },
+  colors: { $accent: "#D4A946", $widgetBackground: "#1A1A1D" },
   entitlements: { "keychain-access-groups": ["$(AppIdentifierPrefix)net.rosterboard.shared"] },
 });
