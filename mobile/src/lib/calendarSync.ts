@@ -1,4 +1,4 @@
-// Shifts and leave copied into a "Tempus Board" calendar in the phone's Calendar
+// Shifts and leave copied into a "Roster Board" calendar in the phone's Calendar
 // app, from a month ago to a year ahead. The calendar is rebuilt whenever your
 // shifts change, so swaps and edits show there too. Turning it off removes it.
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,8 +9,8 @@ import {
   type ShiftType, type Snapshot,
 } from "./model";
 
-const CAL_TITLE = "Tempus Board";
-const OLD_TITLES = ["Roster Board"]; // renamed app: pick up and rename the old calendar
+const CAL_TITLE = "Roster Board";
+const OLD_TITLES = ["Tempus Board"]; // renamed app: pick up and rename the old calendar
 const KEY_ID = "rosterBoard.calendarId";
 const KEY_HASH = "rosterBoard.calendarHash";
 
@@ -84,7 +84,7 @@ function buildEvents(d: Snapshot, typesById: { [id: string]: ShiftType }, from: 
 }
 
 let running = false, again: (() => void) | null = null;
-// Brings the phone's Tempus Board calendar up to date (only when something changed).
+// Brings the phone's Roster Board calendar up to date (only when something changed).
 export async function syncCalendar(d: Snapshot, typesById: { [id: string]: ShiftType }, on: boolean) {
   if (Platform.OS === "web") return;
   if (running) { again = () => syncCalendar(d, typesById, on); return; }
