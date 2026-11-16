@@ -346,8 +346,8 @@ function ToastView() {
   if (!o) return null;
   return (
     <Animated.View pointerEvents="none" style={{ position: "absolute", left: 0, right: 0, bottom: insets.bottom + 84, alignItems: "center", opacity: o.fade }}>
-      <View style={{ backgroundColor: t.dark ? "#F3EEE6" : "#14181F", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9 }}>
-        <Text style={{ color: t.dark ? "#14181F" : "#FFFFFF", fontWeight: "600" }}>{o.msg}</Text>
+      <View style={{ backgroundColor: t.dark ? "#F3EEE6" : "#1C1A16", borderRadius: 999, paddingHorizontal: 16, paddingVertical: 9 }}>
+        <Text style={{ color: t.dark ? "#1C1A16" : "#FFFFFF", fontWeight: "600" }}>{o.msg}</Text>
       </View>
     </Animated.View>
   );

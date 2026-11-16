@@ -43,7 +43,7 @@ async function ensureCalendar(): Promise<string> {
     source = { isLocalAccount: true, name: CAL_TITLE, type: Calendar.SourceType.LOCAL };
   }
   const id = await Calendar.createCalendarAsync({
-    title: CAL_TITLE, color: "#B8892E", entityType: Calendar.EntityTypes.EVENT,
+    title: CAL_TITLE, color: "#3A3630", entityType: Calendar.EntityTypes.EVENT,
     sourceId, source, name: CAL_TITLE, ownerAccount: "personal", accessLevel: Calendar.CalendarAccessLevel.OWNER,
   });
   await AsyncStorage.setItem(KEY_ID, id).catch(() => {});
