@@ -12,7 +12,7 @@ WIDGET_ID = "net.rosterboard.app.widget"
 platform :ios do
   def asc_key
     %w[ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 MATCH_PASSWORD].each do |k|
-      UI.user_error!("Missing GitHub secret #{k}. See native/IOS-SETUP.md.") if ENV[k].to_s.strip.empty?
+      UI.user_error!("Missing GitHub secret #{k}. See mobile/IOS-SETUP.md.") if ENV[k].to_s.strip.empty?
     end
     app_store_connect_api_key(
       key_id: ENV["ASC_KEY_ID"].strip,

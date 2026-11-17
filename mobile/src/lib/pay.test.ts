@@ -1,5 +1,5 @@
 // Checks the native pay engine and pay setup saving against the web app's own
-// code (../index.html) on random settings and shifts. Run: npm test
+// code (test/web-reference.html, the original web app) on random settings and shifts. Run: npm test
 import { readFileSync } from "node:fs";
 import {
   annualTaxEstimate, computePay, num, fmtMoney, fmtMoneyShort, payConfig, payFormFromConfig, payIsSetUp, payPeriodFor,
@@ -7,7 +7,7 @@ import {
 } from "./pay.ts";
 import { EXCESS_TYPE, OVERTIME_TYPE, addDays, ymd, type ShiftType } from "./model.ts";
 
-const html = readFileSync(new URL("../../../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../../test/web-reference.html", import.meta.url), "utf8");
 const cut = (a: string, b: string) => {
   const i = html.indexOf(a), j = html.indexOf(b, i);
   if (i < 0 || j < 0) throw new Error("could not find " + a);

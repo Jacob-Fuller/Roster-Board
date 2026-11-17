@@ -1,9 +1,9 @@
-// Checks the native merge rules against the web app's own code (../index.html)
+// Checks the native merge rules against the web app's own code (test/web-reference.html, the original web app)
 // on random data. Run: npm test
 import { readFileSync } from "node:fs";
 import { mergeSnapshots, sameSnapshot } from "./merge.ts";
 
-const html = readFileSync(new URL("../../../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../../test/web-reference.html", import.meta.url), "utf8");
 const start = html.indexOf("  function mergeTombstones(");
 const end = html.indexOf("  function localSnapshot(");
 const web = new Function(html.slice(start, end) + "\nreturn { mergeSnapshots, sameSnapshot };")();

@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { applyRosterPattern } from "./roster.ts";
 
-const html = readFileSync(new URL("../../../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../../test/web-reference.html", import.meta.url), "utf8");
 const src = html.slice(html.indexOf("  function applyRosterPattern("), html.indexOf("  /* ---------------- reports ----"));
 const makeWeb = new Function("state", "tomb", `
   var COMBO_TYPES = {overtime:1, excess_hours:1};
