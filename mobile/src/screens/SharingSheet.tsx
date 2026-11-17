@@ -6,7 +6,7 @@ import { SwipeMonths, useMonthSwipe } from "../components/SwipeMonths";
 import { MonthGrid, MonthNav } from "../components/MonthGrid";
 import { Button, Dim, Divider, Field, H1, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
 import { EXCESS_TYPE, MONTHS, OVERTIME_TYPE, startOfMonth, type ShiftType } from "../lib/model";
-import { usePremium } from "../lib/premium";
+import { FREE_SHARE_LIMIT, usePremium } from "../lib/premium";
 import { useStore } from "../lib/store";
 import { sb, WEB_URL } from "../lib/supabase";
 
@@ -21,8 +21,8 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
   const shareEvents = !!(mine.settings && mine.settings.shareEvents);
   const { dialog, toast } = useUi();
   const { locked, openPaywall } = usePremium();
-  // Roster sharing is part of Premium: close this sheet first so the paywall can open on top.
-  const needPremium = () => { if (!locked) return false; onClose(); setTimeout(() => openPaywall("Roster sharing is part of Premium."), 500); return true; };
+  // The free version shares with one person; close this sheet first so the paywall can open on top.
+  const toPaywall = () => { onClose(); setTimeout(() => openPaywall("The free version shares with " + FREE_SHARE_LIMIT + " person. Premium shares with as many as you like."), 500); };
   const [conns, setConns] = useState<Conn[] | null>(null);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
@@ -42,9 +42,12 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
   const incoming = (conns || []).filter((c) => c.target_id === uid && c.status === "pending");
   const outgoing = (conns || []).filter((c) => c.requester_id === uid && c.status === "pending");
   const accepted = (conns || []).filter((c) => c.status === "accepted");
+  // Free version: the first connection (kept in list order) is the one that works.
+  const atLimit = locked && accepted.length + outgoing.length >= FREE_SHARE_LIMIT;
+  const freeIds = new Set(accepted.slice(0, FREE_SHARE_LIMIT).map((c) => c.id));
 
   async function invite() {
-    if (needPremium()) return;
+    if (atLimit) { toPaywall(); return; }
     const e = email.trim();
     if (!e) { setErr("Enter an email address."); return; }
     setBusy(true); setErr("");
@@ -56,7 +59,7 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
     refresh();
   }
   async function respond(id: string, accept: boolean) {
-    if (accept && needPremium()) return;
+    if (accept && locked && accepted.length >= FREE_SHARE_LIMIT) { toPaywall(); return; }
     const r = await sb.rpc("respond_connection", { p_connection_id: id, p_accept: accept });
     if (r.error) { toast(r.error.message || "Couldn't respond to request"); return; }
     toast(accept ? "Connected" : "Request declined");
@@ -73,7 +76,7 @@ export function SharingSheet({ visible, onClose }: { visible: boolean; onClose: 
     });
   }
   async function view(c: Conn) {
-    if (needPremium()) return;
+    if (locked && !freeIds.has(c.id)) { toPaywall(); return; }
     const ownerId = c.requester_id === uid ? c.target_id : c.requester_id;
     const r = await sb.rpc("get_shared_roster", { p_owner_id: ownerId });
     if (r.error) { toast(r.error.message || "Couldn't load that roster"); return; }

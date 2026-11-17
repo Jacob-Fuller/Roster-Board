@@ -1,7 +1,6 @@
-// Premium (Apple in-app purchases), same products and limits as the web app's
-// iPhone version. Free: calendar, up to 3 shift types, overtime/excess, leave,
-// events, birthdays, reminders and cloud backup. Premium unlocks the rest,
-// including roster sharing and shift alarms.
+// Premium (Apple in-app purchases). Everything is unlocked for the first
+// 14 days after install (the free trial). After that the free version keeps
+// every feature with limits (FREE_* below); Premium removes the limits.
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as IAP from "expo-iap";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -12,6 +11,10 @@ import { sb } from "./supabase";
 export const PREMIUM_MONTHLY = "net.rosterboard.app.premium.monthly";
 export const PREMIUM_LIFETIME = "net.rosterboard.app.premium.lifetime";
 export const FREE_TYPE_LIMIT = 3;
+export const FREE_FILL_MONTHS = 3; // roster pattern fill, months ahead
+export const FREE_SHARE_LIMIT = 1; // people you share rosters with
+export const TRIAL_DAYS = 14;
+const TRIAL_KEY = "rosterBoard.trialStart";
 const KEY = "rosterBoard.premium";
 
 // Free users get the limited version; Premium unlocks the rest. Purchases only
@@ -22,7 +25,10 @@ export const PREMIUM_ENFORCED = true;
 type Status = { active: boolean; kind: "" | "monthly" | "lifetime" | "complimentary"; until: number };
 type Ctx = {
   status: Status;
+  /** true once the trial is over and Premium isn't active: the free limits apply */
   locked: boolean;
+  /** days left in the free trial (0 when it's over or Premium is active) */
+  trialDaysLeft: number;
   prices: { monthly: string; lifetime: string };
   paywall: string | null;
   openPaywall: (reason?: string) => void;
@@ -76,6 +82,22 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(k, on ? "1" : "0").catch(() => {});
     });
   }, [user]);
+
+  // Free trial: starts the first time the app opens on this device.
+  const [trialStart, setTrialStart] = useState<number | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem(TRIAL_KEY).then((v) => {
+      const n = v ? +v : 0;
+      if (n > 0) { setTrialStart(n); return; }
+      const now = Date.now();
+      setTrialStart(now);
+      AsyncStorage.setItem(TRIAL_KEY, String(now)).catch(() => {});
+    }).catch(() => setTrialStart(Date.now()));
+  }, []);
+  const [, setTick] = useState(0);
+  useEffect(() => { const i = setInterval(() => setTick((n) => n + 1), 60 * 60 * 1000); return () => clearInterval(i); }, []);
+  const trialEnd = (trialStart ?? Date.now()) + TRIAL_DAYS * 86400000;
+  const trialLeftMs = Math.max(0, trialEnd - Date.now());
 
   const save = useCallback((s: Status) => { setStatus(s); AsyncStorage.setItem(KEY, JSON.stringify(s)).catch(() => {}); }, []);
 
@@ -154,9 +176,10 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Ctx>(() => ({
     status: effective, prices, paywall, openPaywall, closePaywall, buy, restore, busy, error,
-    locked: PREMIUM_ENFORCED && supported && !effective.active,
+    locked: PREMIUM_ENFORCED && supported && !effective.active && trialLeftMs <= 0,
+    trialDaysLeft: effective.active ? 0 : Math.ceil(trialLeftMs / 86400000),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [effective.active, effective.kind, effective.until, prices, paywall, openPaywall, closePaywall, buy, restore, busy, error]);
+  }), [effective.active, effective.kind, effective.until, prices, paywall, openPaywall, closePaywall, buy, restore, busy, error, trialLeftMs > 0, Math.ceil(trialLeftMs / 86400000)]);
 
   return <PremiumCtx.Provider value={value}>{children}</PremiumCtx.Provider>;
 }

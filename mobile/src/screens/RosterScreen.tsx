@@ -7,7 +7,7 @@ import { TYPE_ICONS, WEEKDAYS_SHORT, ymd, sortedTypes } from "../lib/model";
 import { applyRosterPattern, ensurePatternShape, patternHasContent } from "../lib/roster";
 import { useStore } from "../lib/store";
 import { useTypesById } from "./CalendarScreen";
-import { usePremium } from "../lib/premium";
+import { FREE_FILL_MONTHS, usePremium } from "../lib/premium";
 
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 type Months = "3" | "6" | "12" | "24";
@@ -55,7 +55,7 @@ export function RosterScreen() {
   }
 
   function fill() {
-    if (locked) { openPaywall("Filling your calendar from a roster pattern is part of Premium."); return; }
+    if (locked && +months > FREE_FILL_MONTHS) { openPaywall("The free version fills " + FREE_FILL_MONTHS + " months ahead. Premium fills up to 2 years."); return; }
     if (!patternHasContent(data)) { toast("Assign shifts to the pattern first"); return; }
     dialog({
       title: "Fill the calendar?",

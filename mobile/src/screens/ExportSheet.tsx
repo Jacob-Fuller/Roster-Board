@@ -8,6 +8,7 @@ import { Button, Chip, SectionHead, Segmented, Sheet, useTheme, useUi } from "..
 import { MONTHS, addMonths, startOfMonth } from "../lib/model";
 import { PDF_PAGE, buildRosterHtml, buildRosterImageHtml, nothingToExport, rosterFileName, rosterFilterOptions, rosterImageName } from "../lib/pdf";
 import { useStore } from "../lib/store";
+import { usePremium } from "../lib/premium";
 
 type Mode = "month" | "year";
 
@@ -24,6 +25,7 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
   const t = useTheme();
   const { toast } = useUi();
   const { data } = useStore();
+  const { locked, openPaywall } = usePremium();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [month, setMonth] = useState(startOfMonth(initialMonth || new Date()));
   const [year, setYear] = useState(initialYear ?? new Date().getFullYear());
@@ -61,6 +63,11 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
 
   const canExport = () => {
     if (busy) return false;
+    // Free version (after the trial): this month's roster only.
+    if (locked && (mode !== "month" || +month !== +startOfMonth(new Date()))) {
+      onClose(); setTimeout(() => openPaywall("The free version exports this month's roster. Premium exports any month or a whole year."), 500);
+      return false;
+    }
     if (nothingToExport(data)) { toast("Nothing to export yet"); return false; }
     if (options.length && options.every((o) => hidden.has(o.id))) { toast("Select at least one"); return false; }
     return true;

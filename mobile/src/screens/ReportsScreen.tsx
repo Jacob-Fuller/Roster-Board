@@ -32,6 +32,9 @@ export function ReportsScreen() {
   const [mode, setMode] = useState<Mode>("month");
   const { locked, openPaywall } = usePremium();
   const [month, setMonth] = useState(startOfMonth(new Date()));
+  // Free version (after the trial): reports and pay for the current month only.
+  const isCurrent = mode === "month" && +month === +startOfMonth(new Date());
+  const limited = locked && !isCurrent;
   const [year, setYear] = useState(new Date().getFullYear());
   const [exportOpen, setExportOpen] = useState(false);
   const [setupOpen, setSetupOpen] = useState(false);
@@ -102,9 +105,9 @@ export function ReportsScreen() {
     return { view, range: r, rangeLabel, p: computePay(data, typesById, r.start, r.end, factor) };
   }, [paySetUp, data, typesById, mode, month, year, savedView, cardOffset]);
   const cardPan = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+    onMoveShouldSetPanResponder: (_, g) => !locked && Math.abs(g.dx) > 24 && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
     onPanResponderRelease: (_, g) => { if (Math.abs(g.dx) >= 50) setCardOffset((o) => o + (g.dx < 0 ? 1 : -1)); },
-  }), []);
+  }), [locked]);
 
   const openBreakdown = () => {
     if (!payCard) return;
@@ -148,7 +151,7 @@ export function ReportsScreen() {
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
         <View style={{ marginTop: -18 }} />
         <SectionHead title="Estimated Pay" right={<HeadLink title="Pay Setup" onPress={() => setSetupOpen(true)} />} />
-        {locked ? <LockCard text="See your estimated pay for every week, fortnight, month and year." /> : !payCard ? (
+        {limited ? <LockCard text="The free version shows this month. Premium shows every week, fortnight, month and year." /> : !payCard ? (
           <Card><Button small title="Set My Hourly Rate" onPress={() => setSetupOpen(true)} /></Card>
         ) : (
           <>
@@ -159,12 +162,12 @@ export function ReportsScreen() {
             <HeroCard>
               <View {...cardPan.panHandlers}>
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                  <Nav dir={-1} onHero a11y="Previous period" onPress={() => setCardOffset((o) => o - 1)} />
+                  <Nav dir={-1} onHero a11y="Previous period" onPress={() => (locked ? openPaywall("The free version shows this month's pay. Premium shows every period.") : setCardOffset((o) => o - 1))} />
                   <Pressable accessibilityRole="button" accessibilityLabel="Back to current period" disabled={!cardOffset} onPress={() => setCardOffset(0)} style={{ alignItems: "center" }}>
                     <Text style={{ color: t.heroInk, fontSize: 15, fontWeight: "700" }}>{payCard.rangeLabel}</Text>
                     {cardOffset ? <Text style={{ color: t.heroDim, fontSize: 12, fontWeight: "600", marginTop: 1 }}>Back to current</Text> : null}
                   </Pressable>
-                  <Nav dir={1} onHero a11y="Next period" onPress={() => setCardOffset((o) => o + 1)} />
+                  <Nav dir={1} onHero a11y="Next period" onPress={() => (locked ? openPaywall("The free version shows this month's pay. Premium shows every period.") : setCardOffset((o) => o + 1))} />
                 </View>
                 <Pressable accessibilityRole="button" accessibilityLabel="Pay breakdown" onPress={openBreakdown}
                   style={({ pressed }) => ({ alignItems: "center", paddingTop: 10, paddingBottom: 0, opacity: pressed ? 0.75 : 1 })}>
@@ -200,10 +203,10 @@ export function ReportsScreen() {
           </View>
         </Card>
 
-        {locked ? (
+        {limited ? (
           <>
             <SectionHead title="By Shift Type" />
-            <LockCard text="Full reports are part of Premium: hours by shift type, weekday vs weekend, comparisons and year in review." />
+            <LockCard text="The free version shows this month. Premium shows every month and your year in review." />
           </>
         ) : <>
         <SectionHead title="By Shift Type" />
@@ -247,7 +250,7 @@ export function ReportsScreen() {
         ) : null}
         </>}
         <Card style={{ marginTop: 24, paddingVertical: 2 }}>
-          <MenuRow icon="document-text" iconColor="#5B6B82" title="PDF Roster" onPress={() => (locked ? openPaywall("PDF export is part of Premium.") : setExportOpen(true))} />
+          <MenuRow icon="document-text" iconColor="#5B6B82" title="PDF Roster" onPress={() => setExportOpen(true)} />
         </Card>
         </View>
       </ScrollView>

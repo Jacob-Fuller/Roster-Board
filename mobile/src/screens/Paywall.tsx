@@ -9,13 +9,12 @@ import { WEB_URL } from "../lib/supabase";
 
 // Same content as the web app's paywall.
 const PERKS = [
-  "Roster sharing: see your family and friends' rosters",
-  "Alarms before your shifts and events",
   "Unlimited shift types",
-  "Roster patterns: fill your calendar for a year in one tap",
+  "Alarms before your shifts and events",
+  "Share rosters with as many people as you like",
+  "Roster patterns: fill your calendar up to 2 years ahead",
   "Estimated pay for every week, fortnight, month and year",
-  "Full reports: by shift type, weekday vs weekend, period comparison",
-  "PDF roster export",
+  "Reports and PDF export for any month, plus your year in review",
 ];
 
 export function Paywall() {
