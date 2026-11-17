@@ -270,7 +270,7 @@ function PremiumSection() {
   const { toast } = useUi();
   const [open, setOpen] = useState(false);
   if (Platform.OS !== "ios") return null;
-  const plan = !premium.status.active ? (premium.trialDaysLeft ? "Free trial · " + premium.trialDaysLeft + (premium.trialDaysLeft === 1 ? " day" : " days") + " left" : "Free") : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Monthly";
+  const plan = !premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Monthly";
   return (
     <>
       <SectionHead title="Premium" />

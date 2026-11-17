@@ -49,7 +49,7 @@ SAFE AND SHARED
   pay are never shared
 
 ROSTER BOARD PREMIUM
-Try everything free for 14 days. After that, the free version keeps every feature with limits: 3 shift types, roster patterns 3 months ahead, sharing with 1 person, and this month's pay, reports and PDF. Premium removes the limits and adds alarms. Choose a monthly subscription or a one-off lifetime purchase.
+The free version includes every feature with limits: 3 shift types, alarms on 1 shift type, roster patterns 3 months ahead, sharing with 1 person, and this month's pay, reports and PDF. Premium removes the limits. Choose a monthly subscription or a one-off lifetime purchase.
 
 The monthly subscription renews automatically unless cancelled at least 24 hours before the end of the current period. Payment is charged to your Apple ID. Manage or cancel it in your Apple ID settings.
 

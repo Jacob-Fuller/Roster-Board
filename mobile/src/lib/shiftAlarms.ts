@@ -52,12 +52,14 @@ export async function requestAlarmPermission(): Promise<boolean> {
   try { return await ShiftAlarm.requestPermission(); } catch { return false; }
 }
 
-export function buildAlarms(data: Snapshot, now = Date.now()): ShiftAlarmItem[] {
+export function buildAlarms(data: Snapshot, now = Date.now(), limited = false): ShiftAlarmItem[] {
   const list: ShiftAlarmItem[] = [];
   const until = now + HORIZON_DAYS * 86400000;
   const today = new Date(now);
   const typesById: { [id: string]: ShiftType } = {};
   (data.types || []).forEach((t) => { typesById[t.id] = t; });
+  // Free version: alarms ring for one shift type (the first with an alarm); events use reminders instead.
+  const freeType = limited ? (data.types || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0)).find((t) => t.alarm) : null;
   for (let i = 0; i <= HORIZON_DAYS; i++) {
     const k = ymd(addDays(today, i));
     const onLeave = (data.leave[k] || []).length > 0;
@@ -66,6 +68,7 @@ export function buildAlarms(data: Snapshot, now = Date.now()): ShiftAlarmItem[] 
       const t = typesById[sh.typeId];
       const mins = (t && t.alarm) || 0;
       if (!t || !(mins > 0)) return;
+      if (limited && (!freeType || t.id !== freeType.id)) return;
       const personal = t.kind === "personal";
       // work shifts don't ring on leave days; personal entries still do
       if (!personal && onLeave) return;
@@ -78,7 +81,7 @@ export function buildAlarms(data: Snapshot, now = Date.now()): ShiftAlarmItem[] 
     });
   }
   // events can have an alert up to a week ahead, so look a week further out
-  for (let i = 0; i <= HORIZON_DAYS + 7; i++) {
+  if (!limited) for (let i = 0; i <= HORIZON_DAYS + 7; i++) {
     const k = ymd(addDays(today, i));
     (data.notes[k] || []).forEach((n) => {
       const offsets = (n.alarms || []).filter((m: number, j: number, a: number[]) => typeof m === "number" && m >= 0 && a.indexOf(m) === j);
@@ -99,7 +102,7 @@ export function buildAlarms(data: Snapshot, now = Date.now()): ShiftAlarmItem[] 
 let lastSent: string | null = null;
 export async function syncShiftAlarms(data: Snapshot, locked: boolean) {
   if (Platform.OS !== "ios" || !ShiftAlarm) return;
-  const list = locked ? [] : buildAlarms(data);
+  const list = buildAlarms(data, Date.now(), locked);
   const key = JSON.stringify(list);
   if (key === lastSent) return;
   lastSent = key;

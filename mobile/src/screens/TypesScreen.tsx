@@ -8,7 +8,7 @@ import { BannerBorder } from "../components/BannerBorder";
 import { OptionPicker } from "../components/OptionPicker";
 import { requestAlarmPermission, SHIFT_ALARM_OPTIONS, useAlarmsAvailable } from "../lib/shiftAlarms";
 import { useStore } from "../lib/store";
-import { FREE_TYPE_LIMIT, usePremium } from "../lib/premium";
+import { FREE_ALARM_TYPES, FREE_TYPE_LIMIT, usePremium } from "../lib/premium";
 import { BANNER_BORDERS, PALETTE, TYPE_ICONS, addDays, employmentOf, calcDuration, fmtHours, mkId, parseYmd, typeLabel, ymd, type ShiftType } from "../lib/model";
 
 type Draft = {
@@ -47,7 +47,8 @@ export function TypesScreen() {
   const set = (p: Partial<Draft>) => setDraft((d) => ({ ...d, ...p }));
   const alarmsOk = useAlarmsAvailable();
   async function chooseAlarm(v: number) {
-    if (v > 0 && locked) { setEditing(null); setTimeout(() => openPaywall("Alarms are part of Premium."), 500); return; }
+    // Free version: alarms on one shift type
+    if (v > 0 && locked && data.types.some((x) => x.alarm && x.id !== editing)) { setEditing(null); setTimeout(() => openPaywall("The free version has alarms on " + FREE_ALARM_TYPES + " shift type. Premium has alarms on all of them."), 500); return; }
     if (v > 0 && !(await requestAlarmPermission())) { toast("Allow alarms for Roster Board in Settings to use alarms"); return; }
     set({ alarm: v });
   }

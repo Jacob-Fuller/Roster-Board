@@ -10,7 +10,7 @@ import { WEB_URL } from "../lib/supabase";
 // Same content as the web app's paywall.
 const PERKS = [
   "Unlimited shift types",
-  "Alarms before your shifts and events",
+  "Alarms for every shift type and event",
   "Share rosters with as many people as you like",
   "Roster patterns: fill your calendar up to 2 years ahead",
   "Estimated pay for every week, fortnight, month and year",
