@@ -75,7 +75,7 @@
           "image": "./assets/splash.png",
           "imageWidth": 300,
           "resizeMode": "contain",
-          "backgroundColor": "#121214"
+          "backgroundColor": "#0F2244"
         }
       ],
       "expo-iap",

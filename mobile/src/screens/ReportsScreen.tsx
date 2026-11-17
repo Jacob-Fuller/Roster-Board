@@ -227,7 +227,7 @@ export function ReportsScreen() {
             {wwTotal ? <>
               <View style={{ flex: stats.weekdayHours || 0.0001, backgroundColor: t.accent }} />
               <View style={{ width: 2, backgroundColor: t.surface }} />
-              <View style={{ flex: stats.weekendHours || 0.0001, backgroundColor: "#D4A946" }} />
+              <View style={{ flex: stats.weekendHours || 0.0001, backgroundColor: "#C8975F" }} />
             </> : null}
           </View>
         </Card>
