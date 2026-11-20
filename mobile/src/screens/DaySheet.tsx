@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Keyboard, Modal, Platform, Pressable, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { TimeField } from "../components/TimeField";
@@ -48,9 +48,12 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
   const [split, setSplit] = useState<{ baseTypeId?: string; ot: string; ex: string; label: string; onSave: (ot: number, ex: number) => void } | null>(null);
   const [swap, setSwap] = useState<{ shift: ShiftEntry } | null>(null);
   const [leavePick, setLeavePick] = useState<"annual" | "sick" | null>(null);
+  // Change shift: the entry being changed comes off the day once its new shift is added.
+  const [changing, setChanging] = useState<ShiftEntry | null>(null);
+  const replaceRef = useRef<string | null>(null);
 
   const resetForm = () => { setEditing(null); setText(""); setCat("other"); setAllDay(false); setTime(""); setRemind(false); setAlerts([-1, -1]); };
-  useEffect(() => { resetForm(); }, [dateKey]);
+  useEffect(() => { resetForm(); replaceRef.current = null; }, [dateKey]);
   if (!dateKey) return <Sheet visible={false} onClose={onClose} title=""><View /></Sheet>;
   const key = dateKey;
 
@@ -68,19 +71,23 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
 
   /* ----- shifts ----- */
   const addShift = (typeId: string, hours?: number | null, baseTypeId?: string | null, tag?: string | null) => {
-    update((d) => {
+    let changed = false;
+    update((d, tomb) => {
+      changed = replacing(d, tomb);
       const e: any = { id: mkId(), typeId };
       if (hours != null) e.hours = hours;
       if (baseTypeId) e.baseTypeId = baseTypeId;
       if (tag) e.tag = tag;
       (d.shifts[key] = d.shifts[key] || []).push(e);
+      if (changed) rebalanceExtras(d, [key]);
     });
-    toast("Shift added");
+    toast(changed ? "Shift changed" : "Shift added");
   };
   // An additional shift: excess hours until the pay period's limit, then overtime.
   const addExtra = (h: number, baseTypeId: string) => {
     let msg = "Shift added";
-    update((d) => {
+    update((d, tomb) => {
+      if (replacing(d, tomb)) msg = "Shift changed";
       const e: any = { id: mkId(), typeId: EXCESS_ID, hours: h, addl: h, baseTypeId };
       (d.shifts[key] = d.shifts[key] || []).push(e);
       rebalanceExtras(d, [key]);
@@ -108,7 +115,10 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
     },
   });
   const removeShift = (id: string) => {
-    update((d, tomb) => {
+    update((d, tomb) => takeOut(d, tomb, id));
+    toast("Shift removed");
+  };
+  function takeOut(d: Snapshot, tomb: (id: string) => void, id: string) {
       d.shifts[key] = (d.shifts[key] || []).filter((s) => s.id !== id);
       if (!d.shifts[key].length) delete d.shifts[key];
       tomb(id);
@@ -127,8 +137,14 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         const od = onRec.linkedDate;
         if (od && d.swaps[od]) { d.swaps[od] = d.swaps[od].filter((r) => r.id !== onRec.linkedSwapId); tomb(onRec.linkedSwapId); }
       }
-    });
-    toast("Shift removed");
+  }
+  // Called inside an add: takes the shift being changed off the day.
+  const replacing = (d: Snapshot, tomb: (id: string) => void) => {
+    const id = replaceRef.current;
+    replaceRef.current = null;
+    if (!id || !(d.shifts[key] || []).some((x) => x.id === id)) return false;
+    takeOut(d, tomb, id);
+    return true;
   };
 
   /* ----- leave ----- */
@@ -332,6 +348,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
                 baseTypeId: s.baseTypeId, ot: String(entryOTHours(s) || ""), ex: String(entryExcessHours(s) || ""), label: "Save",
                 onSave: (ot, ex) => { update((d) => { const e = (d.shifts[key] || []).find((x) => x.id === s.id); if (e) applySplit(e, ot, ex); }); toast("Hours updated"); },
               }) } : { label: "Swap", onPress: () => setSwap({ shift: s }) },
+              { label: "Change", onPress: () => setChanging(s) },
               { label: "Remove", danger: true, onPress: () => removeShift(s.id) },
             ]} />
         );
@@ -365,7 +382,7 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
       ) : null}
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
-        {sortedTypes(data.types).map((ty) => <Chip key={ty.id} label={"+ " + ty.name} color={ty.color} ink={ty.ink} onPress={() => pickType(ty)} />)}
+        {sortedTypes(data.types).map((ty) => <Chip key={ty.id} label={"+ " + ty.name} color={ty.color} ink={ty.ink} onPress={() => { replaceRef.current = null; pickType(ty); }} />)}
       </View>
 
       <SectionHead title="Leave" />
@@ -448,7 +465,11 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
         else if (kind === "ex") askHours("Excess Hours – " + ty.name, "How many excess hours?", (h) => addShift(EXCESS_ID, h, ty.id));
         else setSplit({
           baseTypeId: ty.id, ot: "", ex: "", label: "Add shift",
-          onSave: (ot, ex) => { update((d) => { const e: any = { id: mkId(), baseTypeId: ty.id }; applySplit(e, ot, ex); (d.shifts[key] = d.shifts[key] || []).push(e); }); toast("Shift added"); },
+          onSave: (ot, ex) => {
+            let changed = false;
+            update((d, tomb) => { changed = replacing(d, tomb); const e: any = { id: mkId(), baseTypeId: ty.id }; applySplit(e, ot, ex); (d.shifts[key] = d.shifts[key] || []).push(e); if (changed) rebalanceExtras(d, [key]); });
+            toast(changed ? "Shift changed" : "Shift added");
+          },
         });
       }} />
       <Popup visible={!!leavePick} onClose={() => setLeavePick(null)}>
@@ -461,6 +482,20 @@ export function DaySheet({ dateKey, onClose }: { dateKey: string | null; onClose
               <Text style={{ color: ty.ink, fontWeight: "700", fontSize: 12, opacity: 0.9 }}>{leavePick ? LEAVE_KINDS[leavePick].label : ""}</Text>
             </Pressable>
           ))}
+        </View>
+      </Popup>
+      <Popup visible={!!changing} onClose={() => setChanging(null)}>
+        <H2 style={{ marginBottom: 12 }}>{changing ? "Change " + entryName(changing, typesById) : ""}</H2>
+        <View style={{ gap: 8 }}>
+          {changing ? sortedTypes(data.types).filter((ty) => isCombo(changing.typeId) || ty.id !== changing.typeId).map((ty) => (
+            <Pressable key={ty.id} accessibilityRole="button" onPress={() => {
+              const id = changing.id; setChanging(null);
+              setTimeout(() => { replaceRef.current = id; pickType(ty); }, 250);
+            }}
+              style={({ pressed }) => ({ backgroundColor: ty.color, borderRadius: 12, paddingVertical: 13, paddingHorizontal: 14, opacity: pressed ? 0.85 : 1 })}>
+              <Text style={{ color: ty.ink, fontWeight: "700", fontSize: 15 }}>{ty.name}</Text>
+            </Pressable>
+          )) : null}
         </View>
       </Popup>
       <SplitEditor state={split} typesById={typesById} onClose={() => setSplit(null)} />
