@@ -513,13 +513,12 @@ function Item({ color, title, sub, actions, onPress, highlight }: { color: strin
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, backgroundColor: highlight ? t.accentSoft : "transparent", borderRadius: 8 }}>
         <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color, marginLeft: highlight ? 6 : 0 }} />
         <Pressable disabled={!onPress} onPress={onPress} style={{ flex: 1 }} accessibilityRole={onPress ? "button" : undefined}>
-          <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }}>{title}</Text>
-          {sub ? <Dim>{sub}</Dim> : null}
+          <Text style={{ color: t.text, fontSize: 15, fontWeight: "600" }} numberOfLines={2}>{title}</Text>
+          {sub ? <Dim numberOfLines={1}>{sub}</Dim> : null}
         </Pressable>
         {(actions || []).map((a) => (
-          <Pressable key={a.label} accessibilityRole="button" accessibilityLabel={a.label + " " + title} onPress={a.onPress} hitSlop={6}>
-            <Text style={{ color: a.danger ? t.danger : t.accent, fontWeight: "700", fontSize: 14 }}>{a.label}</Text>
-          </Pressable>
+          <Button key={a.label} small kind={a.danger ? "outlineDanger" : "outline"} title={a.label} onPress={a.onPress}
+            style={{ paddingHorizontal: 11, paddingVertical: 7, borderRadius: 10 }} />
         ))}
       </View>
       <Divider />
