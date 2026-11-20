@@ -28,7 +28,7 @@ const MIME = {
 };
 
 // Only these files (plus the app build and the screenshots folder) are public. Everything else in
-// the repo — README, native/, .git, server.js itself — is never served.
+// the repo — README, .git, server.js itself — is never served.
 const PUBLIC_FILES = new Set([
   "/index.html", "/privacy.html", "/manifest.json", "/sw.js",
   "/icon.svg", "/icon-192.png", "/icon-512.png", "/icon-1024.png",
