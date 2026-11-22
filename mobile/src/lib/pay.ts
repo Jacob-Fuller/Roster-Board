@@ -43,6 +43,8 @@ export const PAY_DEFAULTS = {
   payLeave: true, leaveLoading: 0,
   superPct: 12, showTax: true, taxFree: true,
   paydayReminder: false,
+  // payday marked on the calendar ("" = not shown); repeats with the pay cycle
+  payday: "",
 };
 type DefaultKey = keyof typeof PAY_DEFAULTS;
 const DEFAULT_KEYS = Object.keys(PAY_DEFAULTS) as DefaultKey[];
@@ -133,6 +135,15 @@ export function payPeriodIsAlt(cfg: PayConfig, date: Date): boolean {
     n = Math.floor(dayDiff(date, payAnchor(cfg)) / cycleDays(cfg));
   }
   return ((n % 2) + 2) % 2 === 1;
+}
+// True on each payday: the payday date repeated every week, fortnight or month (same
+// day of the month, or the month's last day when it's shorter).
+export function isPayday(cfg: PayConfig, date: Date): boolean {
+  if (!cfg.payday) return false;
+  const p = parseYmd(cfg.payday);
+  if (cfg.cycle === "monthly") return date.getDate() === monthDayClamped(date.getFullYear(), date.getMonth(), p.getDate()).getDate();
+  const n = dayDiff(date, p);
+  return ((n % cycleDays(cfg)) + cycleDays(cfg)) % cycleDays(cfg) === 0;
 }
 export const shiftPayPeriod = (cfg: PayConfig, period: DateRange, dir: number) =>
   payPeriodFor(cfg, dir > 0 ? period.end : addDays(period.start, -1));

@@ -6,7 +6,7 @@ import {
   type Birthday, type Buckets, type EventEntry, type LeaveEntry, type Rec, type ShiftEntry, type ShiftType,
 } from "../lib/model";
 import { holidayName, placeOf } from "../lib/holidays";
-import { isPublicHoliday, payConfig, payIsSetUp, payPeriodIsAlt } from "../lib/pay";
+import { isPayday, isPublicHoliday, payConfig, payIsSetUp, payPeriodIsAlt } from "../lib/pay";
 import { BannerBorder } from "./BannerBorder";
 import { useTheme } from "./ui";
 
@@ -30,6 +30,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
   const cells = useMemo(() => buildMonthCells(month, { nextWeek: true }), [month]);
   // alternate pay periods are shaded, like the web app (only once pay is set up)
   const shade = useMemo(() => (data.settings && payIsSetUp(data.settings) ? payConfig(data.settings) : null), [data.settings]);
+  const payCfg = useMemo(() => (data.settings ? payConfig(data.settings) : null), [data.settings]);
   const rows = cells.length / 7;
   const today = new Date();
   const todayKey = ymd(today);
@@ -99,6 +100,7 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
               const room = areaH ? areaH - (isToday || sel ? 4 : 0) : 0;
               const { show: max, h: bh } = fitBanners(items.length, room, ts.h);
               const ph = isPublicHoliday(data as any, key);
+              const payday = !!payCfg && isPayday(payCfg, c.date);
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
               return (
                 <Pressable key={key} disabled={!onDayPress} onPress={() => onDayPress && onDayPress(key)}
@@ -113,7 +115,10 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
                     <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 3, alignItems: "center", justifyContent: "center", backgroundColor: isToday ? t.accent : "transparent" }}>
                       <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accentInk : past ? t.textFaint : t.text, fontVariant: ["tabular-nums"] }}>{c.date.getDate()}</Text>
                     </View>
-                    {ph ? <Text accessibilityLabel={holidayName(placeOf((data as any).settings), key) || "Public holiday"} style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+                      {payday ? <Text accessibilityLabel="Payday" style={{ fontSize: 8, fontWeight: "800", color: "#FFFFFF", backgroundColor: PAYDAY, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>$</Text> : null}
+                      {ph ? <Text accessibilityLabel={holidayName(placeOf((data as any).settings), key) || "Public holiday"} style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
+                    </View>
                   </View>
                   <View onLayout={r * 7 + ci === measureIdx ? (e) => { const h = e.nativeEvent.layout.height; setAreaH((o) => (Math.abs(o - h) < 0.5 ? o : h)); } : undefined}
                     style={{ flex: 1, gap: bh < ts.h ? GAP_TIGHT : GAP, opacity: past ? 0.4 : 1 }}>
@@ -130,6 +135,8 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
   );
 }
 
+// Payday marker: a small green "$" by the date.
+const PAYDAY = "#22A06B";
 const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
 const YEARLY = { color: "#E5484D", ink: "#FFFFFF" };
 const GAP = 3, GAP_TIGHT = 2, MORE_H = 11;

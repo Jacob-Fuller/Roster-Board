@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { DateField } from "../components/DateField";
 import { Button, Card, Dim, Divider, Field, Segmented, Sheet, ToggleRow, useTheme, useUi } from "../components/ui";
-import { employmentOf, fmtHours, mkId } from "../lib/model";
+import { employmentOf, fmtHours, mkId, ymd } from "../lib/model";
 import { rebalanceAllExtras } from "../lib/partTime";
 import {
   fmtMoney, payFormFromConfig, paySetupDraft, paySummaries, savePaySetup, workTypes,
@@ -81,6 +81,8 @@ export function PaySetupSheet({ visible, onClose }: { visible: boolean; onClose:
             options={[{ value: "weekly", label: "Weekly" }, { value: "fortnightly", label: "Fortnightly" }, { value: "monthly", label: "Monthly" }]} />
         </View>
         <DateField label="Pay period start date" value={form.periodStart} onChange={(v) => set("periodStart", v)} />
+        <ToggleRow label="Payday on calendar" value={!!draft.payday} onChange={(v) => setDraft({ ...draft, payday: v ? form.periodStart || ymd(new Date()) : "" })} />
+        {draft.payday ? <DateField label="Payday" value={draft.payday} onChange={(v) => setDraft({ ...draft, payday: v })} /> : null}
         <ToggleRow label="Payday reminder" value={!!draft.paydayReminder} onChange={async (v) => {
           if (v && !(await askReminderPermission())) { toast("Allow notifications for Roster Board in Settings to get payday reminders"); return; }
           setDraft({ ...draft, paydayReminder: v });
