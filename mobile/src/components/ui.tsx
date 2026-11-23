@@ -3,7 +3,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
-  useColorScheme, type StyleProp, type TextStyle, type ViewStyle,
+  useColorScheme, useWindowDimensions, type StyleProp, type TextStyle, type ViewStyle,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -422,4 +422,11 @@ export function Chip({ label, color, ink, onPress, selected, small }: { label: s
       <Text style={{ color: ink, fontWeight: "700", fontSize: small ? 12 : 14 }} numberOfLines={1}>{label}</Text>
     </Pressable>
   );
+}
+
+// The app's own width. On a computer the web version sits in a 640px column
+// (web/desktop.css), so the window is wider than the app.
+export function useAppWidth() {
+  const { width } = useWindowDimensions();
+  return Platform.OS === "web" && width >= 760 ? 640 : width;
 }

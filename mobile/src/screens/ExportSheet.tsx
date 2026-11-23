@@ -4,7 +4,7 @@ import { WebView } from "react-native-webview";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { File, Paths } from "expo-file-system";
-import { Button, Chip, SectionHead, Segmented, Sheet, useTheme, useUi } from "../components/ui";
+import { Button, Chip, SectionHead, Segmented, Sheet, useAppWidth, useTheme, useUi } from "../components/ui";
 import { MONTHS, addMonths, startOfMonth } from "../lib/model";
 import { PDF_PAGE, buildRosterHtml, buildRosterImageHtml, nothingToExport, rosterFileName, rosterFilterOptions, rosterImageName } from "../lib/pdf";
 import { useStore } from "../lib/store";
@@ -51,7 +51,8 @@ export function ExportSheet({ visible, onClose, initialMode = "month", initialMo
   }, [mode, month, year]);
   const options = useMemo(() => (visible ? rosterFilterOptions(data, months) : []), [visible, data, months]);
   // Live preview of exactly what will be exported.
-  const { width: screenW, height: screenH } = useWindowDimensions();
+  const { height: screenH } = useWindowDimensions();
+  const screenW = useAppWidth();
   const previewW = screenW - 36;
   const pageH = (previewW * PDF_PAGE.height) / PDF_PAGE.width;
   const previewH = mode === "month" ? pageH + 4 : Math.min(screenH * 0.55, pageH * 12);

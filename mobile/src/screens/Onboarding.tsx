@@ -1,10 +1,10 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useRef, useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import { Button, H1, useTheme } from "../components/ui";
+import { Button, H1, useAppWidth, useTheme } from "../components/ui";
 
 export const ONBOARDING_KEY = "rosterBoard.onboardingSeen";
 export async function hasSeenOnboarding() { return (await AsyncStorage.getItem(ONBOARDING_KEY).catch(() => null)) === "1"; }
@@ -22,9 +22,10 @@ const SLIDES: { icon: Icon; title: string; text: string }[] = [
 export function Onboarding({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const width = useAppWidth();
   const ref = useRef<ScrollView>(null);
   const [idx, setIdx] = useState(0);
+  const [h, setH] = useState(0);
   const last = idx === SLIDES.length - 1;
   const go = (i: number) => { const n = Math.max(0, Math.min(SLIDES.length - 1, i)); ref.current?.scrollTo({ x: n * width, animated: true }); setIdx(n); };
   const close = () => { AsyncStorage.setItem(ONBOARDING_KEY, "1").catch(() => {}); setIdx(0); onClose(); };
@@ -36,10 +37,10 @@ export function Onboarding({ visible, onClose }: { visible: boolean; onClose: ()
         <View style={{ alignItems: "flex-end", paddingHorizontal: 20 }}>
           <Pressable accessibilityRole="button" onPress={close} hitSlop={10}><Text style={{ color: t.textDim, fontWeight: "700", fontSize: 15 }}>Skip</Text></Pressable>
         </View>
-        <ScrollView ref={ref} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={{ flex: 1 }}
+        <ScrollView ref={ref} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={{ flex: 1 }} onLayout={(e) => setH(e.nativeEvent.layout.height)}
           onMomentumScrollEnd={(e) => setIdx(Math.round(e.nativeEvent.contentOffset.x / width))}>
           {SLIDES.map((s) => (
-            <View key={s.title} style={{ width, paddingHorizontal: 32, justifyContent: "center", alignItems: "center" }}>
+            <View key={s.title} style={{ width, height: h || undefined, paddingHorizontal: 32, justifyContent: "center", alignItems: "center" }}>
               <View style={{ width: 96, height: 96, borderRadius: 28, backgroundColor: t.accentSoft, alignItems: "center", justifyContent: "center", marginBottom: 28 }}>
                 <Ionicons name={s.icon} size={46} color={t.accent} />
               </View>
