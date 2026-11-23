@@ -112,11 +112,15 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
                     shadowColor: t.shadow, shadowOpacity: c.inMonth && !t.dark ? 0.04 : 0, shadowRadius: 3, shadowOffset: { width: 0, height: 1 },
                   })}>
                   <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 2, marginLeft: 1 }}>
-                    <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 3, alignItems: "center", justifyContent: "center", backgroundColor: isToday ? t.accent : "transparent" }}>
+                    <View style={{ minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: isToday ? 3 : 1, alignItems: "center", justifyContent: "center", backgroundColor: isToday ? t.accent : "transparent" }}>
                       <Text style={{ fontSize: 12, fontWeight: isToday ? "800" : "600", color: isToday ? t.accentInk : past ? t.textFaint : t.text, fontVariant: ["tabular-nums"] }}>{c.date.getDate()}</Text>
                     </View>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-                      {payday ? <Text accessibilityLabel="Payday" style={{ fontSize: 8, fontWeight: "800", color: "#FFFFFF", backgroundColor: PAYDAY, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>$</Text> : null}
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 2, flexShrink: 1, minWidth: 0 }}>
+                      {payday ? (
+                        <View accessibilityLabel="Payday" style={{ flexShrink: 1, minWidth: 0, backgroundColor: PAYDAY, marginRight: -2, borderRadius: 3, paddingHorizontal: 1, paddingVertical: 1, borderBottomWidth: 1, borderBottomColor: PAYDAY_EDGE }}>
+                          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ fontSize: 6, fontWeight: "900", letterSpacing: -0.2, color: "#FFFFFF" }}>PAYDAY</Text>
+                        </View>
+                      ) : null}
                       {ph ? <Text accessibilityLabel={holidayName(placeOf((data as any).settings), key) || "Public holiday"} style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
                     </View>
                   </View>
@@ -135,8 +139,9 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
   );
 }
 
-// Payday marker: a small green "$" by the date.
-const PAYDAY = "#22A06B";
+// Payday marker: a small green "PAYDAY" banner by the date.
+const PAYDAY = "#1F9D5C";
+const PAYDAY_EDGE = "#157A46";
 const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
 const YEARLY = { color: "#E5484D", ink: "#FFFFFF" };
 const GAP = 3, GAP_TIGHT = 2, MORE_H = 11;
