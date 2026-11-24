@@ -4,8 +4,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as IAP from "expo-iap";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
-import { useStore } from "./store";
-import { sb } from "./supabase";
 
 export const PREMIUM_MONTHLY = "net.rosterboard.app.premium.monthly";
 export const PREMIUM_LIFETIME = "net.rosterboard.app.premium.lifetime";
@@ -20,7 +18,7 @@ const KEY = "rosterBoard.premium";
 // App Store Connect.
 export const PREMIUM_ENFORCED = true;
 
-type Status = { active: boolean; kind: "" | "monthly" | "lifetime" | "complimentary"; until: number };
+type Status = { active: boolean; kind: "" | "monthly" | "lifetime"; until: number };
 type Ctx = {
   status: Status;
   /** true when Premium isn't active: the free limits apply */
@@ -63,21 +61,6 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const connected = useRef(false);
-  // Complimentary Premium: accounts listed in Supabase (complimentary_access),
-  // e.g. the owner and family. Managed from the Supabase dashboard.
-  const { user } = useStore();
-  const [comp, setComp] = useState(false);
-  useEffect(() => {
-    if (!user) { setComp(false); return; }
-    const k = "rosterBoard.comp." + user.id;
-    AsyncStorage.getItem(k).then((v) => { if (v === "1") setComp(true); }).catch(() => {});
-    sb.from("complimentary_access").select("email").limit(1).then((r) => {
-      if (r.error) return; // offline or not set up: keep the last known answer
-      const on = !!(r.data && r.data.length);
-      setComp(on);
-      AsyncStorage.setItem(k, on ? "1" : "0").catch(() => {});
-    });
-  }, [user]);
 
   const save = useCallback((s: Status) => { setStatus(s); AsyncStorage.setItem(KEY, JSON.stringify(s)).catch(() => {}); }, []);
 
@@ -151,7 +134,7 @@ export function PremiumProvider({ children }: { children: React.ReactNode }) {
   }, [save]);
 
   // close the paywall once Premium becomes active
-  const effective: Status = comp && !status.active ? { active: true, kind: "complimentary", until: 0 } : status;
+  const effective: Status = status;
   useEffect(() => { if (effective.active) setPaywall(null); }, [effective.active]);
 
   const value = useMemo<Ctx>(() => ({

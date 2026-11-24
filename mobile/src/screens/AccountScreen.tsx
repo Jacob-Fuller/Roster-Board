@@ -270,7 +270,7 @@ function PremiumSection() {
   const { toast } = useUi();
   const [open, setOpen] = useState(false);
   if (Platform.OS !== "ios") return null;
-  const plan = !premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : premium.status.kind === "complimentary" ? "Complimentary" : "Monthly";
+  const plan = !premium.status.active ? "Free" : premium.status.kind === "lifetime" ? "Lifetime" : "Monthly";
   return (
     <>
       <SectionHead title="Premium" />
