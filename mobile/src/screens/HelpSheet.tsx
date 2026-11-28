@@ -109,8 +109,8 @@ const GROUPS: Group[] = [
       {
         id: "holidays", title: "Show public holidays", icon: "flag", color: GREEN, keywords: "public holiday state ekka show day PH",
         steps: [
-          { text: "Open Account → Employment and choose your state, and your area for local show days.", pic: [{ t: "row", label: "State", value: "Queensland", hl: true }, { t: "row", label: "Area", value: "Brisbane" }] },
-          { text: "Public holidays are marked PH on the calendar and paid at your public holiday penalty rate." },
+          { text: "Open Account → Appearance and choose your state, and your area for local show days.", pic: [{ t: "row", label: "State", value: "Queensland", hl: true }, { t: "row", label: "Area", value: "Brisbane" }] },
+          { text: "Public holidays show their name on the calendar and are paid at your public holiday penalty rate." },
         ],
       },
     ],

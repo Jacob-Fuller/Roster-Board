@@ -97,9 +97,10 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
                   label={y.name} bg={YEARLY.color + "38"} fg={t.text} />));
               const sel = !!(selected && selected[key]);
               // Up to 3 banners per day; they shrink a little to fit, and only show "+ more" when even that won't fit.
-              const room = areaH ? areaH - (isToday || sel ? 4 : 0) : 0;
-              const { show: max, h: bh } = fitBanners(items.length, room, ts.h);
               const ph = isPublicHoliday(data as any, key);
+              const holName = ph ? holidayName(placeOf((data as any).settings), key) || "Public holiday" : "";
+              const room = areaH ? areaH - (isToday || sel ? 4 : 0) - (ph ? HOLIDAY_H + GAP : 0) : 0;
+              const { show: max, h: bh } = fitBanners(items.length, room, ts.h);
               const payday = !!payCfg && isPayday(payCfg, c.date);
               const alt = !!shade && c.inMonth && payPeriodIsAlt(shade, c.date);
               return (
@@ -121,11 +122,11 @@ export function MonthGrid({ month, data, typesById, onDayPress, selected, fadePa
                           <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7} style={{ fontSize: 6, fontWeight: "900", letterSpacing: -0.2, color: "#FFFFFF" }}>PAYDAY</Text>
                         </View>
                       ) : null}
-                      {ph ? <Text accessibilityLabel={holidayName(placeOf((data as any).settings), key) || "Public holiday"} style={{ fontSize: 8, fontWeight: "800", color: t.accentInk, backgroundColor: t.accent, borderRadius: 3, paddingHorizontal: 2, overflow: "hidden" }}>PH</Text> : null}
                     </View>
                   </View>
                   <View onLayout={r * 7 + ci === measureIdx ? (e) => { const h = e.nativeEvent.layout.height; setAreaH((o) => (Math.abs(o - h) < 0.5 ? o : h)); } : undefined}
                     style={{ flex: 1, gap: bh < ts.h ? GAP_TIGHT : GAP, opacity: past ? 0.4 : 1 }}>
+                    {ph ? <Text numberOfLines={2} accessibilityLabel={holName + ", public holiday"} style={{ height: HOLIDAY_H, fontSize: 8, lineHeight: HOLIDAY_H / 2, fontWeight: "800", color: t.accent, textAlign: "center" }}>{holName}</Text> : null}
                     {items.slice(0, max).map((el) => React.cloneElement(el as React.ReactElement<{ h?: number }>, { h: bh }))}
                     {items.length > max ? <Text style={{ fontSize: 9, lineHeight: MORE_H, color: t.textDim, textAlign: "center" }}>+{items.length - max} more</Text> : null}
                   </View>
@@ -145,6 +146,8 @@ const PAYDAY_EDGE = "#157A46";
 const BIRTHDAY = { color: "#A76BF0", ink: "#FFFFFF" };
 const YEARLY = { color: "#E5484D", ink: "#FFFFFF" };
 const GAP = 3, GAP_TIGHT = 2, MORE_H = 11;
+// Public holiday name under the date: room for two short lines.
+const HOLIDAY_H = 18;
 // Smallest a banner gets before a day falls back to "+ more" (never under 70% of full size).
 const MIN_BANNER_H = 18, MIN_BANNER_SHARE = 0.7;
 const MAX_BANNERS = 3;
