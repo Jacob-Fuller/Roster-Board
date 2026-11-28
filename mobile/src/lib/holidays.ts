@@ -47,8 +47,10 @@ function easter(y: number) {
 function build({ state, area }: Place, y: number): { [date: string]: string } {
   const out: { [date: string]: string } = {};
   const add = (d: Date, name: string) => { const k = ymd(d); if (!out[k]) out[k] = name; };
+  // the extra weekday given when a holiday also stays on its weekend date
+  const obs = (name: string) => name + " (observed)";
   // a weekend holiday moves to the Monday after
-  const withMonday = (d: Date, name: string) => { add(d, name); if (d.getDay() === 6) add(plus(d, 2), name); if (d.getDay() === 0) add(plus(d, 1), name); };
+  const withMonday = (d: Date, name: string) => { add(d, name); if (d.getDay() === 6) add(plus(d, 2), obs(name)); if (d.getDay() === 0) add(plus(d, 1), obs(name)); };
 
   withMonday(D(y, 1, 1), "New Year's Day");
   withMonday(D(y, 1, 26), "Australia Day");
@@ -63,7 +65,7 @@ function build({ state, area }: Place, y: number): { [date: string]: string } {
   if (state === "WA") withMonday(anzac, "Anzac Day");
   else if (state === "ACT" && (aw === 6 || aw === 0)) add(anzacMon, "Anzac Day");
   else if ((state === "QLD" || state === "NT") && aw === 0) add(anzacMon, "Anzac Day");
-  else { add(anzac, "Anzac Day"); if (state === "NSW" && aw === 0) add(anzacMon, "Anzac Day"); }
+  else { add(anzac, "Anzac Day"); if (state === "NSW" && aw === 0) add(anzacMon, obs("Anzac Day")); }
 
   // Labour Day
   if (state === "QLD") add(nth(y, 5, 1, 1), "Labour Day");
@@ -103,9 +105,9 @@ function build({ state, area }: Place, y: number): { [date: string]: string } {
   add(xmas, "Christmas Day");
   // Tasmania moves a Sunday Boxing Day to the Tuesday rather than adding a day
   if (!(state === "TAS" && wd === 6)) add(D(y, 12, 26), boxing);
-  if (wd === 6) { add(D(y, 12, 27), "Christmas Day"); add(D(y, 12, 28), boxing); }
-  else if (wd === 5) add(D(y, 12, 28), boxing);
-  else if (wd === 0) add(D(y, 12, 27), "Christmas Day");
+  if (wd === 6) { add(D(y, 12, 27), obs("Christmas Day")); add(D(y, 12, 28), state === "TAS" ? boxing : obs(boxing)); }
+  else if (wd === 5) add(D(y, 12, 28), obs(boxing));
+  else if (wd === 0) add(D(y, 12, 27), obs("Christmas Day"));
   return out;
 }
 
